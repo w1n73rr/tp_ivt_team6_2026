@@ -8,6 +8,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import tech.genna.TY3.model.Role;
 import java.util.Collection;
 import java.util.List;
+import java.util.UUID;
 
 @Entity
 @Table(name = "users")
@@ -20,7 +21,7 @@ public class User implements UserDetails {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    private UUID id;
 
     @Column(unique = true, nullable = false)
     private String username;
