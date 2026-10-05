@@ -52,8 +52,16 @@ dependencies {
 
 
     //Tests
-    testImplementation("org.mockito:mockito-core:5.12.0")
-    testImplementation("org.mockito:mockito-junit-jupiter:5.12.0")
+    // Spring Boot Test & Security Test
+    testImplementation("org.springframework.boot:spring-boot-starter-test")
+    testImplementation("org.springframework.security:spring-security-test")
+
+    // REST Assured для проверки API
+    testImplementation("io.rest-assured:rest-assured:5.4.0")
+
+    // JUnit 5 Jupiter
+    testImplementation("org.junit.jupiter:junit-jupiter-api")
+    testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine")
 
     //QueryDSL
     implementation("com.querydsl:querydsl-jpa:5.0.0:jakarta")
