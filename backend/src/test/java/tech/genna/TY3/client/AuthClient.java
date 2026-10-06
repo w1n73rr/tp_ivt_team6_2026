@@ -9,32 +9,28 @@ import static io.restassured.RestAssured.given;
 
 public class AuthClient {
 
-    private final int port;
-
     public AuthClient(int port) {
-        this.port = port;
-    }
-
-    public Response login(LoginRequest request, int expectedStatus) {
-        return given()
-                .spec(TestConfig.requestSpec(port))
-                .body(request)
-                .when()
-                .post("/api/auth/login")
-                .then()
-                .spec(TestConfig.responseSpec(expectedStatus))
-                .extract()
-                .response();
+        TestConfig.setupRequestSpecification(port);
     }
 
     public Response register(RegisterRequest request, int expectedStatus) {
         return given()
-                .spec(TestConfig.requestSpec(port))
                 .body(request)
                 .when()
                 .post("/api/auth/register")
                 .then()
-                .spec(TestConfig.responseSpec(expectedStatus))
+                .statusCode(expectedStatus)
+                .extract()
+                .response();
+    }
+
+    public Response login(LoginRequest request, int expectedStatus) {
+        return given()
+                .body(request)
+                .when()
+                .post("/api/auth/login")
+                .then()
+                .statusCode(expectedStatus)
                 .extract()
                 .response();
     }
