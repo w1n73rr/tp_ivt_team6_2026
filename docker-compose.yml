@@ -45,7 +45,7 @@ services:
       dockerfile: Dockerfile
     container_name: exam_ai_frontend_container
     ports:
-      - "3000:3000"
+      - "3000:80"
     depends_on:
       - exam-ai-backend
     networks:
