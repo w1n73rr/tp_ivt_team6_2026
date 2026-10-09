@@ -1,1 +1,131 @@
-<p>register works!</p>
+
+<section class="auth-page">
+  <mat-card class="auth-card">
+    <mat-card-header>
+      <mat-card-title>Регистрация</mat-card-title>
+      <mat-card-subtitle>
+        Создайте аккаунт для начала работы
+      </mat-card-subtitle>
+    </mat-card-header>
+
+    <mat-card-content>
+      <form
+        class="auth-form"
+        [formGroup]="registerForm"
+        (ngSubmit)="submit()">
+
+        <!-- Имя пользователя -->
+        <mat-form-field appearance="outline">
+          <mat-label>Имя пользователя</mat-label>
+
+          <input
+            matInput
+            type="text"
+            formControlName="username"
+            autocomplete="username">
+
+          @if (
+            registerForm.controls.username.hasError('required') &&
+            registerForm.controls.username.touched
+          ) {
+            <mat-error>Введите имя пользователя</mat-error>
+          }
+
+          @if (
+            registerForm.controls.username.hasError('minlength') &&
+            registerForm.controls.username.touched
+          ) {
+            <mat-error>Минимум 3 символа</mat-error>
+          }
+
+          @if (
+            registerForm.controls.username.hasError('maxlength') &&
+            registerForm.controls.username.touched
+          ) {
+            <mat-error>Максимум 50 символов</mat-error>
+          }
+        </mat-form-field>
+
+        <!-- Email -->
+        <mat-form-field appearance="outline">
+          <mat-label>Email</mat-label>
+
+          <input
+            matInput
+            type="email"
+            formControlName="email"
+            autocomplete="email">
+
+          @if (
+            registerForm.controls.email.hasError('required') &&
+            registerForm.controls.email.touched
+          ) {
+            <mat-error>Введите email</mat-error>
+          }
+
+          @if (
+            registerForm.controls.email.hasError('email') &&
+            registerForm.controls.email.touched
+          ) {
+            <mat-error>Введите корректный email</mat-error>
+          }
+        </mat-form-field>
+
+        <!-- Пароль -->
+        <mat-form-field appearance="outline">
+          <mat-label>Пароль</mat-label>
+
+          <input
+            matInput
+            type="password"
+            formControlName="password"
+            autocomplete="new-password">
+
+          @if (
+            registerForm.controls.password.hasError('required') &&
+            registerForm.controls.password.touched
+          ) {
+            <mat-error>Введите пароль</mat-error>
+          }
+
+          @if (
+            registerForm.controls.password.hasError('minlength') &&
+            registerForm.controls.password.touched
+          ) {
+            <mat-error>Минимум 6 символов</mat-error>
+          }
+
+          @if (
+            registerForm.controls.password.hasError('maxlength') &&
+            registerForm.controls.password.touched
+          ) {
+            <mat-error>Максимум 100 символов</mat-error>
+          }
+        </mat-form-field>
+
+        <!-- Сообщение API -->
+        @if (message) {
+          <p
+            class="form-message"
+            [class.error]="isError"
+            [class.success]="!isError">
+            {{ message }}
+          </p>
+        }
+
+        <button
+          mat-flat-button
+          type="submit"
+          [disabled]="loading">
+          {{ loading ? 'Регистрация...' : 'Зарегистрироваться' }}
+        </button>
+
+      </form>
+
+      <p class="auth-link">
+        Уже есть аккаунт?
+        <a routerLink="/login">Войти</a>
+      </p>
+    </mat-card-content>
+  </mat-card>
+</section>

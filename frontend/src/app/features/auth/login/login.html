@@ -1,1 +1,74 @@
-<p>login works!</p>
+<section class="auth-page">
+  <mat-card class="auth-card">
+    <mat-card-header>
+      <mat-card-title>Вход</mat-card-title>
+      <mat-card-subtitle>
+        Войдите в свой аккаунт
+      </mat-card-subtitle>
+    </mat-card-header>
+
+    <mat-card-content>
+      <form
+        class="auth-form"
+        [formGroup]="loginForm"
+        (ngSubmit)="submit()">
+
+        <mat-form-field appearance="outline">
+  <mat-label>Имя пользователя</mat-label>
+
+  <input
+    matInput
+    type="text"
+    formControlName="username"
+    autocomplete="username">
+
+  @if (
+    loginForm.controls.username.hasError('required') &&
+    loginForm.controls.username.touched
+  ) {
+    <mat-error>Введите имя пользователя</mat-error>
+  }
+</mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Пароль</mat-label>
+
+          <input
+            matInput
+            type="password"
+            formControlName="password"
+            autocomplete="current-password">
+
+          @if (
+            loginForm.controls.password.hasError('required') &&
+            loginForm.controls.password.touched
+          ) {
+            <mat-error>Пароль обязателен</mat-error>
+          }
+        </mat-form-field>
+
+        @if (message) {
+          <p
+            class="form-message"
+            [class.error]="isError"
+            [class.success]="!isError">
+            {{ message }}
+          </p>
+        }
+
+        <button
+          mat-flat-button
+          type="submit"
+          [disabled]="loading">
+
+          {{ loading ? 'Входим...' : 'Войти' }}
+        </button>
+      </form>
+
+      <p class="auth-link">
+        Нет аккаунта?
+        <a routerLink="/register">Зарегистрироваться</a>
+      </p>
+    </mat-card-content>
+  </mat-card>
+</section>
