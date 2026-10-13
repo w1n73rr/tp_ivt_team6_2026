@@ -1,1 +1,82 @@
-<p>dashboard works!</p>
+<div class="dashboard">
+  <aside>
+    <a class="brand" routerLink="/dashboard">▰ <b>ИИ-помощник</b></a>
+    <nav aria-label="Основные разделы">
+      <a class="active" routerLink="/dashboard" aria-current="page">⌂ Главная</a>
+      @for (section of sections; track section) {
+        <button type="button" (click)="explain(section)">{{ section }}</button>
+      }
+    </nav>
+    <div class="account">Личный кабинет<br /><small>Подготовка к экзаменам</small></div>
+  </aside>
+  <main>
+    <header>
+      <div>
+        <h1>Здравствуйте!</h1>
+        <p>Продолжим подготовку к экзаменам</p>
+      </div>
+      <div class="header-actions">
+        <button (click)="explain('Поиск')">⌕ Поиск по материалам и тестам</button
+        ><button aria-label="Уведомления" (click)="explain('Уведомления')">♧</button>
+      </div>
+    </header>
+    @if (notice) {
+      <p class="notice" role="status">
+        {{ notice }} <button (click)="notice = ''" aria-label="Закрыть сообщение">×</button>
+      </p>
+    }
+    <h2>Быстрые действия</h2>
+    <section class="actions" aria-label="Быстрые действия">
+      <button (click)="explain('Загрузить материал')">
+        <span>↥</span>
+        <div><b>Загрузить материал</b><small>PDF, DOCX, PPTX или TXT</small></div></button
+      ><button (click)="explain('Создать тест')">
+        <span>✧</span>
+        <div><b>Создать тест</b><small>По одному или нескольким материалам</small></div></button
+      ><button class="primary" (click)="explain('Начать тренировку')">
+        <span>▷</span>
+        <div><b>Начать тренировку</b><small>По вашим слабым темам</small></div>
+      </button>
+    </section>
+    <section class="stats" aria-label="Статистика">
+      <article>
+        <p>Общая успеваемость</p>
+        <strong>—</strong>
+        <div class="track"></div>
+        <small>Пока нет результатов тестов</small>
+      </article>
+      <article>
+        <p>Пройдено тестов</p>
+        <strong>—</strong><small>Статистика пока недоступна</small>
+      </article>
+      <article>
+        <p>Изучено вопросов</p>
+        <strong>—</strong><small>Статистика пока недоступна</small>
+      </article>
+    </section>
+    <section class="details">
+      <article>
+        <h2>Последняя тренировка</h2>
+        <div class="empty">
+          <span>▷</span>
+          <h3>Начните подготовку</h3>
+          <p>Здесь появится ваша последняя тренировка и её результат.</p>
+          <button class="cta" (click)="explain('Тренировка')">Начать тренировку →</button>
+        </div>
+      </article>
+      <article>
+        <h2>Слабые темы</h2>
+        <div class="empty">
+          <span>◎</span>
+          <h3>Данных пока нет</h3>
+          <p>После прохождения тестов здесь появятся темы для повторения.</p>
+          <button (click)="explain('Повторить слабые темы')">Повторить слабые темы</button>
+        </div>
+      </article>
+    </section>
+    <footer>
+      Разделы материалов, тестов и тренировок находятся в разработке. Статистика будет доступна
+      после подключения API.
+    </footer>
+  </main>
+</div>

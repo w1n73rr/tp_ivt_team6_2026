@@ -1,38 +1,22 @@
-<mat-toolbar class="navbar">
-  <a
-    mat-button
-    routerLink="/"
-    class="brand">
-    Exam Assistant
-  </a>
+@if (router.url.split('?')[0] !== '/dashboard') {
+  <mat-toolbar class="navbar">
+    <a mat-button routerLink="/" class="brand"> Exam Assistant </a>
 
-  <span class="spacer"></span>
+    <span class="spacer"></span>
 
-  <a
-    mat-button
-    routerLink="/"
-    routerLinkActive="active-link"
-    [routerLinkActiveOptions]="{ exact: true }">
-    Главная
-  </a>
+    <a
+      mat-button
+      routerLink="/"
+      routerLinkActive="active-link"
+      [routerLinkActiveOptions]="{ exact: true }"
+    >
+      Главная
+    </a>
 
-  <a
-    mat-button
-    routerLink="/dashboard"
-    routerLinkActive="active-link">
-    Dashboard
-  </a>
+    <a mat-button routerLink="/dashboard" routerLinkActive="active-link"> Dashboard </a>
 
-  <a
-    mat-button
-    routerLink="/login"
-    routerLinkActive="active-link">
-    Войти
-  </a>
+    <a mat-button routerLink="/login" routerLinkActive="active-link"> Войти </a>
 
-  <a
-    mat-flat-button
-    routerLink="/register">
-    Регистрация
-  </a>
-</mat-toolbar>
+    <a mat-flat-button routerLink="/register"> Регистрация </a>
+  </mat-toolbar>
+}
