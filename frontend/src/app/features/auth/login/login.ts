@@ -7,23 +7,17 @@ import {
 } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 
-import { MatButtonModule } from '@angular/material/button';
-import { MatCardModule } from '@angular/material/card';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatInputModule } from '@angular/material/input';
 import { MatSnackBar } from '@angular/material/snack-bar';
 
 import { AuthService } from '../../../core/auth/auth.service';
+import { AuthShell } from '../auth-shell';
 
 @Component({
   selector: 'app-login',
   imports: [
     ReactiveFormsModule,
     RouterLink,
-    MatButtonModule,
-    MatCardModule,
-    MatFormFieldModule,
-    MatInputModule
+    AuthShell,
   ],
   templateUrl: './login.html',
   styleUrl: './login.scss'
@@ -34,6 +28,7 @@ export class Login {
   private readonly cdr = inject(ChangeDetectorRef);
   private readonly snackBar = inject(MatSnackBar);
 
+  showPassword = false;
   loading = false;
   message = '';
   isError = false;
