@@ -18,7 +18,6 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import tech.genna.TY3.security.filter.JwtAuthFilter;
-import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import tech.genna.TY3.service.user.CustomUserDetailsService;
 import java.util.List;
 
