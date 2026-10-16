@@ -1,15 +1,4 @@
-<div class="dashboard">
-  <aside>
-    <a class="brand" routerLink="/dashboard">▰ <b>ИИ-помощник</b></a>
-    <nav aria-label="Основные разделы">
-      <a class="active" routerLink="/dashboard" aria-current="page">⌂ Главная</a>
-      @for (section of sections; track section) {
-        <button type="button" (click)="explain(section)">{{ section }}</button>
-      }
-    </nav>
-    <div class="account">Личный кабинет<br /><small>Подготовка к экзаменам</small></div>
-  </aside>
-  <main>
+<app-materials-shell active="dashboard">
     <header>
       <div>
         <h1>Здравствуйте!</h1>
@@ -28,13 +17,13 @@
     <h2>Быстрые действия</h2>
     <section class="actions" aria-label="Быстрые действия">
       <button (click)="explain('Загрузить материал')">
-        <span>↥</span>
-        <div><b>Загрузить материал</b><small>PDF, DOCX, PPTX или TXT</small></div></button
+        <span class="upload-icon"><app-figma-icon name="upload" /></span>
+        <div><b>Загрузить материал</b><small>PDF, DOCX или TXT</small></div></button
       ><button (click)="explain('Создать тест')">
-        <span>✧</span>
+        <span><app-figma-icon name="test" /></span>
         <div><b>Создать тест</b><small>По одному или нескольким материалам</small></div></button
       ><button class="primary" (click)="explain('Начать тренировку')">
-        <span>▷</span>
+        <span><app-figma-icon name="training" /></span>
         <div><b>Начать тренировку</b><small>По вашим слабым темам</small></div>
       </button>
     </section>
@@ -58,7 +47,7 @@
       <article>
         <h2>Последняя тренировка</h2>
         <div class="empty">
-          <span>▷</span>
+          <span><app-figma-icon name="training" /></span>
           <h3>Начните подготовку</h3>
           <p>Здесь появится ваша последняя тренировка и её результат.</p>
           <button class="cta" (click)="explain('Тренировка')">Начать тренировку →</button>
@@ -78,5 +67,5 @@
       Разделы материалов, тестов и тренировок находятся в разработке. Статистика будет доступна
       после подключения API.
     </footer>
-  </main>
-</div>
+
+</app-materials-shell>

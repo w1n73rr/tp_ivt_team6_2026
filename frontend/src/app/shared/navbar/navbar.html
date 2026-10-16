@@ -1,4 +1,4 @@
-@if (router.url.split('?')[0] !== '/dashboard') {
+@if (router.url.split('?')[0] !== '/dashboard' && !router.url.startsWith('/materials')) {
   <mat-toolbar class="navbar">
     <a mat-button routerLink="/" class="brand"> Exam Assistant </a>
 

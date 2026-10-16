@@ -20,7 +20,9 @@ export class App {
     ),
     { initialValue: this.router.url },
   );
-  readonly isAuthPage = computed(() =>
-    ['/login', '/register'].includes(this.url().split(/[?#]/)[0]),
+  readonly isAuthPage = computed(
+    () =>
+      ['/login', '/register', '/dashboard'].includes(this.url().split(/[?#]/)[0]) ||
+      this.url().startsWith('/materials'),
   );
 }

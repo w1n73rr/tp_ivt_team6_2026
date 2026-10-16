@@ -1,3 +1,4 @@
+import { Materials } from './features/materials/materials';
 import { Routes } from '@angular/router';
 
 import { Login } from './features/auth/login/login';
@@ -23,6 +24,7 @@ export const routes: Routes = [
     path: 'dashboard',
     component: Dashboard,
   },
+  { path: 'materials', component: Materials },
   {
     path: '**',
     component: NotFound,
