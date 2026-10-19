@@ -34,60 +34,57 @@ dependencies {
 	compileOnly("org.projectlombok:lombok")
 	annotationProcessor("org.projectlombok:lombok")
 
-	testImplementation("org.springframework.boot:spring-boot-starter-test")
-	testImplementation("org.springframework.security:spring-security-test")
-	testImplementation("io.rest-assured:rest-assured:5.5.0")
-	testRuntimeOnly("org.junit.platform:junit-platform-launcher")
-}
+    testImplementation("org.springframework.boot:spring-boot-starter-test")
+    testImplementation("org.springframework.security:spring-security-test")
+    testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 
-val apiSpec = layout.projectDirectory.file("backend-api.yaml")
-val generatedApi = layout.buildDirectory.dir("generated/openapi")
+    //MapStruct
+    annotationProcessor("org.projectlombok:lombok-mapstruct-binding:0.2.0")
 
-openApiValidate {
-	inputSpec.set(apiSpec.asFile.absolutePath)
-}
+    implementation("org.mapstruct:mapstruct:1.6.3")
+    annotationProcessor("org.mapstruct:mapstruct-processor:1.6.3")
 
-openApiGenerate {
-	generatorName.set("spring")
-	inputSpec.set(apiSpec.asFile.absolutePath)
-	outputDir.set(generatedApi.get().asFile.absolutePath)
-	apiPackage.set("tech.genna.TY3.api")
-	modelPackage.set("tech.genna.TY3.api.model")
-	configOptions.set(mapOf(
-		"interfaceOnly" to "true",
-		"useTags" to "true",
-		"useSpringBoot4" to "true",
-		"useJackson3" to "true",
-		"openApiNullable" to "false",
-		"useBeanValidation" to "true",
-		"requestMappingMode" to "api_interface",
-		"dateLibrary" to "java8",
-		"hideGenerationTimestamp" to "true",
-		"useSwaggerUI" to "false"
-	))
-	globalProperties.set(mapOf(
-		"apiTests" to "false",
-		"modelTests" to "false",
-		"apiDocs" to "false",
-		"modelDocs" to "false"
-	))
-}
+    //JWT
+    implementation("io.jsonwebtoken:jjwt-api:0.12.6")
+    runtimeOnly("io.jsonwebtoken:jjwt-impl:0.12.6")
+    runtimeOnly("io.jsonwebtoken:jjwt-jackson:0.12.6")
 
-sourceSets.main {
-	java.srcDir(generatedApi.map { it.dir("src/main/java") })
-}
+    //yaml
+    implementation("org.yaml:snakeyaml")
 
-tasks.openApiGenerate {
-	dependsOn(tasks.openApiValidate)
-}
 
-tasks.compileJava {
-	dependsOn(tasks.openApiGenerate)
-	options.compilerArgs.add("-parameters")
-}
+    // Драйвер PostgreSQL
+    runtimeOnly("org.postgresql:postgresql")
 
-tasks.processResources {
-	from(apiSpec) { into("static") }
+
+    //Tests
+    // Spring Boot Test & Security Test
+    testImplementation("org.springframework.boot:spring-boot-starter-test")
+    testImplementation("org.springframework.security:spring-security-test")
+
+    // REST Assured для проверки API
+    testImplementation("io.rest-assured:rest-assured:5.4.0")
+
+    // JUnit 5 Jupiter
+    testImplementation("org.junit.jupiter:junit-jupiter-api")
+    testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine")
+
+    //QueryDSL
+    implementation("com.querydsl:querydsl-jpa:5.0.0:jakarta")
+
+    annotationProcessor("com.querydsl:querydsl-apt:5.0.0:jakarta")
+
+    annotationProcessor("jakarta.persistence:jakarta.persistence-api")
+    annotationProcessor("jakarta.annotation:jakarta.annotation-api")
+
+    //Logging
+    implementation("net.logstash.logback:logstash-logback-encoder:9.0")
+
+    // Spring Integration для отслеживания папки
+    implementation("org.springframework.boot:spring-boot-starter-integration")
+    implementation("org.springframework.integration:spring-integration-file")
+
+
 }
 
 tasks.withType<Test> {
