@@ -33,6 +33,8 @@ services:
       - SPRING_DATASOURCE_USERNAME=postgres
       - SPRING_DATASOURCE_PASSWORD=postgres
       - SPRING_JPA_HIBERNATE_DDL_AUTO=update
+      - JWT_SECRET=local-dev-mock-secret-change-before-production-2026
+      - JWT_EXPIRATION=86400000
     depends_on:
       db:
         condition: service_healthy
