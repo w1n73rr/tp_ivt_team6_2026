@@ -1,5 +1,5 @@
 import { Injectable, signal } from '@angular/core';
-import { Observable, defer, of, throwError, delay } from 'rxjs';
+import { Observable, defer, of, throwError, delay, timer, map } from 'rxjs';
 export type MaterialFormat = 'PDF' | 'DOCX' | 'TXT';
 export interface Material {
   id: string;
@@ -9,6 +9,8 @@ export interface Material {
   subjectId: string;
   subjectName: string;
   uploadedAt: string;
+  description?: string;
+  tags?: string[];
 }
 export interface MaterialsResponse {
   items: Material[];
@@ -62,6 +64,32 @@ export class MaterialsMock {
       uploadedAt: '2026-09-20T12:00:00Z',
     },
   ]);
+  upload(
+    file: File,
+    data: { name: string; subjectName: string; description: string; tags: string[] },
+    fail = false,
+  ): Observable<Material> {
+    return timer(600).pipe(
+      map(() => {
+        if (fail) {
+          throw new Error('Демонстрационная ошибка загрузки');
+        }
+        const item: Material = {
+          id: crypto.randomUUID(),
+          name: data.name,
+          format: file.name.split('.').pop()!.toUpperCase() as MaterialFormat,
+          sizeBytes: file.size,
+          subjectId: 'demo-' + data.subjectName,
+          subjectName: data.subjectName,
+          uploadedAt: new Date().toISOString(),
+          description: data.description,
+          tags: [...data.tags],
+        };
+        this.records.update((items) => [item, ...items]);
+        return { ...item };
+      }),
+    );
+  }
   list(mode: 'data' | 'empty' | 'error' = 'data'): Observable<MaterialsResponse> {
     return defer(() =>
       mode === 'error'

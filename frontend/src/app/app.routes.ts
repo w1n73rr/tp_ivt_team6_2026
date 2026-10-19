@@ -1,3 +1,4 @@
+import { MaterialUpload } from './features/materials/upload/upload';
 import { Materials } from './features/materials/materials';
 import { Routes } from '@angular/router';
 
@@ -24,6 +25,7 @@ export const routes: Routes = [
     path: 'dashboard',
     component: Dashboard,
   },
+  { path: 'materials/upload', component: MaterialUpload },
   { path: 'materials', component: Materials },
   {
     path: '**',

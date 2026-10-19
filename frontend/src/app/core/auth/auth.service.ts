@@ -1,4 +1,4 @@
-import { Injectable, inject } from '@angular/core';
+import { Injectable, inject, signal } from '@angular/core';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Observable, map } from 'rxjs';
 
@@ -19,6 +19,14 @@ export class AuthService {
   // Пока храним токен только в памяти приложения.
   private accessToken: string | null = null;
 
+  private readonly sessionUsername = signal<string | null>(null);
+  readonly username = this.sessionUsername.asReadonly();
+
+  logout(): void {
+    this.accessToken = null;
+    this.sessionUsername.set(null);
+  }
+
   login(data: LoginRequest): Observable<AuthResponse> {
     return this.http.post<JwtResponse>(
       '/api/auth/login',
@@ -30,6 +38,7 @@ export class AuthService {
         }
 
         this.accessToken = response.token;
+        this.sessionUsername.set(data.username);
 
         return {
           success: true,
@@ -50,6 +59,7 @@ export class AuthService {
         }
 
         this.accessToken = response.token;
+        this.sessionUsername.set(data.username);
 
         return {
           success: true,

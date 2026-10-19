@@ -21,6 +21,10 @@ export class Dashboard {
   ];
   notice = '';
   explain(section: string): void {
+    if (section === 'Загрузить материал') {
+      void this.router.navigateByUrl('/materials/upload');
+      return;
+    }
     if (section === 'Мои материалы') {
       void this.router.navigateByUrl('/materials');
       return;
