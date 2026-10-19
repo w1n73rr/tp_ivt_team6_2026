@@ -19,6 +19,7 @@ repositories {
 }
 
 dependencies {
+    implementation("software.amazon.awssdk:s3:2.25.50")
 	implementation("org.springframework.boot:spring-boot-starter-data-jpa")
 	implementation("org.springframework.boot:spring-boot-starter-flyway")
 	implementation("org.springframework.boot:spring-boot-starter-security")
@@ -37,6 +38,7 @@ dependencies {
     testImplementation("org.springframework.boot:spring-boot-starter-test")
     testImplementation("org.springframework.security:spring-security-test")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
+
 
     //MapStruct
     annotationProcessor("org.projectlombok:lombok-mapstruct-binding:0.2.0")
@@ -85,6 +87,56 @@ dependencies {
     implementation("org.springframework.integration:spring-integration-file")
 
 
+}
+
+val apiSpec = layout.projectDirectory.file("backend-api.yaml")
+val generatedApi = layout.buildDirectory.dir("generated/openapi")
+
+openApiValidate {
+	inputSpec.set(apiSpec.asFile.absolutePath)
+}
+
+openApiGenerate {
+	generatorName.set("spring")
+	inputSpec.set(apiSpec.asFile.absolutePath)
+	outputDir.set(generatedApi.get().asFile.absolutePath)
+	apiPackage.set("tech.genna.TY3.api")
+	modelPackage.set("tech.genna.TY3.api.model")
+	configOptions.set(mapOf(
+		"interfaceOnly" to "true",
+		"useTags" to "true",
+		"useSpringBoot4" to "true",
+		"useJackson3" to "true",
+		"openApiNullable" to "false",
+		"useBeanValidation" to "true",
+		"requestMappingMode" to "api_interface",
+		"dateLibrary" to "java8",
+		"hideGenerationTimestamp" to "true",
+		"useSwaggerUI" to "false"
+	))
+	globalProperties.set(mapOf(
+		"apiTests" to "false",
+		"modelTests" to "false",
+		"apiDocs" to "false",
+		"modelDocs" to "false"
+	))
+}
+
+sourceSets.main {
+	java.srcDir(generatedApi.map { it.dir("src/main/java") })
+}
+
+tasks.openApiGenerate {
+	dependsOn(tasks.openApiValidate)
+}
+
+tasks.compileJava {
+	dependsOn(tasks.openApiGenerate)
+	options.compilerArgs.add("-parameters")
+}
+
+tasks.processResources {
+	from(apiSpec) { into("static") }
 }
 
 tasks.withType<Test> {

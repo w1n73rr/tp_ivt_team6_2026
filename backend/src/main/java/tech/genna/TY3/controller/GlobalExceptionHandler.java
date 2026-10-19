@@ -13,13 +13,11 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import org.springframework.web.server.ResponseStatusException;
-import org.springframework.web.multipart.MaxUploadSizeExceededException;
 import tech.genna.TY3.api.model.ErrorResponse;
 import tech.genna.TY3.api.model.FieldError;
 import org.springframework.web.multipart.MaxUploadSizeExceededException;
 import org.springframework.web.multipart.MultipartException;
 import org.springframework.web.multipart.support.MissingServletRequestPartException;
-import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import tech.genna.TY3.model.exception.FileStorageException;
 import lombok.extern.slf4j.Slf4j;
 
@@ -42,14 +40,8 @@ public class GlobalExceptionHandler {
                 .body(Map.of("error", e.getMessage()));
     }
 
-    @ExceptionHandler(MaxUploadSizeExceededException.class)
-    public ResponseEntity<Map<String, String>> handleFileTooLarge() {
-        return ResponseEntity.status(HttpStatus.PAYLOAD_TOO_LARGE)
-                .body(Map.of("error", "Превышен допустимый размер загрузки"));
-    }
-
     @ExceptionHandler({MissingServletRequestPartException.class,
-            MethodArgumentTypeMismatchException.class, MultipartException.class})
+            MultipartException.class})
     public ResponseEntity<Map<String, String>> handleMalformedFileRequest(Exception e) {
         return ResponseEntity.badRequest().body(Map.of("error", "Некорректный запрос: проверьте файл и fileId"));
     }
@@ -78,16 +70,6 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                 .body(new ErrorResponse(code, "Неверные учётные данные или требуется вход"));
     }
-
-    @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<Map<String, String>> handleValidation(MethodArgumentNotValidException e) {
-        String message = e.getBindingResult().getFieldErrors().stream()
-                .findFirst()
-                .map(err -> err.getField() + ": " + err.getDefaultMessage())
-                .orElse("Ошибка валидации");
-        return ResponseEntity.badRequest().body(Map.of("error", message));
-    }
-}
 
     @ExceptionHandler(ResponseStatusException.class)
     public ResponseEntity<ErrorResponse> handleStatus(ResponseStatusException exception) {
