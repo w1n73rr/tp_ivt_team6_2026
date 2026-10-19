@@ -83,6 +83,14 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-integration")
     implementation("org.springframework.integration:spring-integration-file")
 
+    // AWS SDK v2 для работы с S3 / MinIO
+    implementation("software.amazon.awssdk:s3:2.25.50")
+
+    // Apache Tika для извлечения текста из PDF, DOCX, TXT
+    implementation("org.apache.tika:tika-core:2.9.2")
+    implementation("org.apache.tika:tika-parsers-standard-package:2.9.2")
+    
+
 
 }
 

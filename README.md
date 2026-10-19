@@ -1,4 +1,6 @@
 ## tp_ivt_team6_2026
+
+Файловое API: [загрузка и удаление файлов в MinIO](docs/minio-files.md).
 ### Description
 ...
 # Автотесты TY3 Backend
