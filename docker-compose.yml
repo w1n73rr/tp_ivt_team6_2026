@@ -2,7 +2,7 @@ version: '3.8'
 
 services:
   minio:
-    image: RELEASE.2025-09-07T16-13-09Z
+    image: minio/minio:RELEASE.2025-09-07T16-13-09Z
     restart: unless-stopped
     command: server /data --console-address ":9001"
     environment:
@@ -19,7 +19,7 @@ services:
       timeout: 5s
       retries: 10
     networks:
-      - spring-network
+      - exam-ai-network
 
   exam-ai-db:
     image: postgres:16-alpine
@@ -52,7 +52,7 @@ services:
       - SPRING_DATASOURCE_URL=jdbc:postgresql://exam-ai-db:5432/study_assistant_db
       - SPRING_DATASOURCE_USERNAME=postgres
       - SPRING_DATASOURCE_PASSWORD=postgres
-      - SPRING_JPA_HIBERNATE_DDL_AUTO=update
+      - SPRING_JPA_HIBERNATE_DDL_AUTO=validate
       - JWT_SECRET=${JWT_SECRET:?Set JWT_SECRET}
       - JWT_EXPIRATION=${JWT_EXPIRATION:-86400000}
       - MINIO_ENDPOINT=http://minio:9000
