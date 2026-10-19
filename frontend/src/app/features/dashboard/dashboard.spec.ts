@@ -5,6 +5,14 @@ import { provideHttpClient } from '@angular/common/http';
 import { routes } from '../../app.routes';
 import { Dashboard } from './dashboard';
 describe('Dashboard', () => {
+  it('opens the upload form from the dashboard action', async () => {
+    const harness = await RouterTestingHarness.create();
+    await harness.navigateByUrl('/dashboard', Dashboard);
+    harness.routeNativeElement!.querySelector<HTMLButtonElement>('.actions button')!.click();
+    await harness.fixture.whenStable();
+    expect(TestBed.inject(Router).url).toBe('/materials/upload');
+    expect(harness.routeNativeElement?.querySelector('h1')?.textContent).toBe('Загрузка материала');
+  });
   beforeEach(() =>
     TestBed.configureTestingModule({ providers: [provideRouter(routes), provideHttpClient()] }),
   );
@@ -18,10 +26,10 @@ describe('Dashboard', () => {
     const root = harness.routeNativeElement!;
     expect(root.querySelector('h1')?.textContent).toBe('Здравствуйте!');
     expect(root.querySelectorAll('.stats article').length).toBe(3);
-    root.querySelector<HTMLButtonElement>('.actions button')!.click();
+    root.querySelectorAll<HTMLButtonElement>('.actions button')[1].click();
     harness.detectChanges();
     expect(root.querySelector('[role=status]')?.textContent).toContain(
-      'Загрузить материал: раздел пока в разработке',
+      'Создать тест: раздел пока в разработке',
     );
     expect(TestBed.inject(Router).url).toBe('/dashboard');
   });

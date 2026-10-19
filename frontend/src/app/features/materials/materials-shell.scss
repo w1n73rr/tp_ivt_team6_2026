@@ -141,3 +141,8 @@ a:focus-visible {
 nav { min-width: 0; max-width: 100%; }
 .account > div { min-width: 0; overflow-wrap: anywhere; }
 @media (max-width: 700px) { .account { margin-top: 12px; } nav { overflow-y: hidden; } }
+
+.account { flex-wrap: wrap; }
+.logout { width: 100%; padding: 8px 12px; border: 1px solid #ffffff55; border-radius: 7px; background: transparent; color: white; cursor: pointer; font: inherit; }
+.logout:hover { background: #ffffff18; }
+.logout:focus-visible { outline: 3px solid #8bb5ff; outline-offset: 2px; }

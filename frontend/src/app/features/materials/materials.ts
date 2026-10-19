@@ -1,4 +1,5 @@
 import { Component, inject, signal, OnInit, DestroyRef } from '@angular/core';
+import { Router } from '@angular/router';
 import { DatePipe, DecimalPipe } from '@angular/common';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { finalize } from 'rxjs';
@@ -12,6 +13,7 @@ import { MaterialsShell } from './materials-shell';
   styleUrl: './materials.scss',
 })
 export class Materials implements OnInit {
+  private readonly router = inject(Router);
   private readonly source = inject(MaterialsMock);
   private readonly destroy = inject(DestroyRef);
   readonly items = signal<Material[]>([]);
@@ -59,6 +61,10 @@ export class Materials implements OnInit {
       : this.items().forEach((i) => this.selected.add(i.id));
   }
   explain(action: string): void {
+    if (action === 'Загрузка материала') {
+      void this.router.navigateByUrl('/materials/upload');
+      return;
+    }
     this.message.set(
       action + ' пока доступно только как элемент макета. Серверные операции не выполняются.',
     );

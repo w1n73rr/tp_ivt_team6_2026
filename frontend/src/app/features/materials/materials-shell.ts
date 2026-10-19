@@ -1,5 +1,6 @@
-import { Component, input } from '@angular/core';
-import { RouterLink } from '@angular/router';
+import { Component, input, inject, computed } from '@angular/core';
+import { Router, RouterLink } from '@angular/router';
+import { AuthService } from '../../core/auth/auth.service';
 import { FigmaIcon } from './figma-icon';
 @Component({
   selector: 'app-materials-shell',
@@ -20,12 +21,23 @@ import { FigmaIcon } from './figma-icon';
         ><span><app-figma-icon name="settings" />Настройки</span>
       </nav>
       <div class="account">
-        <span class="avatar">М</span>
-        <div><b>Мария</b><small>Демо-профиль</small></div>
+        <span class="avatar">{{ initial() }}</span>
+        <div><b>{{ displayName() }}</b><small>Личный кабинет</small></div>
+        <button class="logout" type="button" (click)="logout()">Выйти</button>
       </div>
     </aside>
     <main><ng-content /></main>
   </div>`,
   styleUrl: './materials-shell.scss',
 })
-export class MaterialsShell { readonly active = input<'materials' | 'dashboard'>('materials'); }
+export class MaterialsShell {
+  readonly active = input<'materials' | 'dashboard'>('materials');
+  private readonly auth = inject(AuthService);
+  private readonly router = inject(Router);
+  readonly displayName = computed(() => this.auth.username() || 'Пользователь');
+  readonly initial = computed(() => Array.from(this.displayName())[0].toLocaleUpperCase('ru')); 
+  logout(): void {
+    this.auth.logout();
+    void this.router.navigateByUrl('/login', { replaceUrl: true });
+  }
+}
