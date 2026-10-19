@@ -1,29 +1,27 @@
 package tech.genna.TY3.controller;
 
-  
-import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.RestController;
+import tech.genna.TY3.api.AuthApi;
+import tech.genna.TY3.api.model.AuthResponse;
+import tech.genna.TY3.api.model.LoginRequest;
+import tech.genna.TY3.api.model.RegisterRequest;
 import tech.genna.TY3.service.auth.AuthService;
-import tech.genna.TY3.dto.auth.AuthResponse;
-import tech.genna.TY3.dto.auth.RegisterRequest;
-import tech.genna.TY3.dto.auth.LoginRequest;
 
 @RestController
-@RequestMapping("/api/auth")
 @RequiredArgsConstructor
-public class AuthController {
+public class AuthController implements AuthApi {
 
     private final AuthService authService;
 
-    @PostMapping("/register")
-    public ResponseEntity<AuthResponse> register(@Valid @RequestBody RegisterRequest request) {
+    @Override
+    public ResponseEntity<AuthResponse> register(RegisterRequest request) {
         return ResponseEntity.ok(authService.register(request));
     }
 
-    @PostMapping("/login")
-    public ResponseEntity<AuthResponse> login(@Valid @RequestBody LoginRequest request) {
+    @Override
+    public ResponseEntity<AuthResponse> login(LoginRequest request) {
         return ResponseEntity.ok(authService.login(request));
     }
 }

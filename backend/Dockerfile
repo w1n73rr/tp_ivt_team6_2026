@@ -4,6 +4,7 @@ WORKDIR /app
 COPY gradle /app/gradle
 COPY gradlew /app/
 COPY build.gradle.kts settings.gradle* /app/
+COPY backend-api.yaml /app/
 
 RUN ./gradlew dependencies --no-daemon
 

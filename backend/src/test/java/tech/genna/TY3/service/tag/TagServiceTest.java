@@ -5,7 +5,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import tech.genna.TY3.dto.tag.TagListItemResponse;
+import tech.genna.TY3.api.model.TagListItemResponse;
 import tech.genna.TY3.entity.Subject;
 import tech.genna.TY3.entity.Tag;
 import tech.genna.TY3.entity.User;

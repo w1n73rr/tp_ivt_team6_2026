@@ -5,8 +5,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
-import tech.genna.TY3.dto.subject.CreateSubjectRequest;
-import tech.genna.TY3.dto.subject.SubjectResponse;
+import tech.genna.TY3.api.model.CreateSubjectRequest;
+import tech.genna.TY3.api.model.SubjectResponse;
 import tech.genna.TY3.entity.Subject;
 import tech.genna.TY3.entity.User;
 import tech.genna.TY3.repository.SubjectRepository;
@@ -28,9 +28,9 @@ public class SubjectService {
 
     @Transactional
     public SubjectResponse create(CreateSubjectRequest request, User user) {
-        String name = request.name().trim();
+        String name = request.getName().trim();
         if (subjectRepository.existsByUserIdAndName(user.getId(), name)) {
-            throw new ResponseStatusException(HttpStatus.CONFLICT, "Subject already exists");
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "SUBJECT_ALREADY_EXISTS");
         }
 
         Subject subject = new Subject();

@@ -5,9 +5,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
-import tech.genna.TY3.dto.tag.CreateTagRequest;
-import tech.genna.TY3.dto.tag.TagListItemResponse;
-import tech.genna.TY3.dto.tag.TagResponse;
+import tech.genna.TY3.api.model.CreateTagRequest;
+import tech.genna.TY3.api.model.TagListItemResponse;
+import tech.genna.TY3.api.model.TagResponse;
 import tech.genna.TY3.entity.Subject;
 import tech.genna.TY3.entity.Tag;
 import tech.genna.TY3.entity.User;
@@ -35,9 +35,9 @@ public class TagService {
     public TagResponse create(UUID subjectId, CreateTagRequest request, User user) {
         Subject subject = subjectRepository.findByIdAndUserId(subjectId, user.getId())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Subject not found"));
-        String name = request.name().trim();
+        String name = request.getName().trim();
         if (tagRepository.existsBySubjectIdAndName(subjectId, name)) {
-            throw new ResponseStatusException(HttpStatus.CONFLICT, "Tag already exists");
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "TAG_ALREADY_EXISTS");
         }
 
         Tag tag = new Tag();

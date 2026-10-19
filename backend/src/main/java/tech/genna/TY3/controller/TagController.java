@@ -1,41 +1,32 @@
 package tech.genna.TY3.controller;
 
-import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.web.bind.annotation.*;
-import tech.genna.TY3.dto.tag.CreateTagRequest;
-import tech.genna.TY3.dto.tag.TagListItemResponse;
-import tech.genna.TY3.dto.tag.TagResponse;
-import tech.genna.TY3.entity.User;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.RestController;
+import tech.genna.TY3.api.TagsApi;
+import tech.genna.TY3.api.model.CreateTagRequest;
+import tech.genna.TY3.api.model.TagListResponse;
+import tech.genna.TY3.api.model.TagResponse;
+import tech.genna.TY3.security.CurrentUser;
 import tech.genna.TY3.service.tag.TagService;
 
-import java.util.List;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/api")
-import java.util.UUID;
-
-@RestController
-@RequestMapping("/api/subjects/{subjectId}/tags")
 @RequiredArgsConstructor
-public class TagController {
+public class TagController implements TagsApi {
 
     private final TagService tagService;
+    private final CurrentUser currentUser;
 
-    @GetMapping("/tags")
-    public List<TagListItemResponse> findAll(@AuthenticationPrincipal User user) {
-        return tagService.findAll(user);
+    @Override
+    public ResponseEntity<TagListResponse> listTags() {
+        return ResponseEntity.ok(new TagListResponse(tagService.findAll(currentUser.get())));
     }
 
-    @PostMapping("/subjects/{subjectId}/tags")
-    @PostMapping
-    @ResponseStatus(HttpStatus.CREATED)
-    public TagResponse create(@PathVariable UUID subjectId,
-                              @Valid @RequestBody CreateTagRequest request,
-                              @AuthenticationPrincipal User user) {
-        return tagService.create(subjectId, request, user);
+    @Override
+    public ResponseEntity<TagResponse> createTag(UUID subjectId, CreateTagRequest request) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(tagService.create(subjectId, request, currentUser.get()));
     }
 }

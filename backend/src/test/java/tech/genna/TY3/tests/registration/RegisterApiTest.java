@@ -3,7 +3,7 @@ package tech.genna.TY3.tests.registration;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import tech.genna.TY3.client.AuthClient;
-import tech.genna.TY3.dto.auth.RegisterRequest;
+import tech.genna.TY3.api.model.RegisterRequest;
 import tech.genna.TY3.tests.base.BaseTest;
 
 import java.util.UUID;

@@ -1,0 +1,1421 @@
+openapi: 3.0.3
+info:
+  title: ИИ-помощник для подготовки к экзаменам — Backend API
+  version: 1.0.0-mvp
+  description: |
+    Контракт MVP. Все пользовательские данные изолированы по владельцу JWT;
+    userId не принимается от клиента. Чужой ресурс возвращает 404.
+    UUID непрозрачны, время передаётся в UTC RFC 3339, размер — в байтах.
+    Названия обрезаются по краям, пробельные значения запрещены. Уникальность
+    названий материалов проверяется с учётом регистра в пределах пользователя.
+    Списки материалов, предметов и тегов возвращаются в items, включая items: [].
+    Поиск, фильтрация и сортировка материалов выполняются на frontend.
+    Backend принимает PDF, DOCX, TXT, хранит оригиналы в приватном MinIO/S3
+    и выдаёт файлы только после проверки доступа. Ключи S3 и секреты не раскрываются.
+    Анализ и генерация асинхронны; клиент опрашивает состояние до завершения.
+    В MVP используется внешний LLM API. Провайдер и модель выбираются сервером;
+    переход на собственную модель не меняет публичный контракт.
+    Реализованные операции сохраняют поведение; подготовленные операции без
+    бизнес-реализации возвращают 501 без тела. Это не успешный результат операции.
+servers:
+  - url: /
+    description: Текущий сервер; локально http://localhost:8080
+security:
+  - bearerAuth: []
+tags:
+  - { name: Auth, description: 'Регистрация и авторизация' }
+  - { name: Users, description: 'Профиль и настройки' }
+  - { name: Subjects, description: 'Личный каталог предметов' }
+  - { name: Tags, description: 'Теги предметов пользователя' }
+  - { name: Materials, description: 'Загрузка и управление материалами' }
+  - { name: Quizzes, description: 'Генерация и просмотр тестов' }
+  - { name: Generation, description: 'Длительные задачи генерации' }
+  - { name: Attempts, description: 'Прохождение, история и результаты' }
+  - { name: Training, description: 'Персональная тренировка' }
+  - { name: Analytics, description: 'Главная страница и прогресс' }
+paths:
+  /api/auth/register:
+    post:
+      tags: [Auth]
+      operationId: register
+      summary: Зарегистрироваться
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/RegisterRequest' }
+      responses:
+        '200':
+          description: Учётная запись создана, JWT выдан
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/AuthResponse' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '409': { $ref: '#/components/responses/Conflict' }
+        default: { $ref: '#/components/responses/Error' }
+  /api/auth/login:
+    post:
+      tags: [Auth]
+      operationId: login
+      summary: Войти по логину или email и паролю
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/LoginRequest' }
+      responses:
+        '200':
+          description: JWT выдан
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/AuthResponse' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        default: { $ref: '#/components/responses/Error' }
+  /api/auth/google:
+    post:
+      tags: [Auth]
+      operationId: loginWithGoogle
+      summary: Обменять Google ID token на JWT приложения
+      description: Сервер проверяет подпись, issuer, audience и срок Google ID token. Автоматическое связывание существующего аккаунта только по email запрещено.
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/GoogleLoginRequest' }
+      responses:
+        '200':
+          description: Пользователь авторизован
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/AuthResponse' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '501': { $ref: '#/components/responses/NotImplemented' }
+        default: { $ref: '#/components/responses/Error' }
+  /api/auth/password-reset:
+    post:
+      tags: [Auth]
+      operationId: requestPasswordReset
+      summary: Запросить письмо для восстановления пароля
+      description: Всегда одинаковый ответ независимо от существования email. Токен одноразовый, срок 15 минут; rate limit применяется без раскрытия существования аккаунта.
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/PasswordResetRequest' }
+      responses:
+        '202': { description: 'Запрос принят; при наличии аккаунта письмо будет отправлено' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '429': { $ref: '#/components/responses/RateLimited' }
+        '501': { $ref: '#/components/responses/NotImplemented' }
+        default: { $ref: '#/components/responses/Error' }
+  /api/auth/password-reset/confirm:
+    post:
+      tags: [Auth]
+      operationId: confirmPasswordReset
+      summary: Установить новый пароль по одноразовому токену
+      description: Невалидный, использованный или истёкший токен возвращает 400 RESET_TOKEN_INVALID. При успехе активные сессии пользователя отзываются.
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/PasswordResetConfirmRequest' }
+      responses:
+        '204': { description: 'Пароль изменён' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '501': { $ref: '#/components/responses/NotImplemented' }
+        default: { $ref: '#/components/responses/Error' }
+  /api/auth/logout:
+    post:
+      tags: [Auth]
+      operationId: logout
+      summary: Завершить текущую сессию
+      description: Отзывает текущий JWT до его истечения. Клиент удаляет локальную копию токена.
+      responses:
+        '204': { description: 'Сессия завершена' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '501': { $ref: '#/components/responses/NotImplemented' }
+        default: { $ref: '#/components/responses/Error' }
+  /api/users/me:
+    get:
+      tags: [Users]
+      operationId: getProfile
+      summary: Получить профиль текущего пользователя
+      responses:
+        '200':
+          description: Профиль
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/UserProfile' }
+        '501': { $ref: '#/components/responses/NotImplemented' }
+        default: { $ref: '#/components/responses/Error' }
+    patch:
+      tags: [Users]
+      operationId: updateProfile
+      summary: Изменить профиль
+      description: Передаётся минимум одно поле. Email и username уникальны; subjectIds должны принадлежать пользователю.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/UpdateProfileRequest' }
+      responses:
+        '200':
+          description: Обновлённый профиль
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/UserProfile' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '501': { $ref: '#/components/responses/NotImplemented' }
+        default: { $ref: '#/components/responses/Error' }
+  /api/users/me/password:
+    put:
+      tags: [Users]
+      operationId: changePassword
+      summary: Изменить пароль с проверкой текущего пароля
+      description: При успехе отзываются все JWT; пользователь должен войти заново.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ChangePasswordRequest' }
+      responses:
+        '204': { description: 'Пароль изменён' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '501': { $ref: '#/components/responses/NotImplemented' }
+        default: { $ref: '#/components/responses/Error' }
+  /api/users/me/avatar:
+    get:
+      tags: [Users]
+      operationId: getAvatar
+      summary: Получить свой аватар
+      responses:
+        '200':
+          description: Изображение из приватного S3 через backend
+          content:
+            image/png:
+              schema: { type: string, format: binary }
+            image/jpeg:
+              schema: { type: string, format: binary }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '501': { $ref: '#/components/responses/NotImplemented' }
+        default: { $ref: '#/components/responses/Error' }
+    put:
+      tags: [Users]
+      operationId: uploadAvatar
+      summary: Загрузить или заменить аватар PNG/JPEG до 5 MiB
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [file]
+              properties:
+                file: { type: string, format: binary, description: 'Максимум 5242880 байт; проверяются фактический формат и MIME' }
+      responses:
+        '204': { description: 'Аватар сохранён' }
+        '413': { $ref: '#/components/responses/PayloadTooLarge' }
+        '415': { $ref: '#/components/responses/UnsupportedMediaType' }
+        '501': { $ref: '#/components/responses/NotImplemented' }
+        default: { $ref: '#/components/responses/Error' }
+    delete:
+      tags: [Users]
+      operationId: deleteAvatar
+      summary: Удалить свой аватар
+      description: Идемпотентно; отсутствие аватара также даёт 204.
+      responses:
+        '204': { description: 'Аватар отсутствует' }
+        '501': { $ref: '#/components/responses/NotImplemented' }
+        default: { $ref: '#/components/responses/Error' }
+  /api/users/me/preferences:
+    get:
+      tags: [Users]
+      operationId: getPreferences
+      summary: Получить настройки обучения и объяснений
+      responses:
+        '200':
+          description: Сохранённые настройки или значения по умолчанию
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/LearningPreferences' }
+        '501': { $ref: '#/components/responses/NotImplemented' }
+        default: { $ref: '#/components/responses/Error' }
+    put:
+      tags: [Users]
+      operationId: updatePreferences
+      summary: Заменить настройки обучения и объяснений
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/LearningPreferences' }
+      responses:
+        '200':
+          description: Сохранённые настройки
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/LearningPreferences' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '501': { $ref: '#/components/responses/NotImplemented' }
+        default: { $ref: '#/components/responses/Error' }
+  /api/subjects:
+    get:
+      tags: [Subjects]
+      operationId: listSubjects
+      summary: Получить личный каталог предметов
+      responses:
+        '200':
+          description: 'Предметы по названию; пустой каталог — items: []'
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/SubjectListResponse' }
+              example: { items: [] }
+        default: { $ref: '#/components/responses/Error' }
+    post:
+      tags: [Subjects]
+      operationId: createSubject
+      summary: Создать предмет
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/CreateSubjectRequest' }
+      responses:
+        '201':
+          description: Предмет создан
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/SubjectResponse' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '409': { $ref: '#/components/responses/Conflict' }
+        default: { $ref: '#/components/responses/Error' }
+  /api/subjects/{subjectId}:
+    delete:
+      tags: [Subjects]
+      operationId: deleteSubject
+      summary: Удалить неиспользуемый предмет
+      description: При наличии ссылок из материалов, тегов, профиля или истории — 409 SUBJECT_IN_USE.
+      parameters:
+        - { $ref: '#/components/parameters/SubjectId' }
+      responses:
+        '204': { description: 'Предмет удалён' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '501': { $ref: '#/components/responses/NotImplemented' }
+        default: { $ref: '#/components/responses/Error' }
+  /api/tags:
+    get:
+      tags: [Tags]
+      operationId: listTags
+      summary: Получить теги предметов текущего пользователя
+      responses:
+        '200':
+          description: Теги по названию; каждый элемент содержит id и name
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/TagListResponse' }
+              example: { items: [] }
+        default: { $ref: '#/components/responses/Error' }
+  /api/subjects/{subjectId}/tags:
+    post:
+      tags: [Tags]
+      operationId: createTag
+      summary: Создать тег предмета
+      parameters:
+        - { $ref: '#/components/parameters/SubjectId' }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/CreateTagRequest' }
+      responses:
+        '201':
+          description: Тег создан; имя уникально в пределах предмета
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/TagResponse' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409': { $ref: '#/components/responses/Conflict' }
+        default: { $ref: '#/components/responses/Error' }
+  /api/tags/{tagId}:
+    delete:
+      tags: [Tags]
+      operationId: deleteTag
+      summary: Удалить неиспользуемый тег
+      parameters:
+        - { name: tagId, in: path, required: true, schema: { type: string, format: uuid } }
+      responses:
+        '204': { description: 'Тег удалён' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '501': { $ref: '#/components/responses/NotImplemented' }
+        default: { $ref: '#/components/responses/Error' }
+  /api/materials:
+    get:
+      tags: [Materials]
+      operationId: listMaterials
+      summary: Получить метаданные всех своих материалов
+      description: |
+        Без пагинации и серверных фильтров в MVP. Содержимое файлов, текст и
+        статусы ИИ в список не входят. Поиск по подстроке name без учёта регистра,
+        фильтры по предмету/формату и пять способов сортировки реализует frontend.
+      responses:
+        '200':
+          description: 'Список материалов; при отсутствии items: []'
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/MaterialListResponse' }
+        '501': { $ref: '#/components/responses/NotImplemented' }
+        default: { $ref: '#/components/responses/Error' }
+    post:
+      tags: [Materials]
+      operationId: uploadMaterial
+      summary: Загрузить один документ с метаданными и запустить анализ
+      description: |
+        multipart: file — исходный PDF/DOCX/TXT; metadata — JSON.
+        Лимит файла 10 MiB — проектное ограничение MVP. Проверяются реальный формат,
+        размер, читаемость, наличие текста; OCR и зашифрованные PDF не поддерживаются.
+        PDF длиннее 10 страниц или более 30000 Unicode code points извлечённого
+        текста любого формата отклоняется при анализе с MATERIAL_TOO_LONG.
+        Новый предмет создаётся по subjectName атомарно
+        с метаданными; orphan S3 objects очищаются компенсирующей операцией.
+        Ответ выдаётся после сохранения оригинала в S3 и метаданных, до анализа LLM.
+      parameters:
+        - { $ref: '#/components/parameters/IdempotencyKey' }
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [file, metadata]
+              properties:
+                file: { type: string, format: binary, description: 'Один документ до 10485760 байт' }
+                metadata: { $ref: '#/components/schemas/UploadMaterialMetadata' }
+            encoding:
+              metadata: { contentType: application/json }
+      responses:
+        '202':
+          description: Материал сохранён; обработка поставлена в очередь
+          headers:
+            Location: { description: '/api/materials/{materialId}/processing', schema: { type: string } }
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/MaterialDetail' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '413': { $ref: '#/components/responses/PayloadTooLarge' }
+        '415': { $ref: '#/components/responses/UnsupportedMediaType' }
+        '501': { $ref: '#/components/responses/NotImplemented' }
+        default: { $ref: '#/components/responses/Error' }
+  /api/materials/{materialId}:
+    parameters:
+      - { $ref: '#/components/parameters/MaterialId' }
+    get:
+      tags: [Materials]
+      operationId: getMaterial
+      summary: Получить сведения о материале без содержимого файла
+      responses:
+        '200':
+          description: Метаданные, теги и состояние обработки
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/MaterialDetail' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '501': { $ref: '#/components/responses/NotImplemented' }
+        default: { $ref: '#/components/responses/Error' }
+    patch:
+      tags: [Materials]
+      operationId: updateMaterial
+      summary: Изменить название и предмет материала
+      description: |
+        Оба поля обязательны. Только name и subjectName разрешены к изменению.
+        Имя материала уникально с учётом регистра в пределах пользователя.
+        Предмет ищется/создаётся по имени в одной транзакции с материалом.
+        Прежний предмет удаляется только при отсутствии любых ссылок на него.
+        Теги прежнего предмета при переносе отсоединяются в той же транзакции.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/UpdateMaterialRequest' }
+      responses:
+        '200':
+          description: Обновлённые данные для списка
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/MaterialSummary' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '501': { $ref: '#/components/responses/NotImplemented' }
+        default: { $ref: '#/components/responses/Error' }
+    delete:
+      tags: [Materials]
+      operationId: deleteMaterial
+      summary: Удалить один материал
+      description: |
+        Удаление скрывает материал и согласованно удаляет S3-файл.
+        Сформированные тесты и результаты сохраняют снимки исходных сведений.
+        При активной обработке или невозможности безопасно удалить — 409 MATERIAL_IN_USE.
+        Сбой не должен приводить к исчезновению доступного пользователю материала.
+      responses:
+        '204': { description: 'Материал удалён' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '501': { $ref: '#/components/responses/NotImplemented' }
+        default: { $ref: '#/components/responses/Error' }
+  /api/materials/bulk-delete:
+    post:
+      tags: [Materials]
+      operationId: bulkDeleteMaterials
+      summary: Удалить несколько материалов атомарно
+      description: |
+        Всё или ничего: права, существование и зависимости проверяются для всех ID
+        до изменения данных. При 404/409/5xx ни один материал не исчезает из списка.
+        S3-объекты удаляются согласованной операцией с восстановлением/компенсацией;
+        транзакция БД сама по себе не обеспечивает атомарность операций MinIO.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/BulkDeleteMaterialsRequest' }
+      responses:
+        '200':
+          description: Все запрошенные материалы удалены
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/BulkDeleteMaterialsResponse' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '501': { $ref: '#/components/responses/NotImplemented' }
+        default: { $ref: '#/components/responses/Error' }
+  /api/materials/{materialId}/file:
+    get:
+      tags: [Materials]
+      operationId: openMaterialFile
+      summary: Открыть оригинал PDF или TXT в браузере
+      description: Авторизованный backend потоково читает приватный S3. Для DOCX — 415 PREVIEW_NOT_SUPPORTED. TXT выдаётся как text/plain, PDF — application/pdf; Cache-Control private, no-store и X-Content-Type-Options nosniff.
+      parameters:
+        - { $ref: '#/components/parameters/MaterialId' }
+      responses:
+        '200':
+          description: Содержимое исходного файла
+          headers:
+            Content-Disposition: { schema: { type: string }, description: 'inline; безопасное имя файла в filename и filename*' }
+          content:
+            application/pdf:
+              schema: { type: string, format: binary }
+            text/plain:
+              schema: { type: string, format: binary }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '415': { $ref: '#/components/responses/UnsupportedMediaType' }
+        '501': { $ref: '#/components/responses/NotImplemented' }
+        default: { $ref: '#/components/responses/Error' }
+  /api/materials/{materialId}/download:
+    get:
+      tags: [Materials]
+      operationId: downloadMaterial
+      summary: Скачать оригинал PDF, DOCX или TXT
+      description: Backend проверяет владельца и потоково выдаёт оригинальные байты с исходным MIME; постоянные публичные S3 URL не выдаются.
+      parameters:
+        - { $ref: '#/components/parameters/MaterialId' }
+      responses:
+        '200':
+          description: Исходный документ
+          headers:
+            Content-Disposition: { schema: { type: string }, description: 'attachment; безопасное исходное имя filename и filename*' }
+          content:
+            application/pdf:
+              schema: { type: string, format: binary }
+            application/vnd.openxmlformats-officedocument.wordprocessingml.document:
+              schema: { type: string, format: binary }
+            text/plain:
+              schema: { type: string, format: binary }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '501': { $ref: '#/components/responses/NotImplemented' }
+        default: { $ref: '#/components/responses/Error' }
+  /api/materials/{materialId}/processing:
+    get:
+      tags: [Materials]
+      operationId: getMaterialProcessing
+      summary: Получить состояние анализа материала
+      description: Polling раз в 2 секунды; READY и FAILED — конечные состояния. Ошибка задачи возвращается в теле 200, ошибка HTTP-запроса — обычным ErrorResponse.
+      parameters:
+        - { $ref: '#/components/parameters/MaterialId' }
+      responses:
+        '200':
+          description: Состояние анализа
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/MaterialProcessing' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '501': { $ref: '#/components/responses/NotImplemented' }
+        default: { $ref: '#/components/responses/Error' }
+  /api/materials/{materialId}/processing/retry:
+    post:
+      tags: [Materials]
+      operationId: retryMaterialProcessing
+      summary: Повторить неудавшуюся обработку сохранённого материала
+      description: Разрешено только после FAILED с retryable=true. Исходный файл повторно не загружается.
+      parameters:
+        - { $ref: '#/components/parameters/MaterialId' }
+        - { $ref: '#/components/parameters/IdempotencyKey' }
+      responses:
+        '202':
+          description: Повторная обработка поставлена в очередь
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/MaterialProcessing' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '501': { $ref: '#/components/responses/NotImplemented' }
+        default: { $ref: '#/components/responses/Error' }
+  /api/materials/{materialId}/topics:
+    get:
+      tags: [Materials]
+      operationId: listMaterialTopics
+      summary: Получить выделенные темы материала
+      description: Только после READY; до завершения анализа — 409 MATERIAL_NOT_READY.
+      parameters:
+        - { $ref: '#/components/parameters/MaterialId' }
+      responses:
+        '200':
+          description: Темы и персональные показатели по ним
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/TopicListResponse' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '501': { $ref: '#/components/responses/NotImplemented' }
+        default: { $ref: '#/components/responses/Error' }
+  /api/quizzes:
+    get:
+      tags: [Quizzes]
+      operationId: listQuizzes
+      summary: Получить свои сформированные тесты
+      responses:
+        '200':
+          description: Тесты без правильных ответов
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/QuizListResponse' }
+        '501': { $ref: '#/components/responses/NotImplemented' }
+        default: { $ref: '#/components/responses/Error' }
+    post:
+      tags: [Quizzes]
+      operationId: generateQuiz
+      summary: Поставить генерацию теста по одному материалу в очередь
+      description: |
+        Материал должен быть READY. topicIds принадлежат выбранному материалу;
+        пустой массив означает все темы. Нет выбора провайдера и клиентских API-ключей.
+        Дополнительные параметры исключения повторов, слабых тем и уровня — предпочтения;
+        при недостатке контента возвращается ошибка задачи INSUFFICIENT_CONTENT.
+        Ответы/оценки из LLM валидируются сервером, а тест оценивается детерминированно.
+      parameters:
+        - { $ref: '#/components/parameters/IdempotencyKey' }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/GenerateQuizRequest' }
+      responses:
+        '202':
+          description: Задача создана
+          headers:
+            Location: { schema: { type: string }, description: '/api/generation-jobs/{jobId}' }
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/GenerationJob' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '429': { $ref: '#/components/responses/RateLimited' }
+        '501': { $ref: '#/components/responses/NotImplemented' }
+        default: { $ref: '#/components/responses/Error' }
+  /api/generation-jobs/{jobId}:
+    get:
+      tags: [Generation]
+      operationId: getGenerationJob
+      summary: Получить состояние генерации теста или тренировки
+      description: Polling раз в 2 секунды. При COMPLETED заполнен quizId; при FAILED заполнен error. Статус задачи не является HTTP-ошибкой получения состояния.
+      parameters:
+        - { name: jobId, in: path, required: true, schema: { type: string, format: uuid } }
+      responses:
+        '200':
+          description: Состояние задачи
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/GenerationJob' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '501': { $ref: '#/components/responses/NotImplemented' }
+        default: { $ref: '#/components/responses/Error' }
+  /api/quizzes/{quizId}:
+    get:
+      tags: [Quizzes]
+      operationId: getQuiz
+      summary: Получить тест с вопросами без правильных ответов
+      parameters:
+        - { $ref: '#/components/parameters/QuizId' }
+      responses:
+        '200':
+          description: Сформированный тест
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/QuizDetail' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '501': { $ref: '#/components/responses/NotImplemented' }
+        default: { $ref: '#/components/responses/Error' }
+  /api/quizzes/{quizId}/attempts:
+    post:
+      tags: [Attempts]
+      operationId: startAttempt
+      summary: Начать или повторить прохождение существующего теста
+      description: Каждый вызов с новым Idempotency-Key создаёт новую попытку, включая повтор теста. Список вопросов фиксируется снимком.
+      parameters:
+        - { $ref: '#/components/parameters/QuizId' }
+        - { $ref: '#/components/parameters/IdempotencyKey' }
+      responses:
+        '201':
+          description: Попытка начата
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/AttemptDetail' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '501': { $ref: '#/components/responses/NotImplemented' }
+        default: { $ref: '#/components/responses/Error' }
+  /api/attempts:
+    get:
+      tags: [Attempts]
+      operationId: listAttempts
+      summary: Получить историю попыток и незавершённые тренировки
+      parameters:
+        - { $ref: '#/components/parameters/Page' }
+        - { $ref: '#/components/parameters/Size' }
+        - { name: status, in: query, schema: { $ref: '#/components/schemas/AttemptStatus' } }
+      responses:
+        '200':
+          description: История по startedAt убыванию; при равенстве по id
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/AttemptPage' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '501': { $ref: '#/components/responses/NotImplemented' }
+        default: { $ref: '#/components/responses/Error' }
+  /api/attempts/{attemptId}:
+    get:
+      tags: [Attempts]
+      operationId: getAttempt
+      summary: Получить попытку для продолжения после перезагрузки страницы
+      parameters:
+        - { $ref: '#/components/parameters/AttemptId' }
+      responses:
+        '200':
+          description: Вопросы, сохранённые ответы и состояние без ключа правильных ответов
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/AttemptDetail' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '501': { $ref: '#/components/responses/NotImplemented' }
+        default: { $ref: '#/components/responses/Error' }
+  /api/attempts/{attemptId}/answers/{questionId}:
+    put:
+      tags: [Attempts]
+      operationId: saveAnswer
+      summary: Сохранить или изменить ответ либо пропуск вопроса
+      description: |
+        Только IN_PROGRESS. questionId и optionIds должны принадлежать этой попытке.
+        SINGLE_CHOICE и TRUE_FALSE — один optionId; MULTIPLE_CHOICE — непустое
+        подмножество вариантов. Пустой selectedOptionIds означает пропуск/очистку.
+        Повтор одинакового PUT идемпотентен. Правильность не раскрывается до завершения.
+      parameters:
+        - { $ref: '#/components/parameters/AttemptId' }
+        - { $ref: '#/components/parameters/QuestionId' }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/SaveAnswerRequest' }
+      responses:
+        '200':
+          description: Сохранённый ответ без оценки
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/SavedAnswer' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '501': { $ref: '#/components/responses/NotImplemented' }
+        default: { $ref: '#/components/responses/Error' }
+  /api/attempts/{attemptId}/complete:
+    post:
+      tags: [Attempts]
+      operationId: completeAttempt
+      summary: Завершить попытку и вычислить результат
+      description: |
+        Идемпотентно: повторный вызов возвращает тот же результат, статистика
+        учитывается один раз. Пропущенные вопросы считаются неверными.
+        MULTIPLE_CHOICE верен только при полном совпадении множества выбранных
+        вариантов с ключом; частичные баллы не начисляются. Все вопросы имеют вес 1.
+        ABANDONED завершать нельзя (409 ATTEMPT_CLOSED).
+      parameters:
+        - { $ref: '#/components/parameters/AttemptId' }
+      responses:
+        '200':
+          description: Зафиксированный итог
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/AttemptResult' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '501': { $ref: '#/components/responses/NotImplemented' }
+        default: { $ref: '#/components/responses/Error' }
+  /api/attempts/{attemptId}/abandon:
+    post:
+      tags: [Attempts]
+      operationId: abandonAttempt
+      summary: Отказаться от незавершённой попытки
+      description: Повторный отказ идемпотентен; COMPLETED даёт 409. Незавершённые попытки не входят в средние оценки прогресса.
+      parameters:
+        - { $ref: '#/components/parameters/AttemptId' }
+      responses:
+        '204': { description: 'Попытка закрыта без результата' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '501': { $ref: '#/components/responses/NotImplemented' }
+        default: { $ref: '#/components/responses/Error' }
+  /api/attempts/{attemptId}/result:
+    get:
+      tags: [Attempts]
+      operationId: getAttemptResult
+      summary: Получить сохранённый итог завершённой попытки
+      parameters:
+        - { $ref: '#/components/parameters/AttemptId' }
+      responses:
+        '200':
+          description: Итоговые показатели и результаты по темам
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/AttemptResult' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '501': { $ref: '#/components/responses/NotImplemented' }
+        default: { $ref: '#/components/responses/Error' }
+  /api/attempts/{attemptId}/review:
+    get:
+      tags: [Attempts]
+      operationId: reviewAttempt
+      summary: Разобрать ответы и ошибки после завершения
+      parameters:
+        - { $ref: '#/components/parameters/AttemptId' }
+        - { name: incorrectOnly, in: query, schema: { type: boolean, default: true } }
+      responses:
+        '200':
+          description: Ответ пользователя, правильные варианты и объяснение; только для COMPLETED
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ReviewListResponse' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '501': { $ref: '#/components/responses/NotImplemented' }
+        default: { $ref: '#/components/responses/Error' }
+  /api/attempts/{attemptId}/questions/{questionId}/hint:
+    post:
+      tags: [Attempts]
+      operationId: getQuestionHint
+      summary: Получить подсказку без раскрытия правильного ответа
+      description: Только для IN_PROGRESS и при включённых подсказках. Текст проверяется на отсутствие ключа ответа; повторная подсказка может возвращаться из кеша.
+      parameters:
+        - { $ref: '#/components/parameters/AttemptId' }
+        - { $ref: '#/components/parameters/QuestionId' }
+      responses:
+        '200':
+          description: Подсказка
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/AiTextResponse' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '429': { $ref: '#/components/responses/RateLimited' }
+        '502': { $ref: '#/components/responses/UpstreamError' }
+        '504': { $ref: '#/components/responses/UpstreamError' }
+        '501': { $ref: '#/components/responses/NotImplemented' }
+        default: { $ref: '#/components/responses/Error' }
+  /api/attempts/{attemptId}/questions/{questionId}/explanation:
+    post:
+      tags: [Attempts]
+      operationId: simplifyExplanation
+      summary: Объяснить ответ проще после завершения попытки
+      description: Только для COMPLETED. На оценку и историю не влияет. Учитывает сохранённые настройки стиля объяснений.
+      parameters:
+        - { $ref: '#/components/parameters/AttemptId' }
+        - { $ref: '#/components/parameters/QuestionId' }
+      responses:
+        '200':
+          description: Переформулированное объяснение
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/AiTextResponse' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '429': { $ref: '#/components/responses/RateLimited' }
+        '502': { $ref: '#/components/responses/UpstreamError' }
+        '504': { $ref: '#/components/responses/UpstreamError' }
+        '501': { $ref: '#/components/responses/NotImplemented' }
+        default: { $ref: '#/components/responses/Error' }
+  /api/training/recommendations:
+    get:
+      tags: [Training]
+      operationId: getTrainingRecommendations
+      summary: Получить рекомендации по слабым темам
+      description: Темы с точностью менее 70% рекомендуются первыми. При отсутствии истории items пуст; frontend предлагает обычный тест.
+      responses:
+        '200':
+          description: Рекомендованные темы с материалом для тренировки
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/TopicListResponse' }
+        '501': { $ref: '#/components/responses/NotImplemented' }
+        default: { $ref: '#/components/responses/Error' }
+  /api/training/generations:
+    post:
+      tags: [Training]
+      operationId: generateTraining
+      summary: Сгенерировать тренировку по слабым темам одного материала
+      description: Используется тот же формат настроек; приоритет слабых тем включается сервером. Возвращается обычный тест kind=TRAINING, прохождение выполняется через attempts.
+      parameters:
+        - { $ref: '#/components/parameters/IdempotencyKey' }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/GenerateQuizRequest' }
+      responses:
+        '202':
+          description: Генерация тренировки поставлена в очередь
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/GenerationJob' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '429': { $ref: '#/components/responses/RateLimited' }
+        '501': { $ref: '#/components/responses/NotImplemented' }
+        default: { $ref: '#/components/responses/Error' }
+  /api/dashboard:
+    get:
+      tags: [Analytics]
+      operationId: getDashboard
+      summary: Получить данные главного экрана
+      responses:
+        '200':
+          description: Сводка, последняя попытка, незавершённая тренировка и слабые темы
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/DashboardResponse' }
+        '501': { $ref: '#/components/responses/NotImplemented' }
+        default: { $ref: '#/components/responses/Error' }
+  /api/progress:
+    get:
+      tags: [Analytics]
+      operationId: getProgress
+      summary: Получить прогресс обучения
+      description: Учитываются только завершённые попытки; from/to включительно в UTC, from не позже to. При отсутствии истории счётчики и средний результат равны 0, массивы пусты.
+      parameters:
+        - { name: from, in: query, schema: { type: string, format: date } }
+        - { name: to, in: query, schema: { type: string, format: date } }
+        - { name: subjectId, in: query, schema: { type: string, format: uuid } }
+      responses:
+        '200':
+          description: Итоги, временной ряд и прогресс по темам
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ProgressResponse' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '501': { $ref: '#/components/responses/NotImplemented' }
+        default: { $ref: '#/components/responses/Error' }
+components:
+  securitySchemes:
+    bearerAuth: { type: http, scheme: bearer, bearerFormat: JWT }
+  parameters:
+    SubjectId: { name: subjectId, in: path, required: true, schema: { type: string, format: uuid } }
+    MaterialId: { name: materialId, in: path, required: true, schema: { type: string, format: uuid } }
+    QuizId: { name: quizId, in: path, required: true, schema: { type: string, format: uuid } }
+    AttemptId: { name: attemptId, in: path, required: true, schema: { type: string, format: uuid } }
+    QuestionId: { name: questionId, in: path, required: true, schema: { type: string, format: uuid } }
+    Page: { name: page, in: query, schema: { type: integer, minimum: 0, default: 0 } }
+    Size: { name: size, in: query, schema: { type: integer, minimum: 1, maximum: 100, default: 20 } }
+    IdempotencyKey:
+      name: Idempotency-Key
+      in: header
+      required: true
+      description: UUID операции. В пределах пользователя и endpoint повтор с тем же payload возвращает исходный результат в течение 24 часов; другое тело с тем же ключом — 409 IDEMPOTENCY_KEY_REUSED. Для multipart сравниваются метаданные и SHA-256 файла.
+      schema: { type: string, format: uuid }
+  responses:
+    Error:
+      description: Структурированная ошибка. 401 — нет/истёк JWT; 403 — запрет операции; 404 — ресурс отсутствует или чужой; 500 — внутренняя ошибка; 503 — зависимость временно недоступна. Детали инфраструктуры и секреты не выдаются.
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/ErrorResponse' }
+    BadRequest:
+      description: Некорректные параметры/JSON/UUID; VALIDATION_ERROR и fieldErrors
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/ErrorResponse' }
+    Unauthorized:
+      description: AUTHENTICATION_REQUIRED или INVALID_CREDENTIALS
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/ErrorResponse' }
+    NotFound:
+      description: NOT_FOUND; ресурс отсутствует либо принадлежит другому пользователю
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/ErrorResponse' }
+    Conflict:
+      description: Конфликт текущего состояния. Возможные code — MATERIAL_NAME_ALREADY_EXISTS, SUBJECT_ALREADY_EXISTS, TAG_ALREADY_EXISTS, MATERIAL_IN_USE, SUBJECT_IN_USE, TAG_IN_USE, MATERIAL_NOT_READY, ATTEMPT_CLOSED, ATTEMPT_NOT_COMPLETED, HINTS_DISABLED, IDEMPOTENCY_KEY_REUSED, USERNAME_ALREADY_EXISTS, EMAIL_ALREADY_EXISTS.
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/ErrorResponse' }
+    PayloadTooLarge:
+      description: FILE_TOO_LARGE; лимит документа 10 MiB, аватара 5 MiB
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/ErrorResponse' }
+    UnsupportedMediaType:
+      description: UNSUPPORTED_FILE_FORMAT или PREVIEW_NOT_SUPPORTED
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/ErrorResponse' }
+    RateLimited:
+      description: RATE_LIMIT_EXCEEDED; повтор после Retry-After
+      headers:
+        Retry-After: { schema: { type: integer, minimum: 1 }, description: 'Секунды до следующей попытки' }
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/ErrorResponse' }
+    UpstreamError:
+      description: LLM_UNAVAILABLE, LLM_INVALID_RESPONSE или LLM_TIMEOUT. Секреты, промпт и ответ провайдера не возвращаются.
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/ErrorResponse' }
+    NotImplemented:
+      description: API подготовлено по контракту; бизнес-реализация ещё не подключена. Тело отсутствует.
+  schemas:
+    RegisterRequest:
+      type: object
+      required: [username, email, password]
+      properties:
+        username: { type: string, minLength: 3, maxLength: 50, pattern: '[\s\S]*\S[\s\S]*' }
+        email: { type: string, format: email, maxLength: 255 }
+        password: { type: string, minLength: 6, maxLength: 100, pattern: '[\s\S]*\S[\s\S]*', writeOnly: true }
+    LoginRequest:
+      type: object
+      required: [username, password]
+      properties:
+        username: { type: string, minLength: 1, maxLength: 255, pattern: '[\s\S]*\S[\s\S]*', description: 'Логин либо email; имя поля сохранено для совместимости' }
+        password: { type: string, minLength: 1, maxLength: 100, pattern: '[\s\S]*\S[\s\S]*', writeOnly: true }
+    AuthResponse:
+      type: object
+      required: [token]
+      properties:
+        token: { type: string, minLength: 1, description: 'Access JWT; использовать Authorization Bearer; exp определяет срок действия' }
+    GoogleLoginRequest:
+      type: object
+      required: [idToken]
+      properties:
+        idToken: { type: string, minLength: 1, maxLength: 16384, writeOnly: true }
+    PasswordResetRequest:
+      type: object
+      required: [email]
+      properties:
+        email: { type: string, format: email, maxLength: 255 }
+    PasswordResetConfirmRequest:
+      type: object
+      required: [token, newPassword]
+      properties:
+        token: { type: string, minLength: 1, maxLength: 2048, writeOnly: true }
+        newPassword: { type: string, minLength: 6, maxLength: 100, pattern: '[\s\S]*\S[\s\S]*', writeOnly: true }
+    ChangePasswordRequest:
+      type: object
+      required: [currentPassword, newPassword]
+      properties:
+        currentPassword: { type: string, minLength: 1, maxLength: 100, writeOnly: true }
+        newPassword: { type: string, minLength: 6, maxLength: 100, pattern: '[\s\S]*\S[\s\S]*', writeOnly: true }
+    UserProfile:
+      type: object
+      required: [id, username, email, displayName, trainingLevel, subjectIds, avatarAvailable]
+      properties:
+        id: { type: string, format: uuid }
+        username: { type: string }
+        email: { type: string, format: email }
+        displayName: { type: string }
+        trainingLevel: { $ref: '#/components/schemas/TrainingLevel' }
+        subjectIds: { type: array, uniqueItems: true, items: { type: string, format: uuid } }
+        avatarAvailable: { type: boolean }
+    UpdateProfileRequest:
+      type: object
+      minProperties: 1
+      additionalProperties: false
+      properties:
+        username: { type: string, minLength: 3, maxLength: 50, pattern: '[\s\S]*\S[\s\S]*' }
+        email: { type: string, format: email, maxLength: 255 }
+        displayName: { type: string, minLength: 1, maxLength: 100, pattern: '[\s\S]*\S[\s\S]*' }
+        trainingLevel: { $ref: '#/components/schemas/TrainingLevel' }
+        subjectIds: { type: array, maxItems: 100, uniqueItems: true, items: { type: string, format: uuid } }
+    TrainingLevel: { type: string, enum: [BEGINNER, INTERMEDIATE, ADVANCED] }
+    Difficulty: { type: string, enum: [EASY, MEDIUM, HARD] }
+    QuestionType: { type: string, enum: [SINGLE_CHOICE, MULTIPLE_CHOICE, TRUE_FALSE] }
+    QuestionCount: { type: integer, enum: [5, 10, 20] }
+    LearningPreferences:
+      type: object
+      required: [questionCount, difficulty, language, hintsEnabled, explanationDetail, explanationStyle]
+      properties:
+        questionCount: { $ref: '#/components/schemas/QuestionCount' }
+        difficulty: { $ref: '#/components/schemas/Difficulty' }
+        language: { type: string, enum: [ru, en], default: ru }
+        hintsEnabled: { type: boolean, default: true }
+        explanationDetail: { type: string, enum: [SHORT, DETAILED], default: SHORT }
+        explanationStyle: { type: string, enum: [SIMPLE, ACADEMIC, EXAMPLES], default: SIMPLE }
+    CreateSubjectRequest:
+      type: object
+      required: [name]
+      properties:
+        name: { type: string, minLength: 1, maxLength: 100, pattern: '[\s\S]*\S[\s\S]*' }
+    SubjectResponse:
+      type: object
+      required: [id, name]
+      properties:
+        id: { type: string, format: uuid }
+        name: { type: string }
+    SubjectListResponse:
+      type: object
+      required: [items]
+      properties:
+        items: { type: array, items: { $ref: '#/components/schemas/SubjectResponse' } }
+    CreateTagRequest:
+      type: object
+      required: [name]
+      properties:
+        name: { type: string, minLength: 1, maxLength: 50, pattern: '[\s\S]*\S[\s\S]*' }
+    TagResponse:
+      type: object
+      required: [id, name, subjectId]
+      properties:
+        id: { type: string, format: uuid }
+        name: { type: string }
+        subjectId: { type: string, format: uuid }
+    TagListItemResponse:
+      type: object
+      required: [id, name]
+      properties:
+        id: { type: string, format: uuid }
+        name: { type: string }
+    TagListResponse:
+      type: object
+      required: [items]
+      properties:
+        items: { type: array, items: { $ref: '#/components/schemas/TagListItemResponse' } }
+    FileFormat: { type: string, enum: [PDF, DOCX, TXT] }
+    UploadMaterialMetadata:
+      type: object
+      required: [name, subjectName]
+      additionalProperties: false
+      properties:
+        name: { type: string, minLength: 1, maxLength: 255, pattern: '[\s\S]*\S[\s\S]*' }
+        subjectName: { type: string, minLength: 1, maxLength: 100, pattern: '[\s\S]*\S[\s\S]*' }
+        description: { type: string, maxLength: 2000 }
+        tagIds: { type: array, maxItems: 20, uniqueItems: true, items: { type: string, format: uuid }, description: 'Только теги выбранного предмета текущего пользователя' }
+        newTagNames: { type: array, maxItems: 20, uniqueItems: true, items: { type: string, minLength: 1, maxLength: 50, pattern: '[\s\S]*\S[\s\S]*' }, description: 'Создаются/переиспользуются атомарно в предмете; суммарно не более 20 тегов' }
+    UpdateMaterialRequest:
+      type: object
+      required: [name, subjectName]
+      additionalProperties: false
+      properties:
+        name: { type: string, minLength: 1, maxLength: 255, pattern: '[\s\S]*\S[\s\S]*' }
+        subjectName: { type: string, minLength: 1, maxLength: 100, pattern: '[\s\S]*\S[\s\S]*' }
+    MaterialSummary:
+      type: object
+      required: [id, name, format, sizeBytes, subjectId, subjectName, uploadedAt]
+      properties:
+        id: { type: string, format: uuid }
+        name: { type: string }
+        format: { $ref: '#/components/schemas/FileFormat' }
+        sizeBytes: { type: integer, format: int64, minimum: 1 }
+        subjectId: { type: string, format: uuid }
+        subjectName: { type: string }
+        uploadedAt: { type: string, format: date-time }
+    MaterialListResponse:
+      type: object
+      required: [items]
+      properties:
+        items: { type: array, items: { $ref: '#/components/schemas/MaterialSummary' } }
+    MaterialDetail:
+      type: object
+      required: [material, originalFilename, tags, processing]
+      properties:
+        material: { $ref: '#/components/schemas/MaterialSummary' }
+        originalFilename: { type: string }
+        description: { type: string }
+        tags: { type: array, items: { $ref: '#/components/schemas/TagListItemResponse' } }
+        processing: { $ref: '#/components/schemas/MaterialProcessing' }
+    MaterialProcessing:
+      type: object
+      required: [materialId, status, progress, updatedAt]
+      properties:
+        materialId: { type: string, format: uuid }
+        status: { type: string, enum: [QUEUED, EXTRACTING, ANALYZING, READY, FAILED] }
+        progress: { type: integer, minimum: 0, maximum: 100 }
+        updatedAt: { type: string, format: date-time }
+        error: { $ref: '#/components/schemas/TaskError' }
+    TaskError:
+      type: object
+      required: [code, message, retryable]
+      properties:
+        code: { type: string, description: 'MATERIAL_TOO_LONG, NO_TEXT_CONTENT, ENCRYPTED_DOCUMENT, INVALID_DOCUMENT, LLM_UNAVAILABLE, LLM_TIMEOUT, LLM_INVALID_RESPONSE, INSUFFICIENT_CONTENT, STORAGE_UNAVAILABLE' }
+        message: { type: string }
+        retryable: { type: boolean }
+    BulkDeleteMaterialsRequest:
+      type: object
+      required: [materialIds]
+      properties:
+        materialIds: { type: array, minItems: 1, maxItems: 100, uniqueItems: true, items: { type: string, format: uuid } }
+    BulkDeleteMaterialsResponse:
+      type: object
+      required: [deletedIds]
+      properties:
+        deletedIds: { type: array, uniqueItems: true, items: { type: string, format: uuid } }
+    Topic:
+      type: object
+      required: [id, name, materialId, materialName, questionCount, answeredCount, accuracyPercent]
+      properties:
+        id: { type: string, format: uuid }
+        name: { type: string }
+        materialId: { type: string, format: uuid }
+        materialName: { type: string }
+        questionCount: { type: integer, minimum: 0 }
+        answeredCount: { type: integer, minimum: 0 }
+        accuracyPercent: { type: number, format: double, minimum: 0, maximum: 100, description: '0 при отсутствии ответов; отсутствие истории определяется answeredCount=0' }
+    TopicListResponse:
+      type: object
+      required: [items]
+      properties:
+        items: { type: array, items: { $ref: '#/components/schemas/Topic' } }
+    GenerateQuizRequest:
+      type: object
+      required: [materialId, questionCount, difficulty, questionTypes]
+      properties:
+        materialId: { type: string, format: uuid, description: 'Ровно один материал за генерацию' }
+        topicIds: { type: array, maxItems: 100, uniqueItems: true, items: { type: string, format: uuid } }
+        questionCount: { $ref: '#/components/schemas/QuestionCount' }
+        difficulty: { $ref: '#/components/schemas/Difficulty' }
+        questionTypes: { type: array, minItems: 1, maxItems: 3, uniqueItems: true, items: { $ref: '#/components/schemas/QuestionType' } }
+        excludeAnswered: { type: boolean, default: false }
+        prioritizeWeakTopics: { type: boolean, default: false }
+        adaptToLevel: { type: boolean, default: false }
+        language: { type: string, enum: [ru, en], description: 'При отсутствии берётся из настроек пользователя' }
+    GenerationJob:
+      type: object
+      required: [id, materialId, kind, status, progress, createdAt, updatedAt]
+      properties:
+        id: { type: string, format: uuid }
+        materialId: { type: string, format: uuid }
+        kind: { $ref: '#/components/schemas/QuizKind' }
+        status: { type: string, enum: [QUEUED, RUNNING, COMPLETED, FAILED] }
+        stage: { type: string, enum: [PREPARING, GENERATING, VALIDATING] }
+        progress: { type: integer, minimum: 0, maximum: 100 }
+        quizId: { type: string, format: uuid, description: 'Только при COMPLETED' }
+        error: { $ref: '#/components/schemas/TaskError' }
+        createdAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }
+    QuizKind: { type: string, enum: [TEST, TRAINING] }
+    QuizSummary:
+      type: object
+      required: [id, name, materialId, materialName, subjectId, subjectName, topics, kind, difficulty, questionCount, createdAt]
+      properties:
+        id: { type: string, format: uuid }
+        name: { type: string }
+        materialId: { type: string, format: uuid, description: 'Снимок ссылки; материал может быть впоследствии удалён' }
+        materialName: { type: string, description: 'Снимок имени для сохранения истории' }
+        subjectId: { type: string, format: uuid }
+        subjectName: { type: string }
+        topics: { type: array, items: { $ref: '#/components/schemas/TopicReference' }, description: 'Снимки названий тем для списка тестов и истории' }
+        kind: { $ref: '#/components/schemas/QuizKind' }
+        difficulty: { $ref: '#/components/schemas/Difficulty' }
+        questionCount: { type: integer, minimum: 1, maximum: 20 }
+        createdAt: { type: string, format: date-time }
+    TopicReference:
+      type: object
+      required: [id, name]
+      properties:
+        id: { type: string, format: uuid }
+        name: { type: string }
+    QuizListResponse:
+      type: object
+      required: [items]
+      properties:
+        items: { type: array, items: { $ref: '#/components/schemas/QuizSummary' } }
+    QuizDetail:
+      type: object
+      required: [quiz, questions]
+      properties:
+        quiz: { $ref: '#/components/schemas/QuizSummary' }
+        questions: { type: array, minItems: 1, maxItems: 20, items: { $ref: '#/components/schemas/Question' } }
+    Question:
+      type: object
+      description: Публичный вопрос без correctOptionIds, isCorrect и explanation. SINGLE_CHOICE — 4 варианта; TRUE_FALSE — 2; MULTIPLE_CHOICE — 4, минимум 2 правильных. Ключ ответа хранится только на сервере.
+      required: [id, topicId, topicName, type, text, options, position]
+      properties:
+        id: { type: string, format: uuid }
+        topicId: { type: string, format: uuid }
+        topicName: { type: string }
+        type: { $ref: '#/components/schemas/QuestionType' }
+        text: { type: string }
+        position: { type: integer, minimum: 1, description: 'Нумерация вопросов с 1' }
+        options: { type: array, minItems: 2, maxItems: 4, items: { $ref: '#/components/schemas/QuestionOption' } }
+    QuestionOption:
+      type: object
+      required: [id, text]
+      properties:
+        id: { type: string, format: uuid }
+        text: { type: string }
+    AttemptStatus: { type: string, enum: [IN_PROGRESS, COMPLETED, ABANDONED] }
+    AttemptSummary:
+      type: object
+      required: [id, quiz, status, startedAt, answeredCount]
+      properties:
+        id: { type: string, format: uuid }
+        quiz: { $ref: '#/components/schemas/QuizSummary' }
+        status: { $ref: '#/components/schemas/AttemptStatus' }
+        startedAt: { type: string, format: date-time }
+        completedAt: { type: string, format: date-time }
+        answeredCount: { type: integer, minimum: 0 }
+        scorePercent: { type: number, format: double, minimum: 0, maximum: 100, description: 'Только для COMPLETED' }
+    AttemptDetail:
+      type: object
+      required: [attempt, questions, answers, currentPosition]
+      properties:
+        attempt: { $ref: '#/components/schemas/AttemptSummary' }
+        questions: { type: array, items: { $ref: '#/components/schemas/Question' } }
+        answers: { type: array, items: { $ref: '#/components/schemas/SavedAnswer' } }
+        currentPosition: { type: integer, minimum: 1, description: 'Первый вопрос без сохранённого ответа или последний вопрос' }
+    AttemptPage:
+      type: object
+      required: [items, page, size, totalElements]
+      properties:
+        items: { type: array, items: { $ref: '#/components/schemas/AttemptSummary' } }
+        page: { type: integer, minimum: 0 }
+        size: { type: integer, minimum: 1, maximum: 100 }
+        totalElements: { type: integer, format: int64, minimum: 0 }
+    SaveAnswerRequest:
+      type: object
+      required: [selectedOptionIds]
+      properties:
+        selectedOptionIds: { type: array, maxItems: 4, uniqueItems: true, items: { type: string, format: uuid } }
+        timeSpentSeconds: { type: integer, minimum: 0, maximum: 86400, description: 'Накопленное время на вопрос; подсказка аналитике. Итоговую длительность определяет сервер' }
+    SavedAnswer:
+      type: object
+      required: [questionId, selectedOptionIds, savedAt]
+      properties:
+        questionId: { type: string, format: uuid }
+        selectedOptionIds: { type: array, uniqueItems: true, items: { type: string, format: uuid } }
+        savedAt: { type: string, format: date-time }
+    AttemptResult:
+      type: object
+      required: [attemptId, quiz, totalQuestions, correctCount, incorrectCount, skippedCount, scorePercent, durationSeconds, completedAt, topics]
+      properties:
+        attemptId: { type: string, format: uuid }
+        quiz: { $ref: '#/components/schemas/QuizSummary' }
+        totalQuestions: { type: integer, minimum: 1 }
+        correctCount: { type: integer, minimum: 0 }
+        incorrectCount: { type: integer, minimum: 0, description: 'Включая пропущенные; correctCount + incorrectCount = totalQuestions' }
+        skippedCount: { type: integer, minimum: 0 }
+        scorePercent: { type: number, format: double, minimum: 0, maximum: 100, description: '100 * correctCount / totalQuestions; округление до двух знаков' }
+        durationSeconds: { type: integer, format: int64, minimum: 0, description: 'От startedAt до completedAt по часам сервера' }
+        completedAt: { type: string, format: date-time }
+        topics: { type: array, items: { $ref: '#/components/schemas/TopicResult' } }
+    TopicResult:
+      type: object
+      required: [topicId, topicName, totalQuestions, correctCount, scorePercent]
+      properties:
+        topicId: { type: string, format: uuid }
+        topicName: { type: string }
+        totalQuestions: { type: integer, minimum: 1 }
+        correctCount: { type: integer, minimum: 0 }
+        scorePercent: { type: number, format: double, minimum: 0, maximum: 100 }
+    ReviewItem:
+      type: object
+      required: [question, selectedOptionIds, correctOptionIds, correct, explanation]
+      properties:
+        question: { $ref: '#/components/schemas/Question' }
+        selectedOptionIds: { type: array, items: { type: string, format: uuid } }
+        correctOptionIds: { type: array, minItems: 1, items: { type: string, format: uuid } }
+        correct: { type: boolean }
+        explanation: { type: string, description: 'Проверенное объяснение, сохранённое при генерации; доступно без повторного вызова LLM' }
+    ReviewListResponse:
+      type: object
+      required: [items]
+      properties:
+        items: { type: array, items: { $ref: '#/components/schemas/ReviewItem' } }
+    AiTextResponse:
+      type: object
+      required: [text]
+      properties:
+        text: { type: string, minLength: 1 }
+    ProgressSummary:
+      type: object
+      required: [completedAttempts, answeredQuestions, averageScorePercent, learningTimeSeconds]
+      properties:
+        completedAttempts: { type: integer, minimum: 0 }
+        answeredQuestions: { type: integer, minimum: 0, description: 'Число ответов в завершённых попытках; повторный ответ считается новым в новой попытке' }
+        averageScorePercent: { type: number, format: double, minimum: 0, maximum: 100, description: 'Среднее арифметическое процентов завершённых попыток' }
+        learningTimeSeconds: { type: integer, format: int64, minimum: 0 }
+    ProgressPoint:
+      type: object
+      required: [date, completedAttempts, averageScorePercent]
+      properties:
+        date: { type: string, format: date }
+        completedAttempts: { type: integer, minimum: 0 }
+        averageScorePercent: { type: number, format: double, minimum: 0, maximum: 100 }
+    ProgressResponse:
+      type: object
+      required: [summary, series, topics]
+      properties:
+        summary: { $ref: '#/components/schemas/ProgressSummary' }
+        series: { type: array, items: { $ref: '#/components/schemas/ProgressPoint' }, description: 'По дням UTC возрастанию; дни без попыток опускаются' }
+        topics: { type: array, items: { $ref: '#/components/schemas/Topic' } }
+    DashboardResponse:
+      type: object
+      required: [displayName, summary, weakTopics]
+      properties:
+        displayName: { type: string }
+        summary: { $ref: '#/components/schemas/ProgressSummary' }
+        lastAttempt: { $ref: '#/components/schemas/AttemptSummary' }
+        activeAttempt: { $ref: '#/components/schemas/AttemptSummary' }
+        weakTopics: { type: array, items: { $ref: '#/components/schemas/Topic' } }
+    FieldError:
+      type: object
+      required: [field, message]
+      properties:
+        field: { type: string }
+        message: { type: string }
+    ErrorResponse:
+      type: object
+      required: [code, message]
+      properties:
+        code: { type: string, description: 'Стабильный машинный код; клиент не анализирует текст message' }
+        message: { type: string, description: 'Безопасное сообщение пользователю' }
+        fieldErrors: { type: array, items: { $ref: '#/components/schemas/FieldError' } }
+        traceId: { type: string, description: 'Идентификатор для диагностики без секретов' }
