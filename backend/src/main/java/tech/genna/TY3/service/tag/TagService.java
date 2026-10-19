@@ -6,6 +6,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 import tech.genna.TY3.dto.tag.CreateTagRequest;
+import tech.genna.TY3.dto.tag.TagListItemResponse;
 import tech.genna.TY3.dto.tag.TagResponse;
 import tech.genna.TY3.entity.Subject;
 import tech.genna.TY3.entity.Tag;
@@ -13,6 +14,7 @@ import tech.genna.TY3.entity.User;
 import tech.genna.TY3.repository.SubjectRepository;
 import tech.genna.TY3.repository.TagRepository;
 
+import java.util.List;
 import java.util.UUID;
 
 @Service
@@ -21,6 +23,13 @@ public class TagService {
 
     private final SubjectRepository subjectRepository;
     private final TagRepository tagRepository;
+
+    @Transactional(readOnly = true)
+    public List<TagListItemResponse> findAll(User user) {
+        return tagRepository.findAllBySubject_User_IdOrderByNameAsc(user.getId()).stream()
+                .map(tag -> new TagListItemResponse(tag.getId(), tag.getName()))
+                .toList();
+    }
 
     @Transactional
     public TagResponse create(UUID subjectId, CreateTagRequest request, User user) {

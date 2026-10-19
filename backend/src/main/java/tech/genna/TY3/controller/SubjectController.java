@@ -10,12 +10,19 @@ import tech.genna.TY3.dto.subject.SubjectResponse;
 import tech.genna.TY3.entity.User;
 import tech.genna.TY3.service.subject.SubjectService;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/api/subjects")
 @RequiredArgsConstructor
 public class SubjectController {
 
     private final SubjectService subjectService;
+
+    @GetMapping
+    public List<SubjectResponse> findAll(@AuthenticationPrincipal User user) {
+        return subjectService.findAll(user);
+    }
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)

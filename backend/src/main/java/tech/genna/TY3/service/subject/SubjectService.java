@@ -11,11 +11,20 @@ import tech.genna.TY3.entity.Subject;
 import tech.genna.TY3.entity.User;
 import tech.genna.TY3.repository.SubjectRepository;
 
+import java.util.List;
+
 @Service
 @RequiredArgsConstructor
 public class SubjectService {
 
     private final SubjectRepository subjectRepository;
+
+    @Transactional(readOnly = true)
+    public List<SubjectResponse> findAll(User user) {
+        return subjectRepository.findAllByUserIdOrderByNameAsc(user.getId()).stream()
+                .map(subject -> new SubjectResponse(subject.getId(), subject.getName()))
+                .toList();
+    }
 
     @Transactional
     public SubjectResponse create(CreateSubjectRequest request, User user) {
