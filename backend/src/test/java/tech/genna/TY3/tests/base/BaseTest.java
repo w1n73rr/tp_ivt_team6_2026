@@ -1,6 +1,5 @@
 package tech.genna.TY3.tests.base;
 
-import io.restassured.RestAssured;
 import org.junit.jupiter.api.BeforeEach;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.server.LocalServerPort;
@@ -14,7 +13,6 @@ public abstract class BaseTest {
 
     @BeforeEach
     void setUpBase() {
-        RestAssured.port = port;
-        RestAssured.enableLoggingOfRequestAndResponseIfValidationFails();
+        TestConfig.setupRequestSpecification(port);
     }
 }

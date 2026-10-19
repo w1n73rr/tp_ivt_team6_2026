@@ -1,4 +1,5 @@
-@if (!isAuthPage()) {
-  <app-navbar />
-}
-<main [class.page-content]="!isAuthPage()"><router-outlet /></main>
+<app-navbar></app-navbar>
+
+<main class="page-content">
+  <router-outlet></router-outlet>
+</main>

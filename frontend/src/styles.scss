@@ -37,12 +37,3 @@ body {
   height: 100%;
 }
 /* You can add global styles to this file, and also import other style files */
-html {
-  scroll-behavior: smooth;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  html {
-    scroll-behavior: auto;
-  }
-}

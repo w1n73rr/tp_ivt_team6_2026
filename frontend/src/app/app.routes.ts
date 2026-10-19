@@ -1,7 +1,6 @@
-import { MaterialUpload } from './features/materials/upload/upload';
-import { Materials } from './features/materials/materials';
 import { Routes } from '@angular/router';
 
+import { Home } from './features/home/home';
 import { Login } from './features/auth/login/login';
 import { Register } from './features/auth/register/register';
 import { Dashboard } from './features/dashboard/dashboard';
@@ -10,25 +9,22 @@ import { NotFound } from './not-found/not-found';
 export const routes: Routes = [
   {
     path: '',
-    redirectTo: 'login',
-    pathMatch: 'full',
+    component: Home
   },
   {
     path: 'login',
-    component: Login,
+    component: Login
   },
   {
     path: 'register',
-    component: Register,
+    component: Register
   },
   {
     path: 'dashboard',
-    component: Dashboard,
+    component: Dashboard
   },
-  { path: 'materials/upload', component: MaterialUpload },
-  { path: 'materials', component: Materials },
   {
     path: '**',
-    component: NotFound,
-  },
+    component: NotFound
+  }
 ];
