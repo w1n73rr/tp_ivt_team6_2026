@@ -19,6 +19,16 @@ import java.util.UUID;
 
 @Service
 public class FileStorageService {
+    public enum FileScope {
+        GENERAL(""), MATERIALS("materials/");
+
+        private final String prefix;
+
+        FileScope(String prefix) {
+            this.prefix = prefix;
+        }
+    }
+
     private final S3Client s3Client;
     private final String bucketName;
 
@@ -52,26 +62,37 @@ public class FileStorageService {
         if (file == null || file.isEmpty()) {
             throw new IllegalArgumentException("Файл не может быть пустым");
         }
-        UUID fileId = UUID.randomUUID();
-        String key = objectKey(ownerId, fileId);
-        String filename = file.getOriginalFilename();
+        try (InputStream input = file.getInputStream()) {
+            return uploadFile(input, file.getSize(), file.getOriginalFilename(), file.getContentType(),
+                    UUID.randomUUID(), ownerId, FileScope.GENERAL);
+        } catch (IOException e) {
+            throw new FileStorageException("Не удалось загрузить файл в хранилище", e);
+        }
+    }
+
+    /** The caller owns the stream. A preallocated id allows durable upload compensation. */
+    public FileUploadResponse uploadFile(InputStream input, long size, String filename, String contentType,
+                                         UUID fileId, UUID ownerId, FileScope scope) {
+        if (input == null || size <= 0) {
+            throw new IllegalArgumentException("Файл не может быть пустым");
+        }
+        String key = objectKey(ownerId, fileId, scope);
         if (filename == null || filename.isBlank()) {
             filename = "file";
         }
         filename = filename.replace('\\', '/');
         filename = filename.substring(filename.lastIndexOf('/') + 1);
-        String contentType = file.getContentType();
         if (contentType == null || contentType.isBlank()) {
             contentType = "application/octet-stream";
         }
-        try (InputStream input = file.getInputStream()) {
+        try {
             s3Client.putObject(PutObjectRequest.builder()
                             .bucket(bucketName).key(key).contentType(contentType).build(),
-                    RequestBody.fromInputStream(input, file.getSize()));
-        } catch (IOException | SdkException e) {
+                    RequestBody.fromInputStream(input, size));
+        } catch (SdkException e) {
             throw new FileStorageException("Не удалось загрузить файл в хранилище", e);
         }
-        return new FileUploadResponse(fileId, key, filename, contentType, file.getSize());
+        return new FileUploadResponse(fileId, key, filename, contentType, size);
     }
 
     /** The caller must close the returned stream after reading it. */
@@ -91,18 +112,27 @@ public class FileStorageService {
 
     /** Idempotent deletion restricted to the authenticated user's namespace. */
     public void deleteFile(UUID fileId, UUID ownerId) {
+        deleteFile(fileId, ownerId, FileScope.GENERAL);
+    }
+
+    public void deleteFile(UUID fileId, UUID ownerId, FileScope scope) {
         try {
             s3Client.deleteObject(DeleteObjectRequest.builder()
-                    .bucket(bucketName).key(objectKey(ownerId, fileId)).build());
+                    .bucket(bucketName).key(objectKey(ownerId, fileId, scope)).build());
         } catch (SdkException e) {
             throw new FileStorageException("Не удалось удалить файл из хранилища", e);
         }
     }
 
     private String objectKey(UUID ownerId, UUID fileId) {
+        return objectKey(ownerId, fileId, FileScope.GENERAL);
+    }
+
+    private String objectKey(UUID ownerId, UUID fileId, FileScope scope) {
         if (ownerId == null || fileId == null) {
             throw new IllegalArgumentException("Не указан идентификатор пользователя или файла");
         }
-        return ownerId + "/" + fileId;
+        if (scope == null) throw new IllegalArgumentException("Не указана область хранения файла");
+        return scope.prefix + ownerId + "/" + fileId;
     }
 }

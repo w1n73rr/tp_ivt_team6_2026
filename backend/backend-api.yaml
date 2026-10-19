@@ -380,18 +380,17 @@ paths:
     post:
       tags: [Materials]
       operationId: uploadMaterial
-      summary: Загрузить один документ с метаданными и запустить анализ
+      summary: Создать материал из документа и метаданных
       description: |
         multipart: file — исходный PDF/DOCX/TXT; metadata — JSON.
-        Лимит файла 10 MiB — проектное ограничение MVP. Проверяются реальный формат,
-        размер, читаемость, наличие текста; OCR и зашифрованные PDF не поддерживаются.
-        PDF длиннее 10 страниц или более 30000 Unicode code points извлечённого
-        текста любого формата отклоняется при анализе с MATERIAL_TOO_LONG.
+        Лимит файла 10 MiB. Проверяются расширение, размер и сигнатура PDF,
+        структура ZIP-контейнера DOCX, корректность UTF-8 и непустой текст TXT.
+        Полный разбор PDF/DOCX, извлечение текста, OCR и LLM-анализ в CRUD не входят.
         Новый предмет создаётся по subjectName атомарно
-        с метаданными; orphan S3 objects очищаются компенсирующей операцией.
-        Ответ выдаётся после сохранения оригинала в S3 и метаданных, до анализа LLM.
-      parameters:
-        - { $ref: '#/components/parameters/IdempotencyKey' }
+        с метаданными; orphan S3 objects очищаются устойчивой к перезапуску очередью.
+        Ответ выдаётся после сохранения оригинала в S3 и фиксации метаданных в БД.
+        Начальный статус STORED означает сохранённый документ без запущенного анализа.
+        Повторное создание с тем же именем возвращает 409; идемпотентность не реализована.
       requestBody:
         required: true
         content:
@@ -405,10 +404,10 @@ paths:
             encoding:
               metadata: { contentType: application/json }
       responses:
-        '202':
-          description: Материал сохранён; обработка поставлена в очередь
+        '201':
+          description: Материал и оригинал сохранены
           headers:
-            Location: { description: '/api/materials/{materialId}/processing', schema: { type: string } }
+            Location: { description: '/api/materials/{materialId}', schema: { type: string } }
           content:
             application/json:
               schema: { $ref: '#/components/schemas/MaterialDetail' }
@@ -416,7 +415,7 @@ paths:
         '409': { $ref: '#/components/responses/Conflict' }
         '413': { $ref: '#/components/responses/PayloadTooLarge' }
         '415': { $ref: '#/components/responses/UnsupportedMediaType' }
-        '501': { $ref: '#/components/responses/NotImplemented' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
         default: { $ref: '#/components/responses/Error' }
   /api/materials/{materialId}:
     parameters:
@@ -432,7 +431,7 @@ paths:
             application/json:
               schema: { $ref: '#/components/schemas/MaterialDetail' }
         '404': { $ref: '#/components/responses/NotFound' }
-        '501': { $ref: '#/components/responses/NotImplemented' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
         default: { $ref: '#/components/responses/Error' }
     patch:
       tags: [Materials]
@@ -442,7 +441,7 @@ paths:
         Оба поля обязательны. Только name и subjectName разрешены к изменению.
         Имя материала уникально с учётом регистра в пределах пользователя.
         Предмет ищется/создаётся по имени в одной транзакции с материалом.
-        Прежний предмет удаляется только при отсутствии любых ссылок на него.
+        Прежний предмет сохраняется как самостоятельная запись справочника.
         Теги прежнего предмета при переносе отсоединяются в той же транзакции.
       requestBody:
         required: true
@@ -458,22 +457,23 @@ paths:
         '400': { $ref: '#/components/responses/BadRequest' }
         '404': { $ref: '#/components/responses/NotFound' }
         '409': { $ref: '#/components/responses/Conflict' }
-        '501': { $ref: '#/components/responses/NotImplemented' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
         default: { $ref: '#/components/responses/Error' }
     delete:
       tags: [Materials]
       operationId: deleteMaterial
       summary: Удалить один материал
       description: |
-        Удаление скрывает материал и согласованно удаляет S3-файл.
-        Сформированные тесты и результаты сохраняют снимки исходных сведений.
-        При активной обработке или невозможности безопасно удалить — 409 MATERIAL_IN_USE.
-        Сбой не должен приводить к исчезновению доступного пользователю материала.
+        Материал и связи с тегами удаляются в одной транзакции с заданием удаления S3-файла.
+        После фиксации выполняется попытка очистки; при сбое S3 задача повторяется в фоне.
+        204 означает удаление метаданных; физическое удаление файла может завершиться позже.
+        При активной обработке (EXTRACTING/ANALYZING) — 409 MATERIAL_IN_USE.
+        При откате транзакции запись и исходный файл сохраняются.
       responses:
         '204': { description: 'Материал удалён' }
         '404': { $ref: '#/components/responses/NotFound' }
         '409': { $ref: '#/components/responses/Conflict' }
-        '501': { $ref: '#/components/responses/NotImplemented' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
         default: { $ref: '#/components/responses/Error' }
   /api/materials/bulk-delete:
     post:
@@ -1176,7 +1176,7 @@ components:
       required: [materialId, status, progress, updatedAt]
       properties:
         materialId: { type: string, format: uuid }
-        status: { type: string, enum: [QUEUED, EXTRACTING, ANALYZING, READY, FAILED] }
+        status: { type: string, enum: [STORED, QUEUED, EXTRACTING, ANALYZING, READY, FAILED] }
         progress: { type: integer, minimum: 0, maximum: 100 }
         updatedAt: { type: string, format: date-time }
         error: { $ref: '#/components/schemas/TaskError' }

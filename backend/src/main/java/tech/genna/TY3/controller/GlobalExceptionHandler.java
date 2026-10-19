@@ -27,6 +27,12 @@ import java.util.Map;
 @Slf4j
 public class GlobalExceptionHandler {
 
+    @ExceptionHandler(org.springframework.dao.DataIntegrityViolationException.class)
+    public ResponseEntity<ErrorResponse> handleDataConflict(Exception exception) {
+        return ResponseEntity.status(HttpStatus.CONFLICT)
+                .body(new ErrorResponse("CONFLICT", "Данные конфликтуют с существующими записями"));
+    }
+
     @ExceptionHandler(tech.genna.TY3.model.exception.ResourceNotFoundException.class)
     public ResponseEntity<Map<String, String>> handleNotFound(
             tech.genna.TY3.model.exception.ResourceNotFoundException e) {

@@ -10,6 +10,7 @@ import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.S3Configuration;
 
 import java.net.URI;
+import java.time.Duration;
 
 @Configuration
 public class MinioConfig {
@@ -26,6 +27,9 @@ public class MinioConfig {
     @Bean
     public S3Client s3Client() {
         return S3Client.builder()
+                .overrideConfiguration(config -> config
+                        .apiCallTimeout(Duration.ofSeconds(60))
+                        .apiCallAttemptTimeout(Duration.ofSeconds(20)))
                 .endpointOverride(URI.create(endpoint))
                 .region(Region.US_EAST_1) // MinIO игнорирует регион, но SDK он необходим
                 .credentialsProvider(StaticCredentialsProvider.create(
