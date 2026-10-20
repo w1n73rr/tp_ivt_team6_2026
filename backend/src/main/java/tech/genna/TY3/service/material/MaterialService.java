@@ -34,6 +34,14 @@ public class MaterialService {
     private final FileStorageService storage;
     private final MaterialFileCleanup cleanup;
 
+    @Transactional(readOnly = true)
+    public MaterialListResponse findAll(User user) {
+        var items = materials.findAllByUserIdOrderByCreatedAtDescIdDesc(user.getId()).stream()
+                .map(this::summary)
+                .toList();
+        return new MaterialListResponse(items);
+    }
+
     public MaterialDetail create(MultipartFile file, UploadMaterialMetadata metadata, User user) {
         validateName(metadata.getName(), 255);
         validateName(metadata.getSubjectName(), 100);

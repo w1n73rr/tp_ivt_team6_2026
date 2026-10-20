@@ -18,6 +18,11 @@ public class MaterialController implements MaterialsApi {
     private final CurrentUser currentUser;
 
     @Override
+    public ResponseEntity<MaterialListResponse> listMaterials() {
+        return ResponseEntity.ok(materials.findAll(currentUser.get()));
+    }
+
+    @Override
     public ResponseEntity<MaterialDetail> uploadMaterial(MultipartFile file, UploadMaterialMetadata metadata) {
         var material = materials.create(file, metadata, currentUser.get());
         return ResponseEntity.created(URI.create("/api/materials/" + material.getMaterial().getId())).body(material);

@@ -10,11 +10,15 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerMapping;
 import tech.genna.TY3.api.*;
 import tech.genna.TY3.api.model.AuthResponse;
+import tech.genna.TY3.api.model.FileFormat;
+import tech.genna.TY3.api.model.MaterialListResponse;
+import tech.genna.TY3.api.model.MaterialSummary;
 import tech.genna.TY3.api.model.SubjectResponse;
 import tech.genna.TY3.api.model.TagListItemResponse;
 import tech.genna.TY3.entity.User;
 import tech.genna.TY3.security.CurrentUser;
 import tech.genna.TY3.service.auth.AuthService;
+import tech.genna.TY3.service.material.MaterialService;
 import tech.genna.TY3.service.subject.SubjectService;
 import tech.genna.TY3.service.tag.TagService;
 
@@ -37,6 +41,7 @@ class GeneratedApiContractTest {
     private SubjectService subjectService;
     private TagService tagService;
     private AuthService authService;
+    private MaterialService materialService;
     private CurrentUser currentUser;
     private User user;
 
@@ -45,11 +50,13 @@ class GeneratedApiContractTest {
         subjectService = mock(SubjectService.class);
         tagService = mock(TagService.class);
         authService = mock(AuthService.class);
+        materialService = mock(MaterialService.class);
         currentUser = mock(CurrentUser.class);
         user = User.builder().id(UUID.randomUUID()).build();
         when(currentUser.get()).thenReturn(user);
         mockMvc = MockMvcBuilders.standaloneSetup(new SubjectController(subjectService, currentUser),
                         new TagController(tagService, currentUser), new AuthController(authService),
+                        new MaterialController(materialService, currentUser),
                         new MvpController())
                 .setControllerAdvice(new GlobalExceptionHandler())
                 .build();
@@ -59,11 +66,32 @@ class GeneratedApiContractTest {
     void emptyReferenceListsUseItemsEnvelope() throws Exception {
         when(subjectService.findAll(user)).thenReturn(List.of());
         when(tagService.findAll(user)).thenReturn(List.of());
+        when(materialService.findAll(user)).thenReturn(new MaterialListResponse(List.of()));
 
         mockMvc.perform(get("/api/subjects")).andExpect(status().isOk())
                 .andExpect(content().json("{\"items\":[]}"));
         mockMvc.perform(get("/api/tags")).andExpect(status().isOk())
                 .andExpect(content().json("{\"items\":[]}"));
+        mockMvc.perform(get("/api/materials")).andExpect(status().isOk())
+                .andExpect(content().json("{\"items\":[]}"));
+    }
+
+    @Test
+    void materialListReturnsContractFieldsForCurrentUser() throws Exception {
+        UUID materialId = UUID.randomUUID();
+        UUID subjectId = UUID.randomUUID();
+        var summary = new MaterialSummary(materialId, "SQL lecture", FileFormat.PDF, 4096L,
+                subjectId, "Databases", java.time.OffsetDateTime.parse("2026-10-20T10:00:00Z"));
+        when(materialService.findAll(user)).thenReturn(new MaterialListResponse(List.of(summary)));
+
+        mockMvc.perform(get("/api/materials")).andExpect(status().isOk())
+                .andExpect(jsonPath("$.items[0].id").value(materialId.toString()))
+                .andExpect(jsonPath("$.items[0].name").value("SQL lecture"))
+                .andExpect(jsonPath("$.items[0].format").value("PDF"))
+                .andExpect(jsonPath("$.items[0].sizeBytes").value(4096))
+                .andExpect(jsonPath("$.items[0].subjectId").value(subjectId.toString()))
+                .andExpect(jsonPath("$.items[0].subjectName").value("Databases"))
+                .andExpect(jsonPath("$.items[0].uploadedAt").exists());
     }
 
     @Test
@@ -97,6 +125,8 @@ class GeneratedApiContractTest {
 
         mockMvc.perform(get("/api/subjects")).andExpect(status().isUnauthorized())
                 .andExpect(jsonPath("$.code").value("AUTHENTICATION_REQUIRED"));
+        mockMvc.perform(get("/api/materials")).andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.code").value("AUTHENTICATION_REQUIRED"));
     }
 
     @Test
@@ -111,8 +141,6 @@ class GeneratedApiContractTest {
 
     @Test
     void unimplementedGeneratedEndpointsAreRegisteredAndReturn501() throws Exception {
-        mockMvc.perform(get("/api/materials")).andExpect(status().isNotImplemented())
-                .andExpect(content().string(""));
         mockMvc.perform(get("/api/progress")).andExpect(status().isNotImplemented());
         mockMvc.perform(get("/api/attempts")).andExpect(status().isNotImplemented());
         mockMvc.perform(get("/api/users/me/preferences")).andExpect(status().isNotImplemented());

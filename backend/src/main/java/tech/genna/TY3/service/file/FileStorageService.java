@@ -97,9 +97,13 @@ public class FileStorageService {
 
     /** The caller must close the returned stream after reading it. */
     public ResponseInputStream<GetObjectResponse> readFile(UUID fileId, UUID ownerId) {
+        return readFile(fileId, ownerId, FileScope.GENERAL);
+    }
+
+    public ResponseInputStream<GetObjectResponse> readFile(UUID fileId, UUID ownerId, FileScope scope) {
         try {
             return s3Client.getObject(GetObjectRequest.builder()
-                    .bucket(bucketName).key(objectKey(ownerId, fileId)).build());
+                    .bucket(bucketName).key(objectKey(ownerId, fileId, scope)).build());
         } catch (S3Exception e) {
             if (e.statusCode() == 404 && !(e instanceof NoSuchBucketException)) {
                 throw new ResourceNotFoundException("Файл не найден");

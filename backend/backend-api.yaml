@@ -364,18 +364,20 @@ paths:
     get:
       tags: [Materials]
       operationId: listMaterials
+      x-result-order: "uploadedAt DESC, id DESC"
       summary: Получить метаданные всех своих материалов
       description: |
-        Без пагинации и серверных фильтров в MVP. Содержимое файлов, текст и
-        статусы ИИ в список не входят. Поиск по подстроке name без учёта регистра,
-        фильтры по предмету/формату и пять способов сортировки реализует frontend.
+        Возвращает только материалы авторизованного пользователя. Без пагинации и серверных фильтров в MVP.
+        Порядок: uploadedAt по убыванию, при совпадении даты id по убыванию. Элемент содержит id, name,
+        format, sizeBytes, subjectId, subjectName и uploadedAt; содержимое файла, текст и статус обработки
+        в список не входят. Поиск, фильтры и выбор сортировки реализует frontend.
       responses:
         '200':
           description: 'Список материалов; при отсутствии items: []'
           content:
             application/json:
               schema: { $ref: '#/components/schemas/MaterialListResponse' }
-        '501': { $ref: '#/components/responses/NotImplemented' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
         default: { $ref: '#/components/responses/Error' }
     post:
       tags: [Materials]
