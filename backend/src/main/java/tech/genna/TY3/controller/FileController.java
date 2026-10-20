@@ -16,7 +16,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
-import tech.genna.TY3.api.MaterialsApi;
+import tech.genna.TY3.api.FilesApi;
 import tech.genna.TY3.entity.Material;
 import tech.genna.TY3.repository.MaterialRepository;
 import tech.genna.TY3.security.CurrentUser;
@@ -26,7 +26,7 @@ import java.util.UUID;
 
 @RestController
 @RequiredArgsConstructor
-public class FileController implements MaterialsApi {
+public class FileController implements FilesApi {
     private final FileStorageService fileStorageService;
     private final MaterialRepository materials;
     private final CurrentUser currentUser;

@@ -13,15 +13,15 @@ import java.net.URI;
 import java.time.Duration;
 
 @Configuration
-public class MinioConfig {
+public class S3StorageConfig {
 
-    @Value("${minio.endpoint}")
+    @Value("${s3.endpoint}")
     private String endpoint;
 
-    @Value("${minio.access-key}")
+    @Value("${s3.access-key}")
     private String accessKey;
 
-    @Value("${minio.secret-key}")
+    @Value("${s3.secret-key}")
     private String secretKey;
 
     @Bean
@@ -31,7 +31,7 @@ public class MinioConfig {
                         .apiCallTimeout(Duration.ofSeconds(60))
                         .apiCallAttemptTimeout(Duration.ofSeconds(20)))
                 .endpointOverride(URI.create(endpoint))
-                .region(Region.US_EAST_1) // MinIO игнорирует регион, но SDK он необходим
+                .region(Region.US_EAST_1)
                 .credentialsProvider(StaticCredentialsProvider.create(
                         AwsBasicCredentials.create(accessKey, secretKey)
                 ))

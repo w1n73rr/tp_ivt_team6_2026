@@ -93,7 +93,7 @@ curl.exe -i -X DELETE "http://localhost:8080/api/materials/$materialId" -H "Auth
 ```
 
 DELETE атомарно удаляет материал и его связи с тегами и записывает задание
-очистки файла. После фиксации транзакции выполняется попытка удаления из MinIO.
+очистки файла. После фиксации транзакции выполняется попытка удаления из S3-хранилища.
 При ошибке хранилища ответ остаётся 204, материал уже недоступен; сохранённое
 задание повторяется в фоне. Повтор DELETE того же материала возвращает 404.
 Для будущих активных обработок EXTRACTING/ANALYZING предусмотрен 409.
@@ -120,7 +120,7 @@ Flyway применяет `V3__Create_Materials.sql`: `materials`, `material_tag
 `title` хранит API-поле `name`; вместо публичного `file_url` используется `file_id`.
 Добавлены описание, размер файла и исходное имя для существующего API.
 
-Для запуска нужны PostgreSQL и MinIO, а также существующие настройки JWT:
+Для запуска нужны PostgreSQL и SeaweedFS, а также существующие настройки JWT:
 
 ```dotenv
 DB_URL=jdbc:postgresql://localhost:5432/study_assistant_db
@@ -128,17 +128,25 @@ DB_USERNAME=postgres
 DB_PASSWORD=<password>
 JWT_SECRET=<existing-secret>
 JWT_EXPIRATION=86400000
-MINIO_ENDPOINT=http://localhost:9000
-MINIO_ACCESS_KEY=<access-key>
-MINIO_SECRET_KEY=<secret-key>
-MINIO_BUCKET_NAME=materials
+S3_ENDPOINT=http://localhost:8333
+S3_ACCESS_KEY=<access-key>
+S3_SECRET_KEY=<secret-key>
+S3_BUCKET_NAME=materials
 MATERIALS_CLEANUP_DELAY_MS=60000
 ```
 
-Старые имена переменных MinIO поддерживаются как fallback. Bucket создаётся
+Both Compose files run SeaweedFS and default S3 credentials to `local-minio-access`
+and `local-minio-secret-change-before-deploy`. Override them with `S3_ACCESS_KEY`
+and `S3_SECRET_KEY`. `S3_ENDPOINT` is also overridable (Compose defaults to
+`http://seaweedfs:8333`, while a backend started outside Compose uses
+`http://localhost:8333`). Previous `MINIO_*` environment variable names remain
+supported as fallbacks.
+
+Старые имена переменных `MINIO_*` поддерживаются как fallback. Bucket создаётся
 существующим FileStorageService при запуске. Необходимы права на проверку/создание
 bucket и запись/удаление объектов. Схемой управляет Flyway, Hibernate работает
-в режиме `validate`. В Compose исправлены имя образа MinIO и сеть сервиса.
+в режиме `validate`. SeaweedFS использует S3 API на порту `8333` и отдельный том
+`seaweeddata`.
 
 Сборка без автотестов с JDK 25:
 

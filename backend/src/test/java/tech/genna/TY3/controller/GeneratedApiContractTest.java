@@ -16,8 +16,10 @@ import tech.genna.TY3.api.model.MaterialSummary;
 import tech.genna.TY3.api.model.SubjectResponse;
 import tech.genna.TY3.api.model.TagListItemResponse;
 import tech.genna.TY3.entity.User;
+import tech.genna.TY3.repository.MaterialRepository;
 import tech.genna.TY3.security.CurrentUser;
 import tech.genna.TY3.service.auth.AuthService;
+import tech.genna.TY3.service.file.FileStorageService;
 import tech.genna.TY3.service.material.MaterialService;
 import tech.genna.TY3.service.subject.SubjectService;
 import tech.genna.TY3.service.tag.TagService;
@@ -57,6 +59,7 @@ class GeneratedApiContractTest {
         mockMvc = MockMvcBuilders.standaloneSetup(new SubjectController(subjectService, currentUser),
                         new TagController(tagService, currentUser), new AuthController(authService),
                         new MaterialController(materialService, currentUser),
+                        new FileController(mock(FileStorageService.class), mock(MaterialRepository.class), currentUser),
                         new MvpController())
                 .setControllerAdvice(new GlobalExceptionHandler())
                 .build();
@@ -150,7 +153,7 @@ class GeneratedApiContractTest {
     void everyGeneratedOperationHasARegisteredHttpMapping() {
         var context = mockMvc.getDispatcherServlet().getWebApplicationContext();
         var mappings = context.getBean(RequestMappingHandlerMapping.class).getHandlerMethods().keySet();
-        for (Class<?> api : List.of(AuthApi.class, SubjectsApi.class, TagsApi.class, MaterialsApi.class,
+        for (Class<?> api : List.of(AuthApi.class, SubjectsApi.class, TagsApi.class, MaterialsApi.class, FilesApi.class,
                 QuizzesApi.class, GenerationApi.class, AttemptsApi.class, TrainingApi.class,
                 AnalyticsApi.class, UsersApi.class)) {
             for (var method : api.getDeclaredMethods()) {

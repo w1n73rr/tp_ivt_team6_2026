@@ -32,7 +32,7 @@ public class FileStorageService {
     private final S3Client s3Client;
     private final String bucketName;
 
-    public FileStorageService(S3Client s3Client, @Value("${minio.bucket-name}") String bucketName) {
+    public FileStorageService(S3Client s3Client, @Value("${s3.bucket-name}") String bucketName) {
         this.s3Client = s3Client;
         this.bucketName = bucketName;
     }

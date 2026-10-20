@@ -28,6 +28,7 @@ tags:
   - { name: Subjects, description: 'Личный каталог предметов' }
   - { name: Tags, description: 'Теги предметов пользователя' }
   - { name: Materials, description: 'Загрузка и управление материалами' }
+  - { name: Files, description: 'Чтение и скачивание файлов материалов' }
   - { name: Quizzes, description: 'Генерация и просмотр тестов' }
   - { name: Generation, description: 'Длительные задачи генерации' }
   - { name: Attempts, description: 'Прохождение, история и результаты' }
@@ -505,7 +506,7 @@ paths:
         default: { $ref: '#/components/responses/Error' }
   /api/materials/{materialId}/file:
     get:
-      tags: [Materials]
+      tags: [Files]
       operationId: openMaterialFile
       summary: Открыть оригинал PDF или TXT в браузере
       description: Авторизованный backend потоково читает приватный S3. Для DOCX — 415 PREVIEW_NOT_SUPPORTED. TXT выдаётся как text/plain, PDF — application/pdf; Cache-Control private, no-store и X-Content-Type-Options nosniff.
@@ -527,7 +528,7 @@ paths:
         default: { $ref: '#/components/responses/Error' }
   /api/materials/{materialId}/download:
     get:
-      tags: [Materials]
+      tags: [Files]
       operationId: downloadMaterial
       summary: Скачать оригинал PDF, DOCX или TXT
       description: Backend проверяет владельца и потоково выдаёт оригинальные байты с исходным MIME; постоянные публичные S3 URL не выдаются.
