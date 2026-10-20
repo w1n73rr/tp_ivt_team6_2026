@@ -361,6 +361,20 @@ paths:
         '409': { $ref: '#/components/responses/Conflict' }
         '501': { $ref: '#/components/responses/NotImplemented' }
         default: { $ref: '#/components/responses/Error' }
+  /api/materials/allowed-formats:
+    get:
+      tags: [Materials]
+      operationId: getAllowedFileFormats
+      summary: Получить разрешённые расширения файлов
+      description: Данные справочника AllowedFileFormat (B7). Расширения без точки, в нижнем регистре. При пустом справочнике возвращается пустой массив.
+      responses:
+        '200':
+          description: Разрешённые расширения
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/AllowedFileFormatsResponse' }
+        default: { $ref: '#/components/responses/Error' }
+
   /api/materials:
     get:
       tags: [Materials]
@@ -1017,6 +1031,17 @@ components:
     NotImplemented:
       description: API подготовлено по контракту; бизнес-реализация ещё не подключена. Тело отсутствует.
   schemas:
+    AllowedFileFormatsResponse:
+      type: object
+      required: [extensions]
+      properties:
+        extensions:
+          type: array
+          description: Разрешённые расширения без точки; пустой массив, если загрузка всех форматов запрещена.
+          items:
+            type: string
+          example: [pdf, docx, txt]
+
     RegisterRequest:
       type: object
       required: [username, email, password]

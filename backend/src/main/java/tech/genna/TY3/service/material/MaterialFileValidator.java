@@ -1,5 +1,7 @@
 package tech.genna.TY3.service.material;
 
+import tech.genna.TY3.model.AllowedFileFormat;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 import org.springframework.web.multipart.MultipartFile;
@@ -10,7 +12,6 @@ import java.nio.ByteBuffer;
 import java.nio.charset.CharacterCodingException;
 import java.nio.charset.CodingErrorAction;
 import java.nio.charset.StandardCharsets;
-import java.util.Locale;
 import java.util.zip.ZipInputStream;
 
 @Component
@@ -29,7 +30,11 @@ public class MaterialFileValidator {
         if (name.isBlank() || name.length() > 255 || name.codePoints().anyMatch(Character::isISOControl)) {
             throw badFile();
         }
-        String extension = name.substring(name.lastIndexOf('.') + 1).toLowerCase(Locale.ROOT);
+        int dot = name.lastIndexOf('.');
+        String extension = dot < 0 ? "" : name.substring(dot + 1);
+        AllowedFileFormat format = AllowedFileFormat.fromExtension(extension)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.UNSUPPORTED_MEDIA_TYPE, "UNSUPPORTED_FILE_TYPE"));
         byte[] bytes;
         try (var input = file.getInputStream()) {
             bytes = input.readNBytes(MAX_BYTES + 1);
@@ -40,8 +45,9 @@ public class MaterialFileValidator {
             throw new ResponseStatusException(HttpStatus.PAYLOAD_TOO_LARGE, "FILE_TOO_LARGE");
         }
         if (bytes.length == 0) throw badFile();
-        String contentType = switch (extension) {
-            case "txt" -> {
+        // Exhaustive switch: adding a registry entry also requires a content validator.
+        byte[] validatedBytes = switch (format) {
+            case TXT -> {
                 try {
                     String text = StandardCharsets.UTF_8.newDecoder()
                             .onMalformedInput(CodingErrorAction.REPORT)
@@ -54,22 +60,21 @@ public class MaterialFileValidator {
                 } catch (CharacterCodingException e) {
                     throw badFile();
                 }
-                yield "text/plain; charset=UTF-8";
+                yield bytes;
             }
-            case "pdf" -> {
+            case PDF -> {
                 String header = new String(bytes, 0, Math.min(bytes.length, 8), StandardCharsets.US_ASCII);
                 String tail = new String(bytes, Math.max(0, bytes.length - 2048),
                         Math.min(bytes.length, 2048), StandardCharsets.US_ASCII);
                 if (!header.matches("%PDF-[12]\\.[0-9]") || !tail.contains("%%EOF")) throw badFile();
-                yield "application/pdf";
+                yield bytes;
             }
-            case "docx" -> {
+            case DOCX -> {
                 validateDocx(bytes);
-                yield "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
+                yield bytes;
             }
-            default -> throw new ResponseStatusException(HttpStatus.UNSUPPORTED_MEDIA_TYPE, "UNSUPPORTED_FILE_TYPE");
         };
-        return new ValidatedFile(bytes, name, extension.toUpperCase(Locale.ROOT), contentType);
+        return new ValidatedFile(validatedBytes, name, format.apiFormat().getValue(), format.contentType());
     }
 
     private void validateDocx(byte[] bytes) {

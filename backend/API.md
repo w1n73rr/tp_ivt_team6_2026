@@ -10,6 +10,13 @@ Swagger UI: `/swagger-ui.html`; исходный YAML: `/backend-api.yaml`.
 
 ## Генерация и реализация
 
+`GET /api/materials/allowed-formats` возвращает HTTP 200 и
+`{"extensions":["pdf","docx","txt"]}`. Требуется Bearer JWT.
+Ответ формируется непосредственно из справочника B7 `AllowedFileFormat`,
+который используется при проверке загрузок; отдельного списка в endpoint нет.
+Расширения передаются без точки, в нижнем регистре. При пустом справочнике
+ответ — HTTP 200 с `{"extensions":[]}`.
+
 Требуется JDK 25. Gradle Wrapper обновлён до 9.1.0, поддерживающего Java 25.
 
 ```powershell
