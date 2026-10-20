@@ -6,9 +6,11 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 import tech.genna.TY3.api.MaterialsApi;
 import tech.genna.TY3.api.model.*;
+import tech.genna.TY3.model.AllowedFileFormat;
 import tech.genna.TY3.security.CurrentUser;
 import tech.genna.TY3.service.material.MaterialService;
 import java.net.URI;
+import java.util.Arrays;
 import java.util.UUID;
 
 @RestController
@@ -16,6 +18,14 @@ import java.util.UUID;
 public class MaterialController implements MaterialsApi {
     private final MaterialService materials;
     private final CurrentUser currentUser;
+
+    @Override
+    public ResponseEntity<AllowedFileFormatsResponse> getAllowedFileFormats() {
+        var extensions = Arrays.stream(AllowedFileFormat.values())
+                .map(AllowedFileFormat::extension)
+                .toList();
+        return ResponseEntity.ok(new AllowedFileFormatsResponse(extensions));
+    }
 
     @Override
     public ResponseEntity<MaterialListResponse> listMaterials() {
