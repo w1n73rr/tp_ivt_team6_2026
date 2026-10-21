@@ -1,0 +1,4 @@
+.gradle/
+build/
+chromedriver/
+se-metadata.json
