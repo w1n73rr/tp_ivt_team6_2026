@@ -3,16 +3,17 @@
     <a routerLink="/materials">Мои материалы</a><span>/ Загрузка</span>
   </nav>
   <h1>Загрузка материала</h1>
-  <p class="intro">Добавьте лекцию или конспект — ИИ выделит темы и ключевые понятия для тестов.</p>
-  <p class="demo">
-    Прототип: файл не отправляется на сервер и не обрабатывается ИИ. В список добавляется только
-    демонстрационная запись, которая исчезнет после F5.
+  <p class="intro">Добавьте лекцию или конспект для дальнейшей подготовки к экзамену.</p>
+  <p class="intro">
+    PDF, DOCX или TXT до 10 МБ. Файл сохраняется на сервере; анализ ИИ пока не запускается.
   </p>
   <section class="upload-card">
     @if (success()) {
       <div class="success" role="status">
-        <h2>Материал добавлен в демонстрационный список</h2>
-        <p>Серверного сохранения не было. После обновления страницы запись исчезнет.</p>
+        <h2>Материал сохранён на сервере</h2>
+        <p>
+          Идентификатор материала: {{ savedId() }}. Можно вернуться к списку материалов.
+        </p>
         <a class="primary" routerLink="/materials">Перейти к материалам</a>
       </div>
     } @else {
@@ -42,8 +43,7 @@
               <div>
                 <b>{{ chosen.name }}</b
                 ><small
-                  >{{ chosen.size / 1048576 | number: '1.0-2' }} МБ · готов к демонстрационной
-                  загрузке</small
+                  >{{ chosen.size / 1048576 | number: '1.0-2' }} МБ · готов к загрузке</small
                 >
               </div>
               <button type="button" (click)="removeFile()" aria-label="Убрать выбранный файл">
@@ -56,6 +56,7 @@
               <label for="material-name">Название материала</label
               ><input
                 id="material-name"
+                maxlength="255"
                 formControlName="name"
                 placeholder="Название лекции или конспекта"
                 [attr.aria-invalid]="form.controls.name.touched && !form.controls.name.value.trim()"
@@ -76,14 +77,19 @@
               >
                 <option value="" disabled hidden>Выберите предмет</option>
                 <option value="__new">Создать предмет</option>
-                <option>Базы данных</option>
-                <option>Операционные системы</option>
-                <option>Математический анализ</option>
+                @for (subject of subjects(); track subject.id) {
+                  <option [value]="subject.name">{{ subject.name }}</option>
+                }
               </select>
+              @if (subjectsError()) {
+                <p class="field-error" role="alert">{{ subjectsError() }}</p>
+                <button type="button" (click)="loadSubjects()">Повторить загрузку предметов</button>
+              }
               @if (form.controls.subject.value === '__new') {
                 <label class="sr-only" for="custom-subject">Название нового предмета</label
                 ><input
                   id="custom-subject"
+                  maxlength="100"
                   formControlName="customSubject"
                   placeholder="Название нового предмета"
                 />
@@ -97,6 +103,7 @@
             <label for="description">Описание <small>необязательно</small></label
             ><textarea
               id="description"
+              maxlength="2000"
               formControlName="description"
               placeholder="Кратко: о чём материал, к какому экзамену готовитесь"
               rows="3"
@@ -119,9 +126,11 @@
               }
               <input
                 id="tag-input"
+                maxlength="50"
                 [value]="tagInput"
                 (input)="tagInput = $any($event.target).value"
                 (keydown.enter)="addTag($event)"
+                (blur)="addTag()"
                 placeholder="Добавить тег"
               /><button type="button" (click)="addTag()">Добавить</button>
             </div>
@@ -139,15 +148,4 @@
       </form>
     }
   </section>
-  <details class="scenario">
-    <summary>Проверить ошибку загрузки</summary>
-    <label
-      ><input
-        type="checkbox"
-        [checked]="failUpload"
-        [disabled]="loading() || success()"
-        (change)="failUpload = $any($event.target).checked"
-      />Имитировать ошибку mock-сервиса</label
-    >
-  </details></app-materials-shell
->
+</app-materials-shell>

@@ -47,6 +47,59 @@ export class MaterialsApi {
     }
     return 'Не удалось выполнить операцию. Повторите попытку.';
   }
+  subjects(): Observable<{ items: { id: string; name: string }[] }> {
+    if (!this.auth.token) return throwError(() => new HttpErrorResponse({ status: 401 }));
+    return this.http.get<{ items: { id: string; name: string }[] }>('/api/subjects', {
+      headers: new HttpHeaders({ Authorization: `Bearer ${this.auth.token}` }),
+    });
+  }
+  upload(
+    file: File,
+    data: { name: string; subjectName: string; description: string; tags: string[] },
+  ): Observable<{ material: Material }> {
+    if (!this.auth.token) return throwError(() => new HttpErrorResponse({ status: 401 }));
+    const body = new FormData();
+    body.append('file', file);
+    body.append(
+      'metadata',
+      new Blob(
+        [
+          JSON.stringify({
+            name: data.name,
+            subjectName: data.subjectName,
+            description: data.description,
+            tagIds: [],
+            newTagNames: data.tags,
+          }),
+        ],
+        { type: 'application/json' },
+      ),
+    );
+    return this.http.post<{ material: Material }>('/api/materials', body, {
+      headers: new HttpHeaders({ Authorization: `Bearer ${this.auth.token}` }),
+    });
+  }
+  uploadError(error: unknown): string {
+    if (error instanceof HttpErrorResponse) {
+      switch (error.status) {
+        case 401:
+          return 'Сессия завершена. Войдите ещё раз.';
+        case 400:
+          return 'Проверьте поля и содержимое файла. Сервер отклонил документ.';
+        case 409:
+          return 'Материал с таким названием уже существует. Измените название.';
+        case 413:
+          return 'Размер файла превышает 10 МБ.';
+        case 415:
+          return 'Сервер не поддерживает формат документа.';
+        case 503:
+          return 'Хранилище временно недоступно. Попробуйте позже.';
+        case 0:
+          return 'Нет соединения с сервером.';
+      }
+    }
+    return 'Не удалось загрузить материал. Попробуйте ещё раз.';
+  }
   errorMessage(error: unknown): string {
     if (error instanceof HttpErrorResponse && error.status === 501)
       return 'Получение списка материалов ещё не реализовано на сервере. Загрузка доступна отдельно.';
