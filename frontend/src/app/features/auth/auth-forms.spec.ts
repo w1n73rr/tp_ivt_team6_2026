@@ -11,6 +11,7 @@ describe('Auth forms', () => {
   let http: HttpTestingController;
   let harness: RouterTestingHarness;
   beforeEach(async () => {
+    sessionStorage.clear();
     TestBed.configureTestingModule({
       providers: [provideRouter(routes), provideHttpClient(), provideHttpClientTesting()],
     });
@@ -46,9 +47,8 @@ describe('Auth forms', () => {
     await harness.fixture.whenStable();
     harness.detectChanges();
     expect(page.isError).toBe(false);
-    expect(harness.routeNativeElement?.querySelector('.success')?.textContent).toContain(
-      'Регистрация выполнена успешно',
-    );
+    expect(TestBed.inject(Router).url).toBe('/dashboard');
+    expect(TestBed.inject(Router).lastSuccessfulNavigation()?.extras.replaceUrl).toBe(true);
   });
 
   it('rejects mismatch, then accepts corrected confirmation without stale errors', async () => {

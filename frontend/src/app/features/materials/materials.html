@@ -40,7 +40,7 @@
           ><small>Можно удалить выбранные материалы одним действием</small>
         </div>
         <button (click)="selected.clear()">Сбросить выбор</button
-        ><button (click)="explain('Удаление выбранных')">
+        ><button (click)="removeSelected()" [disabled]="busy()">
           <app-figma-icon name="delete" />Удалить выбранные
         </button>
       </div>
@@ -74,7 +74,9 @@
             <h2>{{ item.name }}</h2>
             <small
               >{{ item.subjectName }} · {{ item.format }} ·
-              @if (item.sizeBytes >= 1048576) {
+              @if (item.sizeBytes < 1024) {
+                {{ item.sizeBytes }} Б
+              } @else if (item.sizeBytes >= 1048576) {
                 {{ item.sizeBytes / 1048576 | number: '1.0-1' }} МБ
               } @else {
                 {{ item.sizeBytes / 1024 | number: '1.0-0' }} КБ
@@ -87,17 +89,15 @@
           <div class="row-actions">
             <button (click)="explain('Создание теста')">
               <app-figma-icon name="test" />Создать тест</button
-            ><button (click)="explain('Редактирование')" aria-label="Изменить материал">
+            ><button (click)="edit(item)" [disabled]="busy()" title="Изменить материал" aria-label="Изменить материал">
               <app-figma-icon name="edit" /></button
-            ><button (click)="explain('Скачивание')" aria-label="Скачать материал">
+            ><button (click)="file(item, false)" [disabled]="busy()" title="Скачать оригинал" aria-label="Скачать материал">
               <app-figma-icon name="download" />
             </button>
-            @if (item.format !== 'DOCX') {
-              <button (click)="explain('Открытие файла')" aria-label="Открыть материал">
+              <button (click)="file(item, true)" [disabled]="busy()" [title]="item.format === 'DOCX' ? 'Просмотр текста DOCX' : 'Открыть в новой вкладке'" aria-label="Открыть материал">
                 <app-figma-icon name="eye" />
               </button>
-            }
-            <button class="danger" (click)="explain('Удаление')" aria-label="Удалить материал">
+            <button class="danger" (click)="remove([item])" [disabled]="busy()" title="Удалить материал" aria-label="Удалить материал">
               <app-figma-icon name="delete" />
             </button>
           </div>
@@ -108,18 +108,5 @@
     </section>
   }
   <p class="hint">Поиск и фильтры будут подключены в отдельной задаче tpivt6_26-37.</p>
-  <p class="demo">
-    Демонстрационный режим: вымышленные данные, API не подключён. Материалы не сохраняются после F5.
-  </p>
-  <details>
-    <summary>Проверить состояния макета</summary>
-    <div class="scenarios">
-      <label for="scenario">Сценарий:</label
-      ><select id="scenario" (change)="scenario($event)">
-        <option value="data">Список материалов</option>
-        <option value="empty">Пустой список</option>
-        <option value="error">Ошибка загрузки</option></select
-      ><button (click)="load()" [disabled]="loading()">Обновить</button>
-    </div>
-  </details></app-materials-shell
->
+  <button (click)="load()" [disabled]="loading() || busy()">Обновить список</button>
+</app-materials-shell>

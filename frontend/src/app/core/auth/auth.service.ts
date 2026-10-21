@@ -16,14 +16,30 @@ export class AuthService {
 
   private readonly http = inject(HttpClient);
 
-  // Пока храним токен только в памяти приложения.
   private accessToken: string | null = null;
+  constructor() {
+    try {
+      const saved = JSON.parse(sessionStorage.getItem('exam-ai-session') ?? 'null');
+      if (typeof saved?.token === 'string' && typeof saved?.username === 'string') {
+        this.accessToken = saved.token;
+        this.sessionUsername.set(saved.username);
+      }
+    } catch { /* Недоступное хранилище не мешает входу в текущей вкладке. */ }
+  }
+  get token(): string | null { return this.accessToken; }
+  private saveSession(token: string, username: string): void {
+    this.accessToken = token;
+    this.sessionUsername.set(username);
+    try { sessionStorage.setItem('exam-ai-session', JSON.stringify({ token, username })); }
+    catch { /* При запрете хранилища сессия остаётся только в памяти. */ }
+  }
 
   private readonly sessionUsername = signal<string | null>(null);
   readonly username = this.sessionUsername.asReadonly();
 
   logout(): void {
     this.accessToken = null;
+    try { sessionStorage.removeItem('exam-ai-session'); } catch {}
     this.sessionUsername.set(null);
   }
 
@@ -37,8 +53,7 @@ export class AuthService {
           throw new Error('Сервер не вернул токен');
         }
 
-        this.accessToken = response.token;
-        this.sessionUsername.set(data.username);
+        this.saveSession(response.token, data.username);
 
         return {
           success: true,
@@ -58,8 +73,7 @@ export class AuthService {
           throw new Error('Сервер не вернул токен');
         }
 
-        this.accessToken = response.token;
-        this.sessionUsername.set(data.username);
+        this.saveSession(response.token, data.username);
 
         return {
           success: true,
