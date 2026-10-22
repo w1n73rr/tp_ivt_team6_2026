@@ -1,0 +1,5 @@
+# Optional local overrides. Copy to ui.local.properties (ignored by Git).
+# ui.chromeDriver=C:/tools/chromedriver.exe
+# ui.chromeBinary=C:/Program Files/Google/Chrome/Application/chrome.exe
+# ui.disableSandbox=true
+# ui.headless=true
