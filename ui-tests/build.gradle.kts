@@ -18,7 +18,6 @@ dependencies {
 
 tasks.test {
     useJUnitPlatform()
-    filter { includeTestsMatching("*.MaterialUploadUiTest") }
     // Pass explicit overrides; BrowserSettings supplies defaults for both IDEA and Gradle.
     listOf("ui.baseUrl", "ui.headless", "ui.disableSandbox", "ui.chromeDriver", "ui.chromeBinary").forEach { key ->
         System.getProperty(key)?.let { systemProperty(key, it) }
