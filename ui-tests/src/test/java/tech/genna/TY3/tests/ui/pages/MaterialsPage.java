@@ -3,11 +3,13 @@ package tech.genna.TY3.tests.ui.pages;
 import com.codeborne.selenide.SelenideElement;
 import com.codeborne.selenide.ElementsCollection;
 import tech.genna.TY3.tests.ui.support.Name;
+import org.openqa.selenium.By;
 
 import static com.codeborne.selenide.Condition.exactText;
 import static com.codeborne.selenide.Condition.exist;
 import static com.codeborne.selenide.Condition.text;
 import static com.codeborne.selenide.Condition.visible;
+import static com.codeborne.selenide.Condition.match;
 import static com.codeborne.selenide.Selenide.$x;
 import static com.codeborne.selenide.Selenide.$$x;
 import static com.codeborne.selenide.Selenide.open;
@@ -23,6 +25,21 @@ public final class MaterialsPage extends NamedPage {
     public final SelenideElement foundCount = list.$x(".//div[@class='list-head']/span");
     @Name("Результат операции с материалами")
     public final SelenideElement notice = $x("//app-materials-shell//p[@role='status']");
+    @Name("Поиск по названию")
+    public final SelenideElement searchInput = $x("//input[@aria-label='Поиск по названию']");
+    @Name("Фильтр формата")
+    public final SelenideElement formatSelect = $x("//select[@aria-label='Формат файла']");
+    @Name("Пустой список материалов")
+    public final SelenideElement emptyState = list.$x(".//div[@role='status']");
+    @Name("Ошибка загрузки списка")
+    public final SelenideElement listError = $x("//app-materials-shell//div[@role='alert']");
+    @Name("Повторить загрузку списка")
+    public final SelenideElement retryButton = listError.$x(".//button[normalize-space()='Повторить']");
+    @Name("Выйти из аккаунта")
+    public final SelenideElement logoutButton = $x("//app-materials-shell//button[normalize-space()='Выйти']");
+    @Name("Текущий пользователь")
+    public final SelenideElement accountName = $x("//app-materials-shell//div[@class='account']//b");
+    public final ElementsCollection materialTitles = list.$$x(".//article//h2");
     public final ElementsCollection materialRows = $$x("//section[@aria-label='Список материалов']//article");
     public final EditMaterialModal editModal = new EditMaterialModal();
     public final DeleteMaterialModal deleteModal = new DeleteMaterialModal();
@@ -73,6 +90,7 @@ public final class MaterialsPage extends NamedPage {
     }
 
     public SelenideElement row(String name) {
-        return materialRows.findBy(text(name));
+        return materialRows.findBy(match("Материал с названием «" + name + "»",
+                element -> element.findElement(By.tagName("h2")).getText().equals(name)));
     }
 }
