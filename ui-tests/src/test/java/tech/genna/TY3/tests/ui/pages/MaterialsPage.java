@@ -19,6 +19,10 @@ public final class MaterialsPage extends NamedPage {
     public final SelenideElement list = $x("//section[@aria-label='Список материалов']");
     @Name("Загрузить материал")
     public final SelenideElement uploadButton = $x("//header//button[normalize-space()='Загрузить материал']");
+    @Name("Количество найденных материалов")
+    public final SelenideElement foundCount = list.$x(".//div[@class='list-head']/span");
+    @Name("Результат операции с материалами")
+    public final SelenideElement notice = $x("//app-materials-shell//p[@role='status']");
     public final ElementsCollection materialRows = $$x("//section[@aria-label='Список материалов']//article");
     public final EditMaterialModal editModal = new EditMaterialModal();
     public final DeleteMaterialModal deleteModal = new DeleteMaterialModal();
