@@ -1,29 +1,42 @@
 package tech.genna.TY3.tests.ui.pages;
 
+import com.codeborne.selenide.SelenideElement;
+import tech.genna.TY3.tests.ui.support.Name;
+
 import static com.codeborne.selenide.Condition.visible;
-import static com.codeborne.selenide.Selenide.$;
+import static com.codeborne.selenide.Selenide.$x;
 import static com.codeborne.selenide.Selenide.open;
 
-public final class RegisterPage {
-    private static final String USERNAME = "#username";
-    private static final String EMAIL = "#email";
-    private static final String PASSWORD = "#password";
-    private static final String CONFIRM_PASSWORD = "#confirmPassword";
-    private static final String SUBMIT = "button[type=submit]";
-    private static final String MATERIALS_NAVIGATION = "a[href='/materials']";
+public final class RegisterPage extends NamedPage {
+    @Name("Имя пользователя")
+    public final SelenideElement usernameInput = $x("//*[@id='username']");
+    @Name("Электронная почта")
+    public final SelenideElement emailInput = $x("//*[@id='email']");
+    @Name("Пароль")
+    public final SelenideElement passwordInput = $x("//*[@id='password']");
+    @Name("Подтверждение пароля")
+    public final SelenideElement confirmPasswordInput = $x("//*[@id='confirmPassword']");
+    @Name("Отправить форму")
+    public final SelenideElement submitButton = $x("//form//button[@type='submit']");
+    @Name("Мои материалы")
+    public final SelenideElement materialsLink = $x("//a[@href='/materials']");
+
+    public RegisterPage() {
+        nameElements();
+    }
 
     public RegisterPage openPage() {
         open("/register");
-        $(USERNAME).shouldBe(visible);
+        usernameInput.shouldBe(visible);
         return this;
     }
 
     public void register(String username, String email, String password) {
-        $(USERNAME).setValue(username);
-        $(EMAIL).setValue(email);
-        $(PASSWORD).setValue(password);
-        $(CONFIRM_PASSWORD).setValue(password);
-        $(SUBMIT).click();
-        $(MATERIALS_NAVIGATION).shouldBe(visible);
+        usernameInput.setValue(username);
+        emailInput.setValue(email);
+        passwordInput.setValue(password);
+        confirmPasswordInput.setValue(password);
+        submitButton.click();
+        materialsLink.shouldBe(visible);
     }
 }

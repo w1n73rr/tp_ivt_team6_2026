@@ -19,9 +19,11 @@ dependencies {
 tasks.test {
     useJUnitPlatform()
     filter { includeTestsMatching("*.MaterialUploadUiTest") }
-    systemProperty("ui.baseUrl", System.getProperty("ui.baseUrl", "http://localhost:3000"))
-    systemProperty("ui.browser", System.getProperty("ui.browser", "chrome"))
-    systemProperty("ui.headless", System.getProperty("ui.headless", "true"))
-    systemProperty("ui.disableSandbox", System.getProperty("ui.disableSandbox", "false"))
+    // Pass explicit overrides; BrowserSettings supplies defaults for both IDEA and Gradle.
+    listOf("ui.baseUrl", "ui.headless", "ui.disableSandbox", "ui.chromeDriver", "ui.chromeBinary").forEach { key ->
+        System.getProperty(key)?.let { systemProperty(key, it) }
+    }
+    // The application state is external to Gradle, so each Run executes the browser tests.
+    outputs.upToDateWhen { false }
     testLogging { events("passed", "failed", "skipped") }
 }

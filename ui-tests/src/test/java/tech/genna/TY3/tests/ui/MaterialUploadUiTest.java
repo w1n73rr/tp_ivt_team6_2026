@@ -1,13 +1,15 @@
 package tech.genna.TY3.tests.ui;
 
-import com.codeborne.selenide.Configuration;
+import tech.genna.TY3.tests.ui.support.BrowserSettings;
+import tech.genna.TY3.tests.ui.pages.DashboardPage;
+import java.util.Locale;
+import static com.codeborne.selenide.Condition.*;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.openqa.selenium.chrome.ChromeOptions;
 import org.openqa.selenium.devtools.NetworkInterceptor;
 import org.openqa.selenium.remote.http.Contents;
 import org.openqa.selenium.remote.http.HttpResponse;
@@ -29,7 +31,6 @@ import static com.codeborne.selenide.Selenide.closeWebDriver;
 import static com.codeborne.selenide.WebDriverRunner.getWebDriver;
 import static org.openqa.selenium.remote.http.HttpMethod.POST;
 
-/** Browser checks for tpivt6_26-46. Requires the Docker frontend, backend and storage. */
 public class MaterialUploadUiTest {
     private static final String SUBJECT = "Базы данных";
     private static final String SEED_NAME = "Подготовка предмета";
@@ -47,17 +48,7 @@ public class MaterialUploadUiTest {
 
     @BeforeAll
     static void prepareUserAndSubject() throws IOException {
-        Configuration.baseUrl = System.getProperty("ui.baseUrl", "http://localhost:3000");
-        Configuration.browser = System.getProperty("ui.browser", "chrome");
-        Configuration.headless = Boolean.parseBoolean(System.getProperty("ui.headless", "true"));
-        Configuration.browserSize = "1366x900";
-        Configuration.timeout = 15_000;
-        ChromeOptions options = new ChromeOptions();
-        options.addArguments("--disable-gpu", "--no-first-run");
-        if (Boolean.getBoolean("ui.disableSandbox")) {
-            options.addArguments("--no-sandbox", "--disable-gpu-sandbox");
-        }
-        Configuration.browserCapabilities = options;
+        BrowserSettings.configure();
 
         fixturesDir = Files.createTempDirectory("material-upload-ui-");
         lecture = fixturesDir.resolve("lecture.txt").toFile();
@@ -72,7 +63,6 @@ public class MaterialUploadUiTest {
         new RegisterPage().openPage().register(username, username + "@example.com", PASSWORD);
         accountCreated = true;
 
-        // Create the required subject through the real UI once for this isolated user.
         MATERIALS.openPage().openUploadForm()
                 .chooseFile(lecture)
                 .name(SEED_NAME)
@@ -114,58 +104,77 @@ public class MaterialUploadUiTest {
     @Test
     @DisplayName("TC-UPL-01: успешная загрузка TXT через форму")
     void successfulUpload() throws IOException {
-        MATERIALS.openPage().shouldNotContain(SUCCESS_NAME);
-        MATERIALS.openUploadForm()
-                .chooseFile(lecture)
-                .shouldShowSelectedFile(lecture, "TXT")
-                .name(SUCCESS_NAME)
-                .subject(SUBJECT)
-                .description("Материал для проверки загрузки.")
-                .addTag("SQL")
-                .submit()
-                .shouldShowSuccess()
-                .backToMaterials()
-                .shouldContain(SUCCESS_NAME, SUBJECT, "TXT");
+        MaterialsPage materialsPage = new MaterialsPage().openPage();
+        materialsPage.row(SUCCESS_NAME).shouldNot(exist);
+        materialsPage.uploadButton.click();
+        UploadPage uploadPage = new UploadPage().shouldBeOpen();
+
+        uploadPage.fileInput.uploadFile(lecture);
+        String size = String.format(Locale.US, "%.2f", Files.size(lecture.toPath()) / 1048576.0);
+        uploadPage.fileCard.shouldBe(visible).shouldHave(text("lecture.txt"), text("TXT"), text(size + " МБ"));
+        uploadPage.nameInput.setValue(SUCCESS_NAME).shouldHave(value(SUCCESS_NAME));
+        uploadPage.subjectSelect.selectOption(SUBJECT);
+        uploadPage.subjectSelect.shouldHave(value(SUBJECT));
+        uploadPage.descriptionInput.setValue("Материал для проверки загрузки.")
+                .shouldHave(value("Материал для проверки загрузки."));
+        uploadPage.tagInput.setValue("SQL");
+        uploadPage.addTagButton.click();
+        uploadPage.tag.shouldHave(text("SQL"));
+
+        uploadPage.submitButton.click();
+        uploadPage.successTitle.shouldBe(visible).shouldHave(exactText("Материал сохранён на сервере"));
+        uploadPage.successPanel.shouldHave(text("Идентификатор материала:"));
+        uploadPage.successReturnLink.click();
+        materialsPage.shouldBeOpen();
+        materialsPage.row(SUCCESS_NAME).shouldBe(visible).shouldHave(text(SUBJECT), text("TXT"));
     }
 
     @Test
     @DisplayName("TC-UPL-02: нельзя загрузить материал без файла")
     void uploadWithoutFile() {
-        MATERIALS.openPage().openUploadForm()
-                .name(NO_FILE_NAME)
-                .subject(SUBJECT)
-                .shouldHaveNoSelectedFile()
-                .submit()
-                .shouldShowError("Выберите файл для загрузки")
-                .shouldNotShowSuccess()
-                .backToMaterials()
-                .shouldNotContain(NO_FILE_NAME);
+        MaterialsPage materialsPage = new MaterialsPage().openPage();
+        materialsPage.uploadButton.click();
+        UploadPage uploadPage = new UploadPage().shouldBeOpen();
+        uploadPage.nameInput.setValue(NO_FILE_NAME).shouldHave(value(NO_FILE_NAME));
+        uploadPage.subjectSelect.selectOption(SUBJECT);
+        uploadPage.subjectSelect.shouldHave(value(SUBJECT));
+        uploadPage.fileCard.shouldNot(exist);
+        uploadPage.submitButton.click();
+        uploadPage.errorMessage.shouldBe(visible).shouldHave(text("Выберите файл для загрузки"));
+        uploadPage.successPanel.shouldNot(exist);
+        uploadPage.materialsLink.click();
+        materialsPage.shouldBeOpen().row(NO_FILE_NAME).shouldNot(exist);
     }
 
     @Test
     @DisplayName("TC-UPL-03: PNG отклоняется формой")
     void forbiddenFormat() {
-        MATERIALS.openPage();
-        // Selenium sets the file input directly, even though the OS chooser filters by extension.
-        MATERIALS.openUploadForm()
-                .chooseFile(image)
-                .shouldShowError("Поддерживаются только PDF, DOCX и TXT")
-                .shouldHaveNoSelectedFile()
-                .name(BAD_FORMAT_NAME)
-                .subject(SUBJECT)
-                .submit()
-                .shouldNotShowSuccess()
-                .backToMaterials()
-                .shouldNotContain(BAD_FORMAT_NAME);
+        MaterialsPage materialsPage = new MaterialsPage().openPage();
+        materialsPage.uploadButton.click();
+        UploadPage uploadPage = new UploadPage().shouldBeOpen();
+        uploadPage.fileInput.uploadFile(image);
+        uploadPage.errorMessage.shouldBe(visible).shouldHave(text("Поддерживаются только PDF, DOCX и TXT"));
+        uploadPage.fileCard.shouldNot(exist);
+        uploadPage.nameInput.setValue(BAD_FORMAT_NAME);
+        uploadPage.subjectSelect.selectOption(SUBJECT);
+        uploadPage.submitButton.click();
+        uploadPage.errorMessage.shouldBe(visible).shouldHave(text("Выберите файл для загрузки"));
+        uploadPage.successPanel.shouldNot(exist);
+        uploadPage.materialsLink.click();
+        materialsPage.shouldBeOpen().row(BAD_FORMAT_NAME).shouldNot(exist);
     }
 
     @Test
     @DisplayName("TC-UPL-04: ошибка 500 при загрузке показана пользователю")
     void serverError() {
-        UploadPage upload = MATERIALS.openPage().openUploadForm()
-                .chooseFile(lecture)
-                .name(SERVER_ERROR_NAME)
-                .subject(SUBJECT);
+        MaterialsPage materialsPage = new MaterialsPage().openPage();
+        materialsPage.uploadButton.click();
+        UploadPage uploadPage = new UploadPage().shouldBeOpen();
+        uploadPage.fileInput.uploadFile(lecture);
+        uploadPage.fileCard.shouldBe(visible).shouldHave(text("lecture.txt"));
+        uploadPage.nameInput.setValue(SERVER_ERROR_NAME).shouldHave(value(SERVER_ERROR_NAME));
+        uploadPage.subjectSelect.selectOption(SUBJECT);
+        uploadPage.subjectSelect.shouldHave(value(SUBJECT));
 
         Route failUpload = Route.matching(request -> POST == request.getMethod()
                         && request.getUri().endsWith("/api/materials"))
@@ -173,14 +182,19 @@ public class MaterialUploadUiTest {
                         .addHeader("Content-Type", "application/json")
                         .setContent(Contents.utf8String("{\"error\":\"Test server error\"}")));
         try (NetworkInterceptor ignored = new NetworkInterceptor(getWebDriver(), failUpload)) {
-            upload.submit()
-                    .shouldShowError("Не удалось загрузить материал")
-                    .shouldNotShowSuccess();
+            uploadPage.submitButton.click();
+            uploadPage.errorMessage.shouldBe(visible).shouldHave(text("Не удалось загрузить материал"));
+            uploadPage.successPanel.shouldNot(exist);
         }
-        upload.backToMaterials().shouldNotContain(SERVER_ERROR_NAME);
+        uploadPage.materialsLink.click();
+        materialsPage.shouldBeOpen().row(SERVER_ERROR_NAME).shouldNot(exist);
     }
 
     private static void logIn() {
-        new LoginPage().openPage().signIn(username, PASSWORD);
+        LoginPage loginPage = new LoginPage().openPage();
+        loginPage.usernameInput.setValue(username);
+        loginPage.passwordInput.setValue(PASSWORD);
+        loginPage.submitButton.click();
+        new DashboardPage().materialsLink.shouldBe(visible);
     }
 }

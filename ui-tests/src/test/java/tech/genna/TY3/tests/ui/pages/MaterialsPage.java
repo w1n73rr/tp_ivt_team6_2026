@@ -1,22 +1,28 @@
 package tech.genna.TY3.tests.ui.pages;
 
 import com.codeborne.selenide.SelenideElement;
+import com.codeborne.selenide.ElementsCollection;
+import tech.genna.TY3.tests.ui.support.Name;
 
 import static com.codeborne.selenide.Condition.exactText;
 import static com.codeborne.selenide.Condition.exist;
 import static com.codeborne.selenide.Condition.text;
 import static com.codeborne.selenide.Condition.visible;
-import static com.codeborne.selenide.Selenide.$;
-import static com.codeborne.selenide.Selenide.$$;
+import static com.codeborne.selenide.Selenide.$x;
+import static com.codeborne.selenide.Selenide.$$x;
 import static com.codeborne.selenide.Selenide.open;
 
-public final class MaterialsPage {
-    private static final String TITLE = "h1";
-    private static final String LIST = "section[aria-label='Список материалов']";
-    private static final String UPLOAD_BUTTON = "header button";
-    private static final String MATERIAL_ROWS = ".list article";
-    private static final String DELETE_BUTTON = "button[aria-label='Удалить материал']";
-    private static final String CONFIRM_DELETE_BUTTONS = "[role=dialog] button";
+public final class MaterialsPage extends NamedPage {
+    @Name("Заголовок страницы материалов")
+    public final SelenideElement title = $x("//h1");
+    @Name("Список материалов")
+    public final SelenideElement list = $x("//section[@aria-label='Список материалов']");
+    @Name("Загрузить материал")
+    public final SelenideElement uploadButton = $x("//header//button[normalize-space()='Загрузить материал']");
+    public final ElementsCollection materialRows = $$x("//section[@aria-label='Список материалов']//article");
+    public final DeleteMaterialModal deleteModal = new DeleteMaterialModal();
+
+    public MaterialsPage() { nameElements(); }
 
     public MaterialsPage openPage() {
         open("/materials");
@@ -24,13 +30,13 @@ public final class MaterialsPage {
     }
 
     public MaterialsPage shouldBeOpen() {
-        $(TITLE).shouldHave(exactText("Мои материалы"));
-        $(LIST).shouldBe(visible);
+        title.shouldHave(exactText("Мои материалы"));
+        list.shouldBe(visible);
         return this;
     }
 
     public UploadPage openUploadForm() {
-        $(UPLOAD_BUTTON).shouldHave(exactText("Загрузить материал")).click();
+        uploadButton.shouldHave(exactText("Загрузить материал")).click();
         return new UploadPage().shouldBeOpen();
     }
 
@@ -52,12 +58,12 @@ public final class MaterialsPage {
     public void deleteIfPresent(String name) {
         SelenideElement material = row(name);
         if (!material.exists()) return;
-        material.$(DELETE_BUTTON).click();
-        $$(CONFIRM_DELETE_BUTTONS).findBy(exactText("Удалить")).click();
+        material.$x(".//button[@aria-label='Удалить материал']").click();
+        deleteModal.confirmButton.click();
         material.shouldNot(exist);
     }
 
-    private SelenideElement row(String name) {
-        return $$(MATERIAL_ROWS).findBy(text(name));
+    public SelenideElement row(String name) {
+        return materialRows.findBy(text(name));
     }
 }
