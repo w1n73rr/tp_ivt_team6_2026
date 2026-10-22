@@ -1,3 +1,4 @@
+import { PendingMaterial } from '../pending-material';
 import { Component, inject, signal, DestroyRef, OnInit } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
@@ -14,6 +15,7 @@ import { FigmaIcon } from '../figma-icon';
   styleUrl: './upload.scss',
 })
 export class MaterialUpload implements OnInit {
+  private readonly pending = inject(PendingMaterial);
   private readonly fb = inject(FormBuilder);
   private readonly source = inject(MaterialsApi);
   private readonly router = inject(Router);
@@ -35,6 +37,8 @@ export class MaterialUpload implements OnInit {
   readonly subjectsError = signal('');
   readonly savedId = signal('');
   ngOnInit(): void {
+    const file = this.pending.take();
+    if (file) this.accept([file]);
     this.loadSubjects();
   }
   loadSubjects(): void {
@@ -67,7 +71,7 @@ export class MaterialUpload implements OnInit {
     event.preventDefault();
     if (!this.loading()) this.accept(event.dataTransfer?.files ?? null);
   }
-  accept(files: FileList | null): void {
+  accept(files: FileList | File[] | null): void {
     if (this.loading()) return;
     this.error.set('');
     this.fileError.set('');
