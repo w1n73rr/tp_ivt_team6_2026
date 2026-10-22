@@ -20,6 +20,7 @@ public final class MaterialsPage extends NamedPage {
     @Name("Загрузить материал")
     public final SelenideElement uploadButton = $x("//header//button[normalize-space()='Загрузить материал']");
     public final ElementsCollection materialRows = $$x("//section[@aria-label='Список материалов']//article");
+    public final EditMaterialModal editModal = new EditMaterialModal();
     public final DeleteMaterialModal deleteModal = new DeleteMaterialModal();
 
     public MaterialsPage() { nameElements(); }
@@ -61,6 +62,10 @@ public final class MaterialsPage extends NamedPage {
         material.$x(".//button[@aria-label='Удалить материал']").click();
         deleteModal.confirmButton.click();
         material.shouldNot(exist);
+    }
+
+    public MaterialRow material(String name) {
+        return new MaterialRow(row(name));
     }
 
     public SelenideElement row(String name) {
