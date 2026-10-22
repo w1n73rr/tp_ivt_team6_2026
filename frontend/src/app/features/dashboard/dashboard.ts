@@ -25,7 +25,7 @@ export class Dashboard {
       void this.router.navigateByUrl('/materials/upload');
       return;
     }
-    if (section === 'Мои материалы') {
+    if (section === 'Мои материалы' || section === 'Поиск') {
       void this.router.navigateByUrl('/materials');
       return;
     }
