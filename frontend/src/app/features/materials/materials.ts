@@ -152,6 +152,9 @@ export class Materials implements OnInit {
       }), takeUntilDestroyed(this.destroy), finalize(() => { this.busy.set(false); if (tab && !delivered) tab.close(); }),
     ).subscribe({next: () => { delivered = true; }, error: error => { tab?.close(); this.message.set(this.source.actionError(error)); }});
   }
+  createTest(item: Material): void {
+    void this.router.navigate(['/materials', item.id, 'generate']);
+  }
   explain(action: string): void {
     if (action === 'Загрузка материала') {
       void this.router.navigateByUrl('/materials/upload');

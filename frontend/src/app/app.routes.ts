@@ -6,6 +6,7 @@ import { Login } from './features/auth/login/login';
 import { Register } from './features/auth/register/register';
 import { Dashboard } from './features/dashboard/dashboard';
 import { NotFound } from './not-found/not-found';
+import { Generation } from './features/generation/generation';
 
 export const routes: Routes = [
   {
@@ -26,6 +27,7 @@ export const routes: Routes = [
     component: Dashboard,
   },
   { path: 'materials/upload', component: MaterialUpload },
+  { path: 'materials/:materialId/generate', component: Generation },
   { path: 'materials', component: Materials },
   {
     path: '**',

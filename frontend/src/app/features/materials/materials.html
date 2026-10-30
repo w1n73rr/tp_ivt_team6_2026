@@ -86,7 +86,7 @@
             <small>Загружен</small><time>{{ item.uploadedAt | date: 'dd.MM.yyyy' : 'UTC' }}</time>
           </div>
           <div class="row-actions">
-            <button (click)="explain('Создание теста')">
+            <button (click)="createTest(item)" [disabled]="busy()">
               <app-figma-icon name="test" />Создать тест</button
             ><button (click)="edit(item)" [disabled]="busy()" title="Изменить материал" aria-label="Изменить материал">
               <app-figma-icon name="edit" /></button
