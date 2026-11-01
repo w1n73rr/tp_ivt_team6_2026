@@ -86,6 +86,14 @@ describe('Generation prototype', () => {
     page.settings.set({ ...options.defaults, questionCount: 7 as 5 }); page.start();
     expect(source.start).not.toHaveBeenCalled(); expect(page.error()).toContain('допустимые');
   });
+  it('preserves settings on repeated demo failure, supports retry and rejects a zero result', async () => {
+    const { page } = await open(); page.setName('Повтор'); page.choose({ questionCount: 10, difficulty: 'HARD', questionType: 'TRUE_FALSE' });
+    page.start(); page.demoResult(false); page.retryGeneration();
+    expect(source.start).toHaveBeenLastCalledWith('one', { questionCount: 10, difficulty: 'HARD', questionType: 'TRUE_FALSE' });
+    expect(page.state()).toBe('waiting'); page.demoResult(false); page.backToSettings(); expect(page.name()).toBe('Повтор');
+    page.start(); page.demoResult(true, 0); expect(page.state()).toBe('failed');
+    page.retryGeneration(); page.demoResult(true, 3); expect(page.actualCount()).toBe(3); expect(page.state()).toBe('ready');
+  });
   it('handles unavailable settings and allows retry without losing the route', async () => {
     source.options.mockReturnValue(throwError(() => new Error()));
     const { page, harness } = await open(); expect(page.state()).toBe('error');

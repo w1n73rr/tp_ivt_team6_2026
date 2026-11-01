@@ -1,4 +1,7 @@
 :host { display: block; }
+.result { text-align: center; align-items: center; min-height: 480px; justify-content: center; }
+.success-mark { display: grid; place-items: center; width: 72px; height: 72px; border-radius: 22px; background: #e5f5ee; color: #208268; font-size: 44px; }
+.failure h2 { color: #be3044; }
 .test-name { display: grid; gap: 10px; font-size: 14px; font-weight: bold; }
 .test-name input { width: 100%; padding: 12px 14px; border: 1px solid #dce4f1; border-radius: 9px; font: inherit; color: #17243b; }
 .test-name input:focus-visible { outline: 3px solid #8bb5ff; }

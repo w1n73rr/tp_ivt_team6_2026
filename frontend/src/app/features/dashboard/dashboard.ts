@@ -25,8 +25,12 @@ export class Dashboard {
       void this.router.navigateByUrl('/materials/upload');
       return;
     }
-    if (section === 'Мои материалы' || section === 'Поиск') {
+    if (section === 'Мои материалы' || section === 'Поиск' || section === 'Создать тест') {
       void this.router.navigateByUrl('/materials');
+      return;
+    }
+    if (section === 'Начать тренировку' || section === 'Тесты') {
+      void this.router.navigateByUrl('/tests');
       return;
     }
     this.notice = `${section}: раздел пока в разработке.`;

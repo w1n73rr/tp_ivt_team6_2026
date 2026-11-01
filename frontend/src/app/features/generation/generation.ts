@@ -30,14 +30,18 @@ export class Generation {
   readonly settings = signal<GenerationSettings | null>(null);
   readonly state = signal<'loading' | 'settings' | 'sending' | 'waiting' | 'error' | 'ready' | 'failed'>('loading');
   readonly name = signal('');
+  readonly actualCount = signal(0);
   setName(value: string): void {
     this.name.set(value);
     if (this.material()) this.drafts.names.set(this.material()!.id, value);
   }
-  demoResult(success: boolean): void {
-    if (this.source.demo && this.state() === 'waiting') this.state.set(success ? 'ready' : 'failed');
+  demoResult(success: boolean, count = this.settings()?.questionCount ?? 0): void {
+    if (!this.source.demo || this.state() !== 'waiting') return;
+    this.actualCount.set(Math.max(0, Math.min(count, this.settings()?.questionCount ?? 0)));
+    this.state.set(success && this.actualCount() > 0 ? 'ready' : 'failed');
   }
   backToSettings(): void { this.state.set('settings'); }
+  retryGeneration(): void { if (this.state() === 'failed') { this.backToSettings(); this.start(); } }
   readonly error = signal('');
   readonly difficulties = { EASY: 'Лёгкая', MEDIUM: 'Средняя', HARD: 'Сложная' };
   readonly summaries = { EASY: 'лёгкая', MEDIUM: 'средняя', HARD: 'сложная' };

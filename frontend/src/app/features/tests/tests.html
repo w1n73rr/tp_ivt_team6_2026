@@ -1,23 +1,25 @@
 <app-materials-shell active="tests">
   <header><h1>Тесты</h1><p>Здесь хранятся ваши сохранённые тесты.</p></header>
   @if (source.demo) {
-    <details class="demo"><summary>Демонстрационный режим — показаны примеры, а не сохранённые тесты</summary><p>API списка ещё не подключён. Генерация не добавляет записи в эту таблицу.</p><div class="demo-actions">
+    <details class="demo"><summary>Демонстрационный режим — показаны примеры, а не сохранённые тесты</summary><p>Изменения только в памяти текущей вкладки, отдельно для пользователя. После обновления страницы примеры восстановятся. API ещё не подключён; генерация не добавляет записи в таблицу.</p><label><input type="checkbox" (change)="source.setMutationFailure?.($any($event.target).checked)"> Демо: отказ сохранения и удаления</label><div class="demo-actions">
       <button (click)="demo('list')" [attr.aria-pressed]="scenario() === 'list'">Примеры</button><button (click)="demo('empty')" [attr.aria-pressed]="scenario() === 'empty'">Пустой список</button><button (click)="demo('error')" [attr.aria-pressed]="scenario() === 'error'">Ошибка загрузки</button><button (click)="demo('auth')" [attr.aria-pressed]="scenario() === 'auth'">Требуется вход</button>
     </div></details>
   }
   <a class="materials-link" routerLink="/materials"><span class="folder"><app-figma-icon name="folder" /></span><span><b>Мои материалы</b><small>Перейти к загруженным материалам и создавать тесты по ним</small></span><span class="arrow" aria-hidden="true">›</span></a>
-  <div class="toolbar"><label><span class="sr-only">Поиск по названию теста — будет добавлен отдельно</span><input type="search" placeholder="Поиск по названию теста" disabled></label><select disabled aria-label="Сортировка — будет добавлена отдельно"><option>Сортировка: По названию А–Я</option></select></div>
-  <p class="hint">Поиск и сортировка будут подключены отдельной задачей.</p>
+  <div class="toolbar"><label><span class="sr-only">Поиск по названию теста</span><input type="search" placeholder="Поиск по названию теста" [value]="query()" (input)="query.set($any($event.target).value)"></label><select aria-label="Сортировка тестов" [value]="sort()" (change)="chooseSort($any($event.target).value)"><option value="name:asc">Название: А–Я ↑</option><option value="name:desc">Название: Я–А ↓</option><option value="materialName:asc">Материал: А–Я ↑</option><option value="materialName:desc">Материал: Я–А ↓</option><option value="createdAt:asc">Дата: сначала старые ↑</option><option value="createdAt:desc">Дата: сначала новые ↓</option></select></div>
+  <p class="hint">Поиск по названию без учёта регистра. При равных значениях сохраняется исходный порядок.</p>
+  @if (query() && visibleItems().length > 0) { <button type="button" (click)="query.set('')">Очистить поиск</button> }
+  @if (state() === 'list' && visibleItems().length === 0) { <section class="state"><h2>По вашему запросу тесты не найдены</h2><p>Попробуйте изменить название или очистить поиск.</p><button type="button" (click)="query.set('')">Очистить поиск</button></section> }
   @if (notice()) { <div class="notice" role="status">{{ notice() }} <button type="button" (click)="notice.set('')" aria-label="Закрыть сообщение">×</button></div> }
   @if (state() === 'loading') { <section class="state" role="status" aria-live="polite"><h2>Загружаем тесты…</h2></section> }
   @if (state() === 'empty') { <section class="state"><app-figma-icon name="test" /><h2>Тестов пока нет</h2><p>Создайте тест из раздела «Мои материалы».</p><a class="primary" routerLink="/materials">Мои материалы</a></section> }
   @if (state() === 'error') { <section class="state" role="alert"><h2>Не удалось загрузить тесты</h2><p>Попробуйте ещё раз.</p><button class="primary" type="button" (click)="load()">Повторить</button></section> }
   @if (state() === 'auth') { <section class="state" role="alert"><h2>Требуется авторизация</h2><p>Войдите, чтобы увидеть свои тесты.</p><a class="primary" routerLink="/login" [queryParams]="{returnTo: '/tests'}">Войти</a></section> }
-  @if (state() === 'list') {
-    <div class="table-scroll" tabindex="0" role="region" aria-label="Таблица тестов — прокрутка по горизонтали"><table><caption class="sr-only">Тесты</caption><thead><tr><th scope="col">Название теста</th><th scope="col">Учебный материал</th><th scope="col">Количество вопросов</th><th scope="col">Сложность</th><th scope="col">Тип вопросов</th><th scope="col">Дата создания</th><th scope="col">Действия</th></tr></thead><tbody>
-      @for (item of items(); track item.id) {
+  @if (state() === 'list' && visibleItems().length > 0) {
+    <div class="table-scroll" tabindex="0" role="region" aria-label="Таблица тестов — прокрутка по горизонтали"><table><caption class="sr-only">Тесты</caption><thead><tr><th scope="col" [attr.aria-sort]="ariaSort('name')">Название теста</th><th scope="col" [attr.aria-sort]="ariaSort('materialName')">Учебный материал</th><th scope="col">Количество вопросов</th><th scope="col">Сложность</th><th scope="col">Тип вопросов</th><th scope="col" [attr.aria-sort]="ariaSort('createdAt')">Дата создания</th><th scope="col">Действия</th></tr></thead><tbody>
+      @for (item of visibleItems(); track item.id) {
         <tr><th scope="row"><div class="test-name"><span class="format" [class.docx]="item.format === 'DOCX'" [class.txt]="item.format === 'TXT'">{{ item.format }}</span><span>{{ item.name }}</span></div></th><td>{{ item.materialName }}</td><td class="center">{{ item.questionCount }}</td><td>{{ difficulties[item.difficulty] }}</td><td>{{ types[item.questionType] }}</td><td class="date">{{ item.createdAt | date:'dd.MM.yyyy':'UTC' }}</td><td><div class="row-actions"><button (click)="action('play', item)">Пройти тест</button><button (click)="action('rename', item)" [attr.aria-label]="'Переименовать тест «' + item.name + '»'" title="Переименовать"><app-figma-icon name="edit" /></button><button class="danger" (click)="action('delete', item)" [attr.aria-label]="'Удалить тест «' + item.name + '»'" title="Удалить"><app-figma-icon name="delete" /></button></div></td></tr>
       }
-    </tbody></table></div><p class="total">Всего тестов: {{ items().length }}</p>
+    </tbody></table></div><p class="total">Показано: {{ visibleItems().length }} из {{ items().length }}</p>
   }
 </app-materials-shell>
