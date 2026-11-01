@@ -7,6 +7,8 @@ import { Register } from './features/auth/register/register';
 import { Dashboard } from './features/dashboard/dashboard';
 import { NotFound } from './not-found/not-found';
 import { Generation } from './features/generation/generation';
+import { TestsPage } from './features/tests/tests';
+import { testsAccess } from './core/auth/tests-access';
 
 export const routes: Routes = [
   {
@@ -29,6 +31,7 @@ export const routes: Routes = [
   { path: 'materials/upload', component: MaterialUpload },
   { path: 'materials/:materialId/generate', component: Generation },
   { path: 'materials', component: Materials },
+  { path: 'tests', component: TestsPage, canActivate: [testsAccess] },
   {
     path: '**',
     component: NotFound,
