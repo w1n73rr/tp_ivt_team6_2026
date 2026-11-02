@@ -1,3 +1,17 @@
 .idea
 local-docs/
 *.pdf
+
+# Local configuration and credentials; templates are safe to commit.
+.env
+.env.*
+!.env.example
+!.env.*.example
+docker-compose.local.yml
+*.pem
+*.key
+*.p12
+*.pfx
+*.jks
+*.keystore
+**/test-results/

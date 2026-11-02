@@ -1,0 +1,3 @@
+# Historical JWT placeholder in a dotenv documentation example, not a real credential.
+# Scope is exactly this commit, file, rule and line; new findings still block CI.
+2992f48333c38ad45a61801858eb5cd020f3cdaa:backend/MATERIALS.md:generic-api-key:124

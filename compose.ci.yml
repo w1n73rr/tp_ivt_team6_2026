@@ -1,0 +1,24 @@
+# Use with docker-compose.yml and --env-file .env.ci.example, never with a developer DB.
+# !override requires Docker Compose >= 2.24.4.
+services:
+  exam-ai-db:
+    ports: !reset []
+    volumes: !override
+      - type: tmpfs
+        target: /var/lib/postgresql/data
+  seaweedfs:
+    restart: "no"
+    ports: !reset []
+    volumes: !override
+      - type: tmpfs
+        target: /data
+  exam-ai-backend:
+    image: ${CI_BACKEND_IMAGE:-tpivt-ci-backend:local}
+    ports: !reset []
+    environment:
+      SPRING_CONFIG_IMPORT: ""
+      SPRING_JPA_SHOW_SQL: "false"
+      LOGGING_LEVEL_ORG_HIBERNATE_SQL: WARN
+      LOGGING_LEVEL_ORG_SPRINGFRAMEWORK_SECURITY: WARN
+  exam-ai-frontend:
+    image: ${CI_FRONTEND_IMAGE:-tpivt-ci-frontend:local}

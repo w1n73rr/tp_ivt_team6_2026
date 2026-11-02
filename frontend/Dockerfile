@@ -24,7 +24,7 @@ RUN npm run build
 # ---------- Stage 2: запуск приложения ----------
 
 # Берём лёгкий Nginx.
-FROM nginx:stable-alpine
+FROM nginx:stable-alpine AS runtime-base
 
 # Удаляем стандартную страницу Nginx.
 RUN rm -rf /usr/share/nginx/html/*
@@ -32,10 +32,16 @@ RUN rm -rf /usr/share/nginx/html/*
 COPY nginx.conf /etc/nginx/conf.d/default.conf
 
 # Копируем результат Angular build из первой стадии.
-COPY --from=build /app/dist/frontend/browser /usr/share/nginx/html
-
 # Nginx внутри контейнера слушает порт 80.
 EXPOSE 80
 
 # Запускаем Nginx и оставляем его работать на foreground.
 CMD ["nginx", "-g", "daemon off;"]
+
+# CI packages the Angular files already built and tested by the frontend job.
+FROM runtime-base AS ci-runtime
+COPY browser /usr/share/nginx/html
+
+# Default local build still compiles everything from source.
+FROM runtime-base AS runtime
+COPY --from=build /app/dist/frontend/browser /usr/share/nginx/html
