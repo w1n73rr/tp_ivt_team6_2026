@@ -1,0 +1,147 @@
+{
+  "date": "2026-11-02",
+  "scenario": "5 questions, medium, reasoning disabled, model-assisted review",
+  "acceptance": "failed: multiple_choice rejected; human review still required",
+  "runs": {
+    "single_choice": {
+      "status": "validated",
+      "completedCalls": 2,
+      "seconds": 10.2503767,
+      "events": [
+        {
+          "requestId": "live-demo-single_choice",
+          "stage": "PREPARING_PROMPT",
+          "sequence": 1
+        },
+        {
+          "requestId": "live-demo-single_choice",
+          "stage": "WAITING_FOR_MODEL",
+          "sequence": 2
+        },
+        {
+          "requestId": "live-demo-single_choice",
+          "stage": "RECEIVING_RESPONSE",
+          "sequence": 3
+        },
+        {
+          "requestId": "live-demo-single_choice",
+          "stage": "VALIDATING",
+          "sequence": 4
+        },
+        {
+          "requestId": "live-demo-single_choice",
+          "stage": "REVIEWING_CONTENT",
+          "sequence": 5
+        },
+        {
+          "requestId": "live-demo-single_choice",
+          "stage": "VALIDATED",
+          "sequence": 6
+        }
+      ]
+    },
+    "multiple_choice": {
+      "events": [
+        {
+          "requestId": "live-demo-multiple_choice",
+          "stage": "PREPARING_PROMPT",
+          "sequence": 1
+        },
+        {
+          "requestId": "live-demo-multiple_choice",
+          "stage": "WAITING_FOR_MODEL",
+          "sequence": 2
+        },
+        {
+          "requestId": "live-demo-multiple_choice",
+          "stage": "RECEIVING_RESPONSE",
+          "sequence": 3
+        },
+        {
+          "requestId": "live-demo-multiple_choice",
+          "stage": "VALIDATING",
+          "sequence": 4
+        },
+        {
+          "requestId": "live-demo-multiple_choice",
+          "stage": "REVISING",
+          "sequence": 5
+        },
+        {
+          "requestId": "live-demo-multiple_choice",
+          "stage": "WAITING_FOR_MODEL",
+          "sequence": 6
+        },
+        {
+          "requestId": "live-demo-multiple_choice",
+          "stage": "RECEIVING_RESPONSE",
+          "sequence": 7
+        },
+        {
+          "requestId": "live-demo-multiple_choice",
+          "stage": "VALIDATING",
+          "sequence": 8
+        },
+        {
+          "requestId": "live-demo-multiple_choice",
+          "stage": "FAILED",
+          "sequence": 9
+        }
+      ],
+      "completedCalls": 2,
+      "seconds": 23.5011905,
+      "status": "failed",
+      "code": "INVALID_MODEL_OUTPUT"
+    },
+    "true_false": {
+      "status": "validated",
+      "completedCalls": 2,
+      "seconds": 9.0222297,
+      "events": [
+        {
+          "requestId": "live-demo-true_false",
+          "stage": "PREPARING_PROMPT",
+          "sequence": 1
+        },
+        {
+          "requestId": "live-demo-true_false",
+          "stage": "WAITING_FOR_MODEL",
+          "sequence": 2
+        },
+        {
+          "requestId": "live-demo-true_false",
+          "stage": "RECEIVING_RESPONSE",
+          "sequence": 3
+        },
+        {
+          "requestId": "live-demo-true_false",
+          "stage": "VALIDATING",
+          "sequence": 4
+        },
+        {
+          "requestId": "live-demo-true_false",
+          "stage": "REVIEWING_CONTENT",
+          "sequence": 5
+        },
+        {
+          "requestId": "live-demo-true_false",
+          "stage": "VALIDATED",
+          "sequence": 6
+        }
+      ]
+    }
+  },
+  "humanReview": {
+    "single_choice": [
+      "q5 introduces boundary testing terminology not explicitly present in material; answer is hinted by wording",
+      "medium difficulty is mostly direct recall; automated reviewer missed defects"
+    ],
+    "true_false": [
+      "answers grounded in source, both true and false present",
+      "difficulty mostly easy; not proof of medium quality"
+    ],
+    "multiple_choice": [
+      "both candidates have one correct answer; rejected before review"
+    ]
+  }
+}

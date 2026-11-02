@@ -144,6 +144,10 @@ tasks.withType<Test> {
 	useJUnitPlatform()
 }
 
+tasks.withType<JavaCompile> {
+	options.encoding = "UTF-8"
+}
+
 tasks.bootJar {
 	archiveFileName.set("app.jar")
 }

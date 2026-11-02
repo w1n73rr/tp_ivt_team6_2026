@@ -3,6 +3,14 @@
 CI, тестовое окружение и воспроизводимый запуск: [инструкция](docs/ci.md).
 
 Файловое API: [материалы и файловое хранилище](backend/MATERIALS.md).
+ML-компонент: [метод generate, входные параметры, streaming и проверки](docs/ml-generator.md).
+Для OpenRouter предусмотрен `.env.example`; реальный ключ хранится только локально.
+Компонент не заменяет ещё не реализованный backend API генерации.
+[Короткая памятка BE/FE: метод, синхронность callback и WebSocket](docs/be-ml-handoff.md).
+[M1 v2: выбранный формат выхода ML](docs/ml-output-m1-v2.md).
+Предложение аналитикам и BE: [жизненный цикл, каналы и статусы](docs/generation-lifecycle-proposal.md)
+(требует согласования; WebSocket этим документом не реализован).
+
 ### Description
 ...
 
