@@ -47,7 +47,8 @@ endpoint полезен для проверки настроек, но не яв
 
 OpenAPI: [backend-api.yaml](../backend/backend-api.yaml); DTO и интерфейсы генерирует
 Gradle. Это подготовленный контракт; подтверждение FE/ML другой командой ещё требуется.
-Внешние приложенные памятки описывают будущую интеграцию и не означают наличия ML в dev.
+После объединения обновлений dev ML-модуль присутствует в backend;
+его подключение к HTTP-задачам генерации остаётся отдельной работой.
 
 ## Хранение и снимки запусков
 
@@ -71,7 +72,7 @@ generation_settings_snapshots хранит фактические значени
 Коды в публичном API оставлены в верхнем регистре существующего backend-контракта.
 `mlDifficulty()` и `mlQuestionType()` дают easy/medium/hard и
 single_choice/multiple_choice/true_false. В ML передаётся один тип, без тем и персонализации.
-Когда появится QuizGenerator, BE передаст ему requestId/jobId, materialId, извлечённый
+При подключении уже добавленного QuizGenerator сервис задач BE передаст ему requestId/jobId, materialId, извлечённый
 текст и эти настройки; сам промпт и OpenRouter не относятся к справочнику.
 M1 v2 / correctOptionIds относятся к результату ML и здесь не изменяются.
 Сохранение Quiz и выставление COMPLETED после commit — задача отдельного lifecycle.
@@ -113,8 +114,12 @@ Get-Content -Raw backend/scripts/update-generation-option.sql | docker compose e
 ## Повторяемые проверки
 
 Из backend: `./gradlew build` (Windows: `.\gradlew.bat build`). Это все unit-тесты,
-HTTP-контракт MockMvc, миграции и JDBC в H2, проверки регистрации/входа, OpenAPI и jar.
-Профиль test задан явно для Spring-тестов; старая пользовательская PostgreSQL не используется.
+HTTP-контракт MockMvc, миграции и JDBC на отдельном PostgreSQL, проверки регистрации/входа,
+ML unit-тесты, OpenAPI и jar. Профиль test задан явно для Spring-тестов;
+TEST_DATABASE_URL, TEST_DATABASE_USERNAME и TEST_DATABASE_PASSWORD должны указывать
+на одноразовый PostgreSQL. Команды подготовки приведены в README. S3 изолирован mock
+FileStorageService. Старая пользовательская БД не используется. Настоящие обращения
+к OpenRouter отключены по умолчанию и не нужны для проверки справочника.
 
 `python scripts/check-generation-parameters.py` — реальный PostgreSQL 16, Flyway и
 HTTP в одноразовом Compose-проекте. Требует Docker и готового app.jar из build.

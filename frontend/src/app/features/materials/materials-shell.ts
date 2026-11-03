@@ -12,7 +12,7 @@ import { FigmaIcon } from './figma-icon';
         <a [class.active]="active() === 'dashboard'" [attr.aria-current]="active() === 'dashboard' ? 'page' : null" routerLink="/dashboard"><app-figma-icon name="home" />Главная</a
         ><a [class.active]="active() === 'materials'" routerLink="/materials" [attr.aria-current]="active() === 'materials' ? 'page' : null"
           ><app-figma-icon name="folder" />Мои материалы</a
-        ><span><app-figma-icon name="tests" />Тесты</span
+        ><a [class.active]="active() === 'tests'" [attr.aria-current]="active() === 'tests' ? 'page' : null" routerLink="/tests"><app-figma-icon name="tests" />Тесты</a
         ><span><app-figma-icon name="training" />Тренировка</span
         ><span><app-figma-icon name="progress" />Прогресс</span
         ><span><app-figma-icon name="history" />История тестов</span>
@@ -31,7 +31,7 @@ import { FigmaIcon } from './figma-icon';
   styleUrl: './materials-shell.scss',
 })
 export class MaterialsShell {
-  readonly active = input<'materials' | 'dashboard'>('materials');
+  readonly active = input<'materials' | 'dashboard' | 'tests'>('materials');
   private readonly auth = inject(AuthService);
   private readonly router = inject(Router);
   readonly displayName = computed(() => this.auth.username() || 'Пользователь');

@@ -1,0 +1,342 @@
+name: Проверка проекта
+
+on:
+  push:
+  workflow_dispatch:
+    inputs:
+      full:
+        description: Полный прогон с браузерными тестами
+        type: boolean
+        default: true
+      negative_smoke:
+        description: Контрольный красный прогон (неверный путь к API)
+        type: boolean
+        default: false
+      publish:
+        description: Опубликовать проверенные образы в GHCR
+        type: boolean
+        default: false
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  secrets:
+    name: Поиск секретов в истории
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - name: Получение всей истории
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Установка проверенной версии Gitleaks
+        run: |
+          curl --fail --silent --show-error --location --retry 3 \
+            https://github.com/gitleaks/gitleaks/releases/download/v8.30.1/gitleaks_8.30.1_linux_x64.tar.gz \
+            -o "$RUNNER_TEMP/gitleaks.tar.gz"
+          echo "551f6fc83ea457d62a0d98237cbad105af8d557003051f41f3e7ca7b3f2470eb  $RUNNER_TEMP/gitleaks.tar.gz" | sha256sum --check
+          mkdir -p "$RUNNER_TEMP/gitleaks-bin"
+          tar -xzf "$RUNNER_TEMP/gitleaks.tar.gz" -C "$RUNNER_TEMP/gitleaks-bin" gitleaks
+          echo "$RUNNER_TEMP/gitleaks-bin" >> "$GITHUB_PATH"
+      - name: Проверка истории без вывода значений секретов
+        run: gitleaks git --log-opts=HEAD --redact=100 --no-banner .
+
+  changes:
+    needs: secrets
+    name: Определение нужных проверок
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    outputs:
+      frontend: ${{ steps.select.outputs.frontend }}
+      backend: ${{ steps.select.outputs.backend }}
+      integration: ${{ steps.select.outputs.integration }}
+      browser: ${{ steps.select.outputs.browser }}
+    steps:
+      - name: Получение кода и истории
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          fetch-depth: 0
+      - name: Подготовка Node.js для проверок CI
+        uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version: '24'
+      - name: Проверка правил выбора этапов
+        run: node --test ci/changes.test.mjs
+      - name: Выбор проверок по изменённым файлам
+        id: select
+        env:
+          BEFORE: ${{ github.event.before }}
+          AFTER: ${{ github.sha }}
+          REF: ${{ github.ref }}
+          EVENT: ${{ github.event_name }}
+          FULL: ${{ inputs.full }}
+        run: node ci/changes.mjs
+
+  frontend:
+    needs: changes
+    if: needs.changes.outputs.frontend == 'true'
+    name: Проверки интерфейса
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - name: Получение кода
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+      - name: Подготовка Node.js
+        uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version: '24'
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - name: Установка зависимостей интерфейса
+        run: npm ci
+        working-directory: frontend
+      - name: Тесты компонентов интерфейса
+        run: npm test -- --watch=false --reporters=junit --output-file=test-results/junit.xml
+        working-directory: frontend
+      - name: Сборка интерфейса без скачивания шрифтов
+        run: npm run build
+        working-directory: frontend
+      - name: Сохранение отчёта о тестах интерфейса
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
+        if: always()
+        with:
+          name: отчёт-интерфейс
+          path: frontend/test-results/
+          retention-days: 7
+      - name: Передача готовой сборки интерфейса
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
+        with:
+          name: сборка-интерфейса
+          path: frontend/dist/frontend/browser/
+          if-no-files-found: error
+          retention-days: 1
+
+  backend:
+    needs: changes
+    if: needs.changes.outputs.backend == 'true'
+    name: Проверки сервера
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_DB: ci_tests
+          POSTGRES_USER: ci_user
+          POSTGRES_PASSWORD: ci-only-password
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U ci_user -d ci_tests"
+          --health-interval 5s --health-timeout 5s --health-retries 20
+    env:
+      TEST_DATABASE_URL: jdbc:postgresql://localhost:5432/ci_tests
+      TEST_DATABASE_USERNAME: ci_user
+      TEST_DATABASE_PASSWORD: ci-only-password
+    steps:
+      - name: Получение кода
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+      - name: Подготовка Java 25
+        uses: actions/setup-java@b6effb05e454b25005698d916606bdc6ffcbf961 # v5
+        with:
+          distribution: temurin
+          java-version: '25'
+          cache: gradle
+      - name: Тесты сервера и сборка приложения
+        run: ./gradlew test bootJar --no-daemon --console=plain
+        working-directory: backend
+      - name: Сохранение отчёта о тестах сервера
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
+        if: always()
+        with:
+          name: отчёт-сервер
+          path: |
+            backend/build/reports/tests/
+            backend/build/test-results/
+          retention-days: 7
+      - name: Передача готовой сборки сервера
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
+        with:
+          name: сборка-сервера
+          path: backend/build/libs/app.jar
+          if-no-files-found: error
+          compression-level: 0
+          retention-days: 1
+
+  integration:
+    name: Проверка всего приложения
+    needs: [changes, frontend, backend]
+    if: needs.changes.outputs.integration == 'true'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    env:
+      COMPOSE_PROJECT_NAME: ci-${{ github.run_id }}-${{ github.run_attempt }}
+      COMPOSE_FILE: docker-compose.yml:compose.ci.yml
+      COMPOSE_ENV_FILES: .env.ci.example
+      CI_BACKEND_IMAGE: tpivt-ci-backend:${{ github.sha }}
+      CI_FRONTEND_IMAGE: tpivt-ci-frontend:${{ github.sha }}
+    steps:
+      - name: Получение кода
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+      - name: Подготовка Java 25
+        if: needs.changes.outputs.browser == 'true'
+        uses: actions/setup-java@b6effb05e454b25005698d916606bdc6ffcbf961 # v5
+        with:
+          distribution: temurin
+          java-version: '25'
+          cache: gradle
+      - name: Подготовка Node.js для проверок CI
+        uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version: '24'
+      - name: Подготовка сборщика Docker
+        uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4
+      - name: Получение проверенной сборки сервера
+        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7
+        with:
+          name: сборка-сервера
+          path: ci/package/backend
+      - name: Получение проверенной сборки интерфейса
+        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7
+        with:
+          name: сборка-интерфейса
+          path: ci/package/frontend/browser
+      - name: Подготовка настройки nginx
+        run: cp frontend/nginx.conf ci/package/frontend/nginx.conf
+      - name: Проверка конфигурации Compose
+        run: docker compose config --quiet
+      - name: Проверка серверной конфигурации без запуска
+        env:
+          IMAGE_TAG: sha-${{ github.sha }}
+          SERVER_ORIGIN: http://127.0.0.1
+        run: docker compose -f docker-compose.yml -f compose.registry.yml -f compose.server.yml config --quiet
+      - name: Сборка образа сервера
+        uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7
+        with:
+          context: ci/package/backend
+          file: backend/Dockerfile
+          target: ci-runtime
+          load: true
+          push: false
+          tags: ${{ env.CI_BACKEND_IMAGE }}
+          cache-from: type=gha,scope=backend
+          cache-to: type=gha,mode=max,scope=backend
+      - name: Сборка образа интерфейса
+        uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7
+        with:
+          context: ci/package/frontend
+          file: frontend/Dockerfile
+          target: ci-runtime
+          load: true
+          push: false
+          tags: ${{ env.CI_FRONTEND_IMAGE }}
+          cache-from: type=gha,scope=frontend
+          cache-to: type=gha,mode=max,scope=frontend
+      - name: Запуск сервисов и ожидание готовности
+        run: docker compose up -d --no-build --wait --wait-timeout 240
+      - name: Быстрая проверка основных функций через nginx
+        env:
+          NEGATIVE_SMOKE: ${{ github.event_name == 'workflow_dispatch' && inputs.negative_smoke }}
+        run: |
+          if [ "$NEGATIVE_SMOKE" = "true" ]; then
+            node ci/smoke.mjs --base-url http://localhost:18085/invalid-ci-route
+          else
+            node ci/smoke.mjs --base-url http://localhost:18085
+          fi
+      - name: Браузерные тесты на работающем приложении
+        if: needs.changes.outputs.browser == 'true'
+        run: ./backend/gradlew -p ui-tests test -Dui.headless=true -Dui.baseUrl=http://localhost:18085 --no-daemon --console=plain
+      - name: Журналы тестовых сервисов при ошибке
+        if: failure()
+        run: docker compose logs --no-color --tail 150
+      - name: Сохранение отчёта о браузерных тестах
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
+        if: always() && (needs.changes.outputs.browser == 'true')
+        with:
+          name: отчёт-браузер
+          path: |
+            ui-tests/build/reports/
+            ui-tests/build/test-results/
+          retention-days: 7
+      - name: Удаление временных контейнеров
+        if: always()
+        run: docker compose down --remove-orphans
+
+  publish:
+    name: Публикация проверенных образов
+    needs: [changes, frontend, backend, integration]
+    if: needs.integration.result == 'success' && ((github.event_name == 'push' && (github.ref == 'refs/heads/dev' || github.ref == 'refs/heads/master')) || (github.event_name == 'workflow_dispatch' && inputs.publish && !inputs.negative_smoke))
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - name: Получение кода
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+      - name: Получение проверенной сборки сервера
+        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7
+        with:
+          name: сборка-сервера
+          path: ci/package/backend
+      - name: Получение проверенной сборки интерфейса
+        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7
+        with:
+          name: сборка-интерфейса
+          path: ci/package/frontend/browser
+      - name: Подготовка настройки nginx и меток версий
+        env:
+          REPOSITORY: ${{ github.repository }}
+          SHA: ${{ github.sha }}
+          REF: ${{ github.ref }}
+        run: |
+          cp frontend/nginx.conf ci/package/frontend/nginx.conf
+          repository="${REPOSITORY,,}"
+          for service in backend frontend; do
+            image="ghcr.io/${repository}-${service}"
+            echo "${service}_tags<<TAGS" >> "$GITHUB_ENV"
+            echo "${image}:sha-${SHA}" >> "$GITHUB_ENV"
+            if [ "$REF" = refs/heads/dev ]; then echo "${image}:dev" >> "$GITHUB_ENV"; fi
+            if [ "$REF" = refs/heads/master ]; then echo "${image}:master" >> "$GITHUB_ENV"; fi
+            echo TAGS >> "$GITHUB_ENV"
+          done
+      - name: Вход в реестр GitHub
+        env:
+          GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GHCR_USER: ${{ github.actor }}
+        run: printf '%s' "$GHCR_TOKEN" | docker login ghcr.io -u "$GHCR_USER" --password-stdin
+      - name: Подготовка сборщика Docker
+        uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4
+      - name: Публикация образа сервера
+        uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7
+        with:
+          context: ci/package/backend
+          file: backend/Dockerfile
+          target: ci-runtime
+          push: true
+          tags: ${{ env.backend_tags }}
+          labels: |
+            org.opencontainers.image.source=https://github.com/${{ github.repository }}
+            org.opencontainers.image.revision=${{ github.sha }}
+          cache-from: type=gha,scope=backend
+      - name: Публикация образа интерфейса
+        uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7
+        with:
+          context: ci/package/frontend
+          file: frontend/Dockerfile
+          target: ci-runtime
+          push: true
+          tags: ${{ env.frontend_tags }}
+          labels: |
+            org.opencontainers.image.source=https://github.com/${{ github.repository }}
+            org.opencontainers.image.revision=${{ github.sha }}
+          cache-from: type=gha,scope=frontend
+      - name: Выход из реестра
+        if: always()
+        run: docker logout ghcr.io

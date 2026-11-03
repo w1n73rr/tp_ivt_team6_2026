@@ -1,6 +1,15 @@
 .idea
-local-docs/
-*.pdf
 .env
 .env.*
 !.env.example
+!.env.*.example
+local-docs/
+*.pdf
+docker-compose.local.yml
+*.pem
+*.key
+*.p12
+*.pfx
+*.jks
+*.keystore
+**/test-results/

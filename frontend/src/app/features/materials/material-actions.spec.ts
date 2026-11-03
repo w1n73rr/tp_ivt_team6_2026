@@ -41,6 +41,22 @@ describe('Material actions', () => {
   expect(p.items().map(x=>x.id)).toEqual(['two']);expect(p.selected.has('two')).toBe(true);
   expect(p.message()).toContain('Не удалено: 1');
  });
+ it('selects and deletes only visible results, and clears selection on filter changes', () => {
+  const p=page(); p.toggleAll(); expect(p.selected.size).toBe(2);
+  p.setQuery('вТОРАЯ'); expect(p.selected.size).toBe(0);
+  p.toggleAll(); expect([...p.selected]).toEqual(['two']);
+  p.removeSelected(); http.expectNone('/api/materials/one');
+  http.expectOne('/api/materials/two').flush(null,{status:204,statusText:'No Content'});
+  expect(p.items().map(x=>x.id)).toEqual(['one']); expect(p.visibleItems()).toEqual([]);
+  p.resetFilters(); expect(p.visibleItems()).toHaveLength(1);
+ });
+ it('drops selection when an edited material stops matching the search', () => {
+  const p=page(); p.setQuery('Лекция'); p.toggleAll();
+  dialogs.open.mockReturnValue({afterClosed: () => of({...item,name:'Практика'})});
+  p.edit(item); http.expectOne('/api/materials/one').flush({material:item,tags:[]});
+  expect(p.visibleItems()).toEqual([]); expect(p.selected.size).toBe(0);
+  expect(p.items()[0].name).toBe('Практика');
+ });
  it('requests protected files as blobs with no JWT in the URL', () => {
   TestBed.inject(MaterialsApi).file('one').subscribe(r=>expect(r.body?.size).toBe(7));
   const r=http.expectOne('/api/materials/one/download');expect(r.request.responseType).toBe('blob');expect(r.request.headers.get('Authorization')).toBe('Bearer jwt');r.flush(new Blob(['lecture']));

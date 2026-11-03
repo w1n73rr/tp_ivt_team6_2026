@@ -5,7 +5,8 @@ import {
   ReactiveFormsModule,
   Validators
 } from '@angular/forms';
-import { Router, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { authDestination } from '../../../core/auth/tests-access';
 
 import { MatSnackBar } from '@angular/material/snack-bar';
 
@@ -23,6 +24,7 @@ import { AuthShell } from '../auth-shell';
   styleUrl: './login.scss'
 })
 export class Login {
+  private readonly route = inject(ActivatedRoute);
   private readonly fb = inject(FormBuilder);
   private readonly router = inject(Router);
   private readonly authService = inject(AuthService);
@@ -63,7 +65,7 @@ export class Login {
         this.message = response.message;
 
         if (response.success) {
-          void this.router.navigateByUrl('/dashboard');
+          void this.router.navigateByUrl(authDestination(this.route), { replaceUrl: true });
           this.snackBar.open(
             'Вход выполнен успешно',
             'Закрыть',

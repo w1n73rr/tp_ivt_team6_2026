@@ -9,18 +9,17 @@
     </button>
   </header>
 
-  <div class="toolbar">
-    <input
-      aria-label="Поиск по названию пока недоступен"
-      placeholder="Поиск по названию"
-      disabled
-    /><button disabled>
-      <app-figma-icon name="filter" />Фильтры <app-figma-icon name="chevron" /></button
-    ><select aria-label="Сортировка пока недоступна" disabled>
-      <option>Сортировка: по алфавиту А–Я</option>
+  <div class="toolbar" role="search" aria-label="Поиск материалов">
+    <input type="search" aria-label="Поиск по названию" placeholder="Поиск по названию"
+      [value]="query()" (input)="setQuery($any($event.target).value)" />
+    <select aria-label="Формат файла" [value]="format()" (change)="setFormat($any($event.target).value)">
+      <option value="">Все форматы</option>
+      <option value="PDF">PDF</option>
+      <option value="DOCX">DOCX</option>
+      <option value="TXT">TXT</option>
     </select>
+    <button (click)="resetFilters()" [disabled]="!query() && !format()">Сбросить всё</button>
   </div>
-
   @if (message()) {
     <p class="notice" role="status">{{ message() }}</p>
   }
@@ -50,14 +49,14 @@
         <label
           ><input
             type="checkbox"
-            [checked]="items().length > 0 && selected.size === items().length"
-            [disabled]="!items().length"
+            [checked]="visibleItems().length > 0 && selected.size === visibleItems().length"
+            [disabled]="!visibleItems().length"
             (change)="toggleAll()"
           />
           Выбрать все</label
-        ><span>Найдено материалов: {{ items().length }}</span>
+        ><span>Найдено материалов: {{ visibleItems().length }}</span>
       </div>
-      @for (item of items(); track item.id) {
+      @for (item of visibleItems(); track item.id) {
         <article [class.selected]="selected.has(item.id)">
           <input
             type="checkbox"
@@ -87,7 +86,7 @@
             <small>Загружен</small><time>{{ item.uploadedAt | date: 'dd.MM.yyyy' : 'UTC' }}</time>
           </div>
           <div class="row-actions">
-            <button (click)="explain('Создание теста')">
+            <button (click)="createTest(item)" [disabled]="busy()">
               <app-figma-icon name="test" />Создать тест</button
             ><button (click)="edit(item)" [disabled]="busy()" title="Изменить материал" aria-label="Изменить материал">
               <app-figma-icon name="edit" /></button
@@ -103,10 +102,19 @@
           </div>
         </article>
       } @empty {
-        <div class="state">Материалы не найдены. Здесь появятся ваши лекции и конспекты.</div>
+        <div class="state" role="status">@if (items().length) {Нет материалов, соответствующих поиску и фильтру. Попробуйте изменить условия.} @else {Материалы не найдены. Здесь появятся ваши лекции и конспекты.}</div>
       }
     </section>
   }
-  <p class="hint">Поиск и фильтры будут подключены в отдельной задаче tpivt6_26-37.</p>
+  <p class="hint">При изменении поиска или формата выбор материалов сбрасывается.</p>
   <button (click)="load()" [disabled]="loading() || busy()">Обновить список</button>
 </app-materials-shell>
+
+@if (dragging() || dropped()) {
+ <div class="drop-overlay"><section class="drop-card" cdkTrapFocus [cdkTrapFocusAutoCapture]="true" role="dialog" aria-modal="true" aria-label="Добавление файла">
+ @if (dropped(); as file) {
+ <h2>Добавить файл?</h2><p>{{ file.name }}</p><p>Откроется форма загрузки: проверьте название и укажите предмет.</p>
+ <button (click)="cancelDrop()">Отмена</button><button (click)="confirmDrop()">Продолжить</button>
+ } @else {<h2>Отпустите файл, чтобы добавить материал</h2><p>PDF, DOCX или TXT · до 10 МБ</p>}
+ </section></div>
+}

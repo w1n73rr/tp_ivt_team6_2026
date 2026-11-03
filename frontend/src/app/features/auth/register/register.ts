@@ -9,7 +9,8 @@ import {
 } from '@angular/forms';
 
 import { AuthShell } from '../auth-shell';
-import { Router, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { authDestination } from '../../../core/auth/tests-access';
 
 import { MatSnackBar } from '@angular/material/snack-bar';
 
@@ -28,6 +29,7 @@ export function passwordsMatch(control: AbstractControl): ValidationErrors | nul
   styleUrl: './register.scss',
 })
 export class Register {
+  private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly fb = inject(FormBuilder);
   private readonly authService = inject(AuthService);
@@ -76,7 +78,7 @@ export class Register {
 
         if (response.success) {
           this.snackBar.open('Регистрация выполнена успешно', 'Закрыть', { duration: 4000 });
-          void this.router.navigateByUrl('/dashboard', { replaceUrl: true });
+          void this.router.navigateByUrl(authDestination(this.route), { replaceUrl: true });
         }
 
         this.cdr.markForCheck();

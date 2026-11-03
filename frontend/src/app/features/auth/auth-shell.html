@@ -92,13 +92,13 @@
       <div class="auth-card">
         <nav class="auth-tabs" aria-label="Вход и регистрация">
           <a
-            routerLink="/login"
+            routerLink="/login" queryParamsHandling="preserve"
             [class.active]="mode() === 'login'"
             [attr.aria-current]="mode() === 'login' ? 'page' : null"
             >Вход</a
           >
           <a
-            routerLink="/register"
+            routerLink="/register" queryParamsHandling="preserve"
             [class.active]="mode() === 'register'"
             [attr.aria-current]="mode() === 'register' ? 'page' : null"
             >Регистрация</a

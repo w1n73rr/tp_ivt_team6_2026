@@ -6,14 +6,16 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
-import software.amazon.awssdk.services.s3.S3Client;
+import tech.genna.TY3.service.file.FileStorageService;
 
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
+        properties = "spring.config.import=")
 @ActiveProfiles("test")
 public abstract class BaseTest {
 
+    // Authentication tests use real PostgreSQL, but never the developer's S3 storage.
     @MockitoBean
-    protected S3Client s3Client;
+    protected FileStorageService fileStorageService;
 
     @LocalServerPort
     protected int port;

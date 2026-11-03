@@ -22,7 +22,7 @@ export class App {
   );
   readonly isAuthPage = computed(
     () =>
-      ['/login', '/register', '/dashboard'].includes(this.url().split(/[?#]/)[0]) ||
+      ['/login', '/register', '/dashboard', '/tests'].includes(this.url().split(/[?#]/)[0]) ||
       this.url().startsWith('/materials'),
   );
 }

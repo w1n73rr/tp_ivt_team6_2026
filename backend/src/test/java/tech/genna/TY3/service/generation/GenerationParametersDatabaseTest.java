@@ -6,7 +6,8 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
-import software.amazon.awssdk.services.s3.S3Client;
+import tech.genna.TY3.service.file.FileStorageService;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 import tech.genna.TY3.api.model.*;
@@ -17,12 +18,12 @@ import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-/** Migrations and real JDBC on isolated H2; PostgreSQL/HTTP is checked separately by the smoke script. */
-@SpringBootTest
+/** Migrations and JDBC on disposable PostgreSQL supplied through TEST_DATABASE_*; S3 is isolated. */
+@SpringBootTest(properties = "spring.config.import=")
 @ActiveProfiles("test")
 @Transactional
 class GenerationParametersDatabaseTest {
-    @MockitoBean S3Client s3Client;
+    @MockitoBean FileStorageService fileStorageService;
     @Autowired GenerationParametersService service;
     @Autowired GenerationSettingsSnapshotRepository snapshots;
     @Autowired JdbcTemplate jdbc;
@@ -53,12 +54,19 @@ class GenerationParametersDatabaseTest {
     }
 
     @Test
+    @Transactional(propagation = Propagation.NOT_SUPPORTED)
     void cannotReplaceExistingSnapshot() {
         var jobId = UUID.randomUUID();
         var original = service.saveForRun(jobId,
                 new GenerateQuizRequest(UUID.randomUUID(), QuestionCount.NUMBER_5, Difficulty.EASY, QuestionType.TRUE_FALSE));
-        assertThrows(org.springframework.dao.DuplicateKeyException.class, () -> snapshots.insert(jobId,
-                new SelectedGenerationSettings(10, Difficulty.HARD, QuestionType.MULTIPLE_CHOICE)));
-        assertEquals(original, snapshots.findByJobId(jobId).orElseThrow());
+        try {
+            // A rejected insert aborts its PostgreSQL transaction, so check the committed
+            // original in a separate statement without a surrounding test transaction.
+            assertThrows(org.springframework.dao.DuplicateKeyException.class, () -> snapshots.insert(jobId,
+                    new SelectedGenerationSettings(10, Difficulty.HARD, QuestionType.MULTIPLE_CHOICE)));
+            assertEquals(original, snapshots.findByJobId(jobId).orElseThrow());
+        } finally {
+            jdbc.update("DELETE FROM generation_settings_snapshots WHERE job_id = ?", jobId);
+        }
     }
 }

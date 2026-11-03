@@ -326,3 +326,9 @@ details {
 }
 .row-actions button { box-sizing: border-box; }
 button:disabled { opacity: .55; }
+
+.drop-overlay { position: fixed; inset: 0; z-index: 1000; background: #18243b99; display: grid; place-items: center; padding: 20px; }
+.drop-card { background: white; border-radius: 14px; padding: 28px; max-width: 460px; width: 100%; text-align: center; overflow-wrap: anywhere; }
+.drop-card h2 { font-size: 20px; }
+.drop-card p { color: #607491; font-size: 14px; }
+.drop-card button { margin: 6px; }

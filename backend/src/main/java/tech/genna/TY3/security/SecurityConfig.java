@@ -3,6 +3,7 @@ package tech.genna.TY3.security;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
@@ -31,6 +32,9 @@ public class SecurityConfig {
     private final CustomUserDetailsService userDetailsService;
     private final ObjectMapper objectMapper;
 
+    @Value("${APP_CORS_ALLOWED_ORIGINS:http://localhost:3000}")
+    private String allowedOrigins;
+
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
@@ -42,6 +46,7 @@ public class SecurityConfig {
                         .requestMatchers("/backend-api.yaml", "/v3/api-docs/**", "/v3/api-docs.yaml",
                                 "/swagger-ui/**", "/swagger-ui.html").permitAll()
                         .requestMatchers("/error").permitAll()
+                        .requestMatchers("/actuator/health").permitAll()
                         .anyRequest().authenticated()
                 )
                 .sessionManagement(session ->
@@ -87,7 +92,7 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
-        config.setAllowedOrigins(List.of("http://localhost:3000")); // фронтенд
+        config.setAllowedOrigins(List.of(allowedOrigins.split(",")));
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
         config.setExposedHeaders(List.of("Location", "Content-Disposition", "Retry-After"));
         config.setAllowedHeaders(List.of("*"));
