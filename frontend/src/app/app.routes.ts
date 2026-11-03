@@ -1,30 +1,39 @@
+import { MaterialUpload } from './features/materials/upload/upload';
+import { Materials } from './features/materials/materials';
 import { Routes } from '@angular/router';
 
-import { Home } from './features/home/home';
 import { Login } from './features/auth/login/login';
 import { Register } from './features/auth/register/register';
 import { Dashboard } from './features/dashboard/dashboard';
 import { NotFound } from './not-found/not-found';
+import { Generation } from './features/generation/generation';
+import { TestsPage } from './features/tests/tests';
+import { testsAccess } from './core/auth/tests-access';
 
 export const routes: Routes = [
   {
     path: '',
-    component: Home
+    redirectTo: 'login',
+    pathMatch: 'full',
   },
   {
     path: 'login',
-    component: Login
+    component: Login,
   },
   {
     path: 'register',
-    component: Register
+    component: Register,
   },
   {
     path: 'dashboard',
-    component: Dashboard
+    component: Dashboard,
   },
+  { path: 'materials/upload', component: MaterialUpload },
+  { path: 'materials/:materialId/generate', component: Generation },
+  { path: 'materials', component: Materials },
+  { path: 'tests', component: TestsPage, canActivate: [testsAccess] },
   {
     path: '**',
-    component: NotFound
-  }
+    component: NotFound,
+  },
 ];

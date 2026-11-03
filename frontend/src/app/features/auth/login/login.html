@@ -1,1 +1,97 @@
-<p>login works!</p>
+<app-auth-shell mode="login"
+  ><h1>Вход в систему</h1>
+  <form
+    class="auth-form"
+    [formGroup]="loginForm"
+    (ngSubmit)="submit()"
+    [attr.aria-busy]="loading"
+    novalidate
+  >
+    <div class="field">
+      <label for="username">Логин</label>
+      <div class="input-wrap">
+        <svg class="input-icon" viewBox="0 0 24 24" aria-hidden="true">
+          <circle cx="12" cy="7" r="4" />
+          <path d="M5 21v-3a7 7 0 0 1 14 0v3z" /></svg
+        ><input
+          id="username"
+          name="username"
+          type="text"
+          formControlName="username"
+          autocomplete="username"
+          placeholder="Введите ваш логин"
+          [attr.aria-invalid]="
+            loginForm.controls.username.touched && loginForm.controls.username.invalid
+          "
+          aria-describedby="username-error"
+        />
+      </div>
+      <div id="username-error">
+        @if (
+          loginForm.controls.username.touched && loginForm.controls.username.hasError('required')
+        ) {
+          <p class="field-error">Введите имя пользователя</p>
+        }
+      </div>
+    </div>
+    <div class="field">
+      <label for="password">Пароль</label>
+      <div class="input-wrap">
+        <svg class="input-icon" viewBox="0 0 24 24" aria-hidden="true">
+          <rect x="5" y="10" width="14" height="11" rx="2" />
+          <path d="M8 10V7a4 4 0 0 1 8 0v3m-4 5v3" /></svg
+        ><input
+          id="password"
+          name="password"
+          [type]="showPassword ? 'text' : 'password'"
+          formControlName="password"
+          autocomplete="current-password"
+          placeholder="Введите пароль"
+          [attr.aria-invalid]="
+            loginForm.controls.password.touched && loginForm.controls.password.invalid
+          "
+          aria-describedby="password-error"
+        /><button
+          class="visibility"
+          type="button"
+          (click)="showPassword = !showPassword"
+          [attr.aria-label]="showPassword ? 'Скрыть пароль' : 'Показать пароль'"
+          [attr.aria-pressed]="showPassword"
+        >
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7S2 12 2 12z" />
+            <circle cx="12" cy="12" r="3" />
+          </svg>
+        </button>
+      </div>
+      <div id="password-error">
+        @if (
+          loginForm.controls.password.touched && loginForm.controls.password.hasError('required')
+        ) {
+          <p class="field-error">Введите пароль</p>
+        }
+      </div>
+    </div>
+    <div class="unavailable">
+      <button type="button" disabled>Забыли пароль?</button
+      ><small>Восстановление пароля пока недоступно</small>
+    </div>
+    @if (message) {
+      <p
+        class="form-message"
+        [class.error]="isError"
+        [class.success]="!isError"
+        role="status"
+        aria-live="polite"
+      >
+        {{ message }}
+      </p>
+    }
+    <button class="submit" type="submit" [disabled]="loading">
+      {{ loading ? 'Входим...' : 'Войти' }}
+    </button>
+  </form>
+  <p class="auth-link">
+    Нет аккаунта? <a routerLink="/register" queryParamsHandling="preserve">Создать аккаунт</a>
+  </p></app-auth-shell
+>

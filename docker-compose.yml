@@ -1,0 +1,102 @@
+services:
+  seaweedfs:
+    image: chrislusf/seaweedfs:4.48
+    restart: unless-stopped
+    command: ["server", "-dir=/data", "-s3", "-s3.port=8333", "-master.volumeSizeLimitMB=1024"]
+    environment:
+      AWS_ACCESS_KEY_ID: ${S3_ACCESS_KEY:?Set S3_ACCESS_KEY in .env}
+      AWS_SECRET_ACCESS_KEY: ${S3_SECRET_KEY:?Set S3_SECRET_KEY in .env}
+    ports:
+      - "127.0.0.1:${S3_PORT:-8333}:8333"
+    volumes:
+      - seaweeddata:/data
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://localhost:9333/cluster/healthz >/dev/null && code=$$(curl -s -o /dev/null -w '%{http_code}' http://localhost:8333/); { [ \"$$code\" = 200 ] || [ \"$$code\" = 403 ]; }"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    networks:
+      - exam-ai-network
+
+  exam-ai-db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-study_assistant_db}
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}
+    ports:
+      - "127.0.0.1:${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U \"$$POSTGRES_USER\" -d \"$$POSTGRES_DB\""]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 5s
+    networks:
+      - exam-ai-network
+
+  exam-ai-backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    ports:
+      - "127.0.0.1:${BACKEND_PORT:-8080}:8080"
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://exam-ai-db:5432/${POSTGRES_DB:-study_assistant_db}
+      - SPRING_DATASOURCE_USERNAME=${POSTGRES_USER:-postgres}
+      - SPRING_DATASOURCE_PASSWORD=${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}
+      - SPRING_JPA_HIBERNATE_DDL_AUTO=validate
+      - JWT_SECRET=${JWT_SECRET:?Set JWT_SECRET in .env (at least 32 random bytes)}
+      - JWT_EXPIRATION=${JWT_EXPIRATION:-86400000}
+      - APP_CORS_ALLOWED_ORIGINS=${APP_CORS_ALLOWED_ORIGINS:-http://localhost:${FRONTEND_PORT:-3000}}
+      - OPENROUTER_API_KEY=${OPENROUTER_API_KEY:-}
+      - OPENROUTER_MODEL=${OPENROUTER_MODEL:-nvidia/nemotron-3.5-lightning:free}
+      - OPENROUTER_TIMEOUT_SECONDS=${OPENROUTER_TIMEOUT_SECONDS:-90}
+      - OPENROUTER_REASONING_ENABLED=${OPENROUTER_REASONING_ENABLED:-false}
+      - ML_TOTAL_TIMEOUT_SECONDS=${ML_TOTAL_TIMEOUT_SECONDS:-240}
+      - OPENROUTER_MAX_OUTPUT_TOKENS=${OPENROUTER_MAX_OUTPUT_TOKENS:-12000}
+      - ML_MAX_INPUT_CHARS=${ML_MAX_INPUT_CHARS:-60000}
+      - S3_ENDPOINT=${S3_ENDPOINT:-${MINIO_ENDPOINT:-http://seaweedfs:8333}}
+      - S3_ACCESS_KEY=${S3_ACCESS_KEY:?Set S3_ACCESS_KEY in .env}
+      - S3_SECRET_KEY=${S3_SECRET_KEY:?Set S3_SECRET_KEY in .env}
+      - S3_BUCKET_NAME=${S3_BUCKET_NAME:-${MINIO_BUCKET_NAME:-materials}}
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://localhost:8080/actuator/health"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+      start_period: 30s
+    depends_on:
+      seaweedfs:
+        condition: service_healthy
+      exam-ai-db:
+        condition: service_healthy
+    networks:
+      - exam-ai-network
+
+  exam-ai-frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    ports:
+      - "127.0.0.1:${FRONTEND_PORT:-3000}:80"
+    depends_on:
+      exam-ai-backend:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://127.0.0.1/"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    networks:
+      - exam-ai-network
+
+volumes:
+  seaweeddata:
+  pgdata:
+
+networks:
+  exam-ai-network:
+    driver: bridge

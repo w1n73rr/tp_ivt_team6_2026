@@ -1,0 +1,120 @@
+<app-materials-shell
+  ><header>
+    <div>
+      <h1>Мои материалы</h1>
+      <p>Лекции и конспекты, по которым ИИ составляет тесты.</p>
+    </div>
+    <button class="primary" (click)="explain('Загрузка материала')">
+      <app-figma-icon name="upload" /> Загрузить материал
+    </button>
+  </header>
+
+  <div class="toolbar" role="search" aria-label="Поиск материалов">
+    <input type="search" aria-label="Поиск по названию" placeholder="Поиск по названию"
+      [value]="query()" (input)="setQuery($any($event.target).value)" />
+    <select aria-label="Формат файла" [value]="format()" (change)="setFormat($any($event.target).value)">
+      <option value="">Все форматы</option>
+      <option value="PDF">PDF</option>
+      <option value="DOCX">DOCX</option>
+      <option value="TXT">TXT</option>
+    </select>
+    <button (click)="resetFilters()" [disabled]="!query() && !format()">Сбросить всё</button>
+  </div>
+  @if (message()) {
+    <p class="notice" role="status">{{ message() }}</p>
+  }
+  @if (loading()) {
+    <div class="state" role="status">Загрузка материалов…</div>
+  } @else if (error()) {
+    <div class="state error" role="alert">
+      <p>{{ error() }}</p>
+      <button (click)="load()">Повторить</button>
+    </div>
+  } @else {
+    @if (selected.size) {
+      <div class="selection">
+        <span class="count">{{ selected.size }}</span>
+        <div class="selection-copy">
+          <b>Выбрано: {{ selected.size }} материала</b
+          ><small>Можно удалить выбранные материалы одним действием</small>
+        </div>
+        <button (click)="selected.clear()">Сбросить выбор</button
+        ><button (click)="removeSelected()" [disabled]="busy()">
+          <app-figma-icon name="delete" />Удалить выбранные
+        </button>
+      </div>
+    }
+    <section class="list" aria-label="Список материалов">
+      <div class="list-head">
+        <label
+          ><input
+            type="checkbox"
+            [checked]="visibleItems().length > 0 && selected.size === visibleItems().length"
+            [disabled]="!visibleItems().length"
+            (change)="toggleAll()"
+          />
+          Выбрать все</label
+        ><span>Найдено материалов: {{ visibleItems().length }}</span>
+      </div>
+      @for (item of visibleItems(); track item.id) {
+        <article [class.selected]="selected.has(item.id)">
+          <input
+            type="checkbox"
+            [attr.aria-label]="'Выбрать ' + item.name"
+            [checked]="selected.has(item.id)"
+            (change)="toggle(item.id)"
+          /><span
+            class="format"
+            [class.docx]="item.format === 'DOCX'"
+            [class.txt]="item.format === 'TXT'"
+            >{{ item.format }}</span
+          >
+          <div class="info">
+            <h2>{{ item.name }}</h2>
+            <small
+              >{{ item.subjectName }} · {{ item.format }} ·
+              @if (item.sizeBytes < 1024) {
+                {{ item.sizeBytes }} Б
+              } @else if (item.sizeBytes >= 1048576) {
+                {{ item.sizeBytes / 1048576 | number: '1.0-1' }} МБ
+              } @else {
+                {{ item.sizeBytes / 1024 | number: '1.0-0' }} КБ
+              }
+            </small>
+          </div>
+          <div class="date">
+            <small>Загружен</small><time>{{ item.uploadedAt | date: 'dd.MM.yyyy' : 'UTC' }}</time>
+          </div>
+          <div class="row-actions">
+            <button (click)="createTest(item)" [disabled]="busy()">
+              <app-figma-icon name="test" />Создать тест</button
+            ><button (click)="edit(item)" [disabled]="busy()" title="Изменить материал" aria-label="Изменить материал">
+              <app-figma-icon name="edit" /></button
+            ><button (click)="file(item, false)" [disabled]="busy()" title="Скачать оригинал" aria-label="Скачать материал">
+              <app-figma-icon name="download" />
+            </button>
+              <button (click)="file(item, true)" [disabled]="busy()" [title]="item.format === 'DOCX' ? 'Просмотр текста DOCX' : 'Открыть в новой вкладке'" aria-label="Открыть материал">
+                <app-figma-icon name="eye" />
+              </button>
+            <button class="danger" (click)="remove([item])" [disabled]="busy()" title="Удалить материал" aria-label="Удалить материал">
+              <app-figma-icon name="delete" />
+            </button>
+          </div>
+        </article>
+      } @empty {
+        <div class="state" role="status">@if (items().length) {Нет материалов, соответствующих поиску и фильтру. Попробуйте изменить условия.} @else {Материалы не найдены. Здесь появятся ваши лекции и конспекты.}</div>
+      }
+    </section>
+  }
+  <p class="hint">При изменении поиска или формата выбор материалов сбрасывается.</p>
+  <button (click)="load()" [disabled]="loading() || busy()">Обновить список</button>
+</app-materials-shell>
+
+@if (dragging() || dropped()) {
+ <div class="drop-overlay"><section class="drop-card" cdkTrapFocus [cdkTrapFocusAutoCapture]="true" role="dialog" aria-modal="true" aria-label="Добавление файла">
+ @if (dropped(); as file) {
+ <h2>Добавить файл?</h2><p>{{ file.name }}</p><p>Откроется форма загрузки: проверьте название и укажите предмет.</p>
+ <button (click)="cancelDrop()">Отмена</button><button (click)="confirmDrop()">Продолжить</button>
+ } @else {<h2>Отпустите файл, чтобы добавить материал</h2><p>PDF, DOCX или TXT · до 10 МБ</p>}
+ </section></div>
+}

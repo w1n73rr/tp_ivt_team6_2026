@@ -1,0 +1,288 @@
+:host {
+  display: block;
+  color: #142c60;
+  font-family: Arial, sans-serif;
+}
+* {
+  box-sizing: border-box;
+}
+.auth-page {
+  min-height: 100dvh;
+  background: #f3f8ff;
+}
+.auth-layout {
+  display: grid;
+  grid-template-columns: 40% 60%;
+  min-height: 100dvh;
+}
+.brand-panel {
+  position: relative;
+  overflow: hidden;
+  padding: 90px 16% 55px;
+  color: #e5eeff;
+  background: linear-gradient(35deg, #0b1f49, #214e9e);
+}
+.brand-panel::before,
+.brand-panel::after {
+  content: '';
+  position: absolute;
+  border-radius: 50%;
+  width: 650px;
+  height: 400px;
+  background: #2867ca33;
+  pointer-events: none;
+}
+.brand-panel::before {
+  right: 60%;
+  top: -290px;
+  transform: rotate(-30deg);
+}
+.brand-panel::after {
+  left: 12%;
+  bottom: -265px;
+  transform: rotate(-35deg);
+}
+.brand {
+  position: relative;
+  color: inherit;
+  text-decoration: none;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  font-size: 32px;
+  font-weight: 700;
+  line-height: 1.2;
+}
+.brand svg {
+  width: 64px;
+  height: 52px;
+  flex-shrink: 0;
+}
+.tagline {
+  font-size: 20px;
+  line-height: 1.4;
+  margin: 8px 0 38px;
+  color: #ccddfc;
+}
+.benefits {
+  position: relative;
+  padding: 0;
+  margin: 0;
+  list-style: none;
+  display: grid;
+  gap: 30px;
+}
+.benefits li {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+}
+.feature-icon {
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
+  width: 45px;
+  height: 45px;
+  border: 1px solid #3c70bc;
+  border-radius: 10px;
+  background: #255bb477;
+  font-size: 28px;
+}
+.feature-icon svg {
+  width: 24px;
+  height: 24px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.7;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.benefits strong {
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 1.5;
+}
+.benefits p {
+  color: #9bb8ed;
+  margin: 4px 0 0;
+  font-size: 12px;
+  line-height: 1.5;
+}
+.brand-note {
+  position: relative;
+  max-width: 220px;
+  color: #5a9bff;
+  font-size: 20px;
+  font-style: italic;
+  letter-spacing: 1px;
+  transform: rotate(-9deg);
+  margin: 65px 0 15px;
+  text-align: center;
+}
+.brand-note span {
+  display: block;
+  font-size: 35px;
+}
+.form-panel {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 9%;
+  background: linear-gradient(135deg, #f8fbff, #f0f7ff);
+}
+.auth-card {
+  width: 100%;
+  max-width: 530px;
+  padding: 36px;
+  border: 1px solid #e1edff;
+  border-radius: 9px;
+  background: #fff;
+  box-shadow: 0 5px 22px #2b6cca0b;
+}
+.auth-tabs {
+  display: flex;
+  border-bottom: 1px solid #dbe7ff;
+  margin-bottom: 34px;
+}
+.auth-tabs a {
+  width: 50%;
+  padding: 4px 8px 15px;
+  text-align: center;
+  color: #7086b0;
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 15px;
+}
+.auth-tabs a.active {
+  color: #2673ff;
+  border-bottom: 3px solid #2673ff;
+  margin-bottom: -2px;
+}
+a:focus-visible {
+  outline: 3px solid #78aaff;
+  outline-offset: 4px;
+}
+.registration {
+  padding: 36px;
+  display: grid;
+  place-items: center;
+}
+.registration .auth-layout {
+  width: 100%;
+  max-width: 1160px;
+  min-height: 730px;
+  grid-template-columns: 46% 54%;
+  overflow: hidden;
+  border: 1px solid #e1edff;
+  border-radius: 10px;
+  box-shadow: 0 2px 15px #2b6cca0b;
+}
+.registration .brand-panel {
+  padding: 55px 48px;
+}
+.registration .brand {
+  flex-direction: row;
+  align-items: center;
+  font-size: 30px;
+  gap: 18px;
+}
+.registration .brand svg {
+  width: 54px;
+}
+.registration .tagline {
+  margin: 4px 0 45px 72px;
+  font-size: 15px;
+}
+.registration .benefits {
+  gap: 38px;
+}
+.registration .form-panel {
+  padding: 45px 60px;
+  background: white;
+}
+.registration .auth-card {
+  border: 0;
+  box-shadow: none;
+  padding: 0;
+}
+@media (max-width: 1000px) {
+  .brand-panel {
+    padding: 65px 30px;
+  }
+  .registration .brand-panel {
+    padding: 40px 28px;
+  }
+  .registration .form-panel {
+    padding: 40px 30px;
+  }
+  .brand,
+  .registration .brand {
+    font-size: 25px;
+  }
+  .registration .brand {
+    gap: 12px;
+  }
+  .registration .tagline {
+    margin-left: 0;
+  }
+  .form-panel {
+    padding: 40px 6%;
+  }
+}
+@media (max-width: 700px) {
+  .auth-layout,
+  .registration .auth-layout {
+    grid-template-columns: 1fr;
+    min-height: 100dvh;
+  }
+  .auth-page.registration {
+    padding: 0;
+  }
+  .registration .auth-layout {
+    border: 0;
+    border-radius: 0;
+  }
+  .brand-panel,
+  .registration .brand-panel {
+    padding: 26px 24px;
+  }
+  .brand,
+  .registration .brand {
+    flex-direction: row;
+    align-items: center;
+    gap: 15px;
+    font-size: 25px;
+  }
+  .brand svg {
+    width: 44px;
+    height: 36px;
+  }
+  .tagline,
+  .registration .tagline {
+    font-size: 14px;
+    margin: 8px 0 0;
+  }
+  .benefits,
+  .brand-note {
+    display: none;
+  }
+  .form-panel,
+  .registration .form-panel {
+    padding: 28px 16px;
+    align-items: flex-start;
+  }
+  .auth-card {
+    padding: 26px 22px;
+  }
+  .registration .auth-card {
+    padding: 0 8px;
+  }
+}
+/* Регистрация занимает доступный экран, как форма входа. */
+@media (min-width: 701px) {
+  .registration { padding: 0; }
+  .registration .auth-layout { max-width: none; min-height: 100dvh; border: 0; border-radius: 0; grid-template-columns: 40% 60%; }
+  .registration .brand-panel { padding: clamp(40px, 8vh, 90px) clamp(28px, 5vw, 90px); }
+  .registration .form-panel { padding: 40px 9%; background: linear-gradient(135deg, #f8fbff, #f0f7ff); }
+  .registration .auth-card { max-width: 530px; padding: 36px; border: 1px solid #e1edff; border-radius: 9px; box-shadow: 0 5px 22px #2b6cca0b; }
+}

@@ -1,0 +1,111 @@
+<section class="auth-page" [class.registration]="mode() === 'register'">
+  <div class="auth-layout">
+    <aside class="brand-panel" aria-label="Об ИИ-помощнике">
+      <a class="brand" routerLink="/" aria-label="ИИ-помощник — главная">
+        <svg viewBox="0 0 64 52" aria-hidden="true">
+          <path
+            d="M3 16 32 3l29 13-29 14zM12 25v14c12 11 28 11 40 0V25L32 35z"
+            fill="currentColor"
+          />
+          <path d="M59 19v20" stroke="currentColor" stroke-width="4" stroke-linecap="round" />
+          <circle cx="59" cy="42" r="4" fill="currentColor" />
+        </svg>
+        <span>ИИ-помощник</span>
+      </a>
+      <p class="tagline">
+        {{
+          mode() === 'login'
+            ? 'Твоя персональная подготовка к экзаменам'
+            : 'Твой персональный помощник в подготовке к экзаменам'
+        }}
+      </p>
+      <ul class="benefits">
+        <li>
+          <span class="feature-icon" aria-hidden="true"
+            ><svg viewBox="0 0 24 24"><path d="M6 3h9l4 4v14H6zM14 3v5h5M9 12h7M9 16h7" /></svg
+          ></span>
+          <div>
+            <strong>{{
+              mode() === 'login' ? 'Анализируй лекционные материалы' : 'Загружай материалы'
+            }}</strong>
+            <p>
+              {{
+                mode() === 'login'
+                  ? 'ИИ выделит ключевые темы и понятия'
+                  : 'Добавляй лекции, конспекты и презентации в удобных форматах'
+              }}
+            </p>
+          </div>
+        </li>
+        <li>
+          <span class="feature-icon" aria-hidden="true"
+            ><svg viewBox="0 0 24 24"><path d="m12 2 3 7 7 3-7 3-3 7-3-7-7-3 7-3z" /></svg
+          ></span>
+          <div>
+            <strong>{{
+              mode() === 'login' ? 'Генерируй тесты и вопросы' : 'Генерируй тесты с помощью ИИ'
+            }}</strong>
+            <p>
+              {{
+                mode() === 'login'
+                  ? 'Под любой формат и уровень сложности'
+                  : 'Получай персонализированные вопросы на основе твоих материалов'
+              }}
+            </p>
+          </div>
+        </li>
+        @if (mode() === 'login') {
+          <li>
+            <span class="feature-icon" aria-hidden="true"
+              ><svg viewBox="0 0 24 24">
+                <circle cx="12" cy="7" r="4" />
+                <path d="M5 21v-3a7 7 0 0 1 14 0v3z" /></svg
+            ></span>
+            <div>
+              <strong>Получай персональные рекомендации</strong>
+              <p>Учитывай свои слабые темы</p>
+            </div>
+          </li>
+        }
+        <li>
+          <span class="feature-icon bars" aria-hidden="true"
+            ><svg viewBox="0 0 24 24"><path d="M5 20v-6m5 6V9m5 11V5m5 15V2" /></svg
+          ></span>
+          <div>
+            <strong>Отслеживай прогресс</strong>
+            <p>
+              {{
+                mode() === 'login'
+                  ? 'Смотри статистику и развивайся'
+                  : 'Анализируй результаты и фокусируйся на слабых темах'
+              }}
+            </p>
+          </div>
+        </li>
+      </ul>
+      <p class="brand-note">
+        {{ mode() === 'login' ? 'Больше знаний — ближе к цели!' : 'Учись умнее с ИИ!'
+        }}<span aria-hidden="true">⤴</span>
+      </p>
+    </aside>
+    <div class="form-panel">
+      <div class="auth-card">
+        <nav class="auth-tabs" aria-label="Вход и регистрация">
+          <a
+            routerLink="/login" queryParamsHandling="preserve"
+            [class.active]="mode() === 'login'"
+            [attr.aria-current]="mode() === 'login' ? 'page' : null"
+            >Вход</a
+          >
+          <a
+            routerLink="/register" queryParamsHandling="preserve"
+            [class.active]="mode() === 'register'"
+            [attr.aria-current]="mode() === 'register' ? 'page' : null"
+            >Регистрация</a
+          >
+        </nav>
+        <ng-content />
+      </div>
+    </div>
+  </div>
+</section>

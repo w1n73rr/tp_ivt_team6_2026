@@ -1,0 +1,6 @@
+.gradle/
+build/
+chromedriver/
+se-metadata.json
+
+ui.local.properties

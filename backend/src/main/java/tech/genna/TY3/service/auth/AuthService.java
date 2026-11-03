@@ -1,8 +1,8 @@
 package tech.genna.TY3.service.auth;
 
-import tech.genna.TY3.dto.auth.AuthResponse;
-import tech.genna.TY3.dto.auth.LoginRequest;
-import tech.genna.TY3.dto.auth.RegisterRequest;
+import tech.genna.TY3.api.model.AuthResponse;
+import tech.genna.TY3.api.model.LoginRequest;
+import tech.genna.TY3.api.model.RegisterRequest;
 
 public interface AuthService {
 

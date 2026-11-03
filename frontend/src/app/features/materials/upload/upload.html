@@ -1,0 +1,151 @@
+<app-materials-shell
+  ><nav class="breadcrumbs" aria-label="Хлебные крошки">
+    <a routerLink="/materials">Мои материалы</a><span>/ Загрузка</span>
+  </nav>
+  <h1>Загрузка материала</h1>
+  <p class="intro">Добавьте лекцию или конспект для дальнейшей подготовки к экзамену.</p>
+  <p class="intro">
+    PDF, DOCX или TXT до 10 МБ. Файл сохраняется на сервере; анализ ИИ пока не запускается.
+  </p>
+  <section class="upload-card">
+    @if (success()) {
+      <div class="success" role="status">
+        <h2>Материал сохранён на сервере</h2>
+        <p>
+          Идентификатор материала: {{ savedId() }}. Можно вернуться к списку материалов.
+        </p>
+        <a class="primary" routerLink="/materials">Перейти к материалам</a>
+      </div>
+    } @else {
+      <form [formGroup]="form" (ngSubmit)="submit()" novalidate [attr.aria-busy]="loading()">
+        <fieldset [disabled]="loading()">
+          <legend class="sr-only">Данные материала</legend>
+          <div class="drop-zone" (dragover)="$event.preventDefault()" (drop)="drop($event)">
+            <span class="upload-icon"><app-figma-icon name="upload" /></span
+            ><strong>Перетащите файл сюда</strong><span>или</span
+            ><button type="button" (click)="fileInput.click()">Выбрать файл</button
+            ><input
+              #fileInput
+              class="sr-only"
+              type="file"
+              accept=".pdf,.docx,.txt"
+              aria-label="Выбрать учебный файл"
+              (change)="choose($event)"
+            />
+            <div class="formats"><span>PDF</span><span>DOCX</span><span>TXT</span></div>
+          </div>
+          @if (fileError()) {
+            <p class="field-error" role="alert">{{ fileError() }}</p>
+          }
+          @if (file(); as chosen) {
+            <div class="chosen-file">
+              <span class="file-format">{{ chosen.name.split('.').pop()?.toUpperCase() }}</span>
+              <div>
+                <b>{{ chosen.name }}</b
+                ><small
+                  >{{ chosen.size / 1048576 | number: '1.0-2' }} МБ · готов к загрузке</small
+                >
+              </div>
+              <button type="button" (click)="removeFile()" aria-label="Убрать выбранный файл">
+                ×
+              </button>
+            </div>
+          }
+          <div class="fields">
+            <div class="field">
+              <label for="material-name">Название материала</label
+              ><input
+                id="material-name"
+                maxlength="255"
+                formControlName="name"
+                placeholder="Название лекции или конспекта"
+                [attr.aria-invalid]="form.controls.name.touched && !form.controls.name.value.trim()"
+                aria-describedby="name-error"
+              />
+              <div id="name-error">
+                @if (form.controls.name.touched && !form.controls.name.value.trim()) {
+                  <p class="field-error">Введите название материала</p>
+                }
+              </div>
+            </div>
+            <div class="field">
+              <label for="subject">Предмет</label
+              ><select
+                id="subject"
+                formControlName="subject"
+                [attr.aria-invalid]="form.controls.subject.touched && !subjectName"
+              >
+                <option value="" disabled hidden>Выберите предмет</option>
+                <option value="__new">Создать предмет</option>
+                @for (subject of subjects(); track subject.id) {
+                  <option [value]="subject.name">{{ subject.name }}</option>
+                }
+              </select>
+              @if (subjectsError()) {
+                <p class="field-error" role="alert">{{ subjectsError() }}</p>
+                <button type="button" (click)="loadSubjects()">Повторить загрузку предметов</button>
+              }
+              @if (form.controls.subject.value === '__new') {
+                <label class="sr-only" for="custom-subject">Название нового предмета</label
+                ><input
+                  id="custom-subject"
+                  maxlength="100"
+                  formControlName="customSubject"
+                  placeholder="Название нового предмета"
+                />
+              }
+              @if (form.controls.subject.touched && !subjectName) {
+                <p class="field-error">Укажите предмет</p>
+              }
+            </div>
+          </div>
+          <div class="field">
+            <label for="description">Описание <small>необязательно</small></label
+            ><textarea
+              id="description"
+              maxlength="2000"
+              formControlName="description"
+              placeholder="Кратко: о чём материал, к какому экзамену готовитесь"
+              rows="3"
+            ></textarea>
+          </div>
+          <div class="field">
+            <label for="tag-input">Теги</label>
+            <div class="tag-editor">
+              @for (tag of tags(); track tag) {
+                <span class="tag"
+                  >{{ tag
+                  }}<button
+                    type="button"
+                    (click)="removeTag(tag)"
+                    [attr.aria-label]="'Удалить тег ' + tag"
+                  >
+                    ×
+                  </button></span
+                >
+              }
+              <input
+                id="tag-input"
+                maxlength="50"
+                [value]="tagInput"
+                (input)="tagInput = $any($event.target).value"
+                (keydown.enter)="addTag($event)"
+                (blur)="addTag()"
+                placeholder="Добавить тег"
+              /><button type="button" (click)="addTag()">Добавить</button>
+            </div>
+          </div>
+          @if (error()) {
+            <p class="field-error" role="alert">{{ error() }}</p>
+          }
+          <div class="buttons">
+            <button type="button" (click)="cancel()">Отмена</button
+            ><button class="primary" type="submit">
+              <app-figma-icon name="upload" />{{ loading() ? 'Загрузка…' : 'Загрузить' }}
+            </button>
+          </div>
+        </fieldset>
+      </form>
+    }
+  </section>
+</app-materials-shell>

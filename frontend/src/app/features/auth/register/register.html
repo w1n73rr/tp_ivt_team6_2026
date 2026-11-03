@@ -1,1 +1,198 @@
-<p>register works!</p>
+<app-auth-shell mode="register"
+  ><h1>Создайте аккаунт</h1>
+  <p class="intro">Начните свой путь к высоким результатам</p>
+  <form
+    class="auth-form"
+    [formGroup]="registerForm"
+    (ngSubmit)="submit()"
+    [attr.aria-busy]="loading"
+    novalidate
+  >
+    <div class="field">
+      <label for="username">Имя пользователя</label>
+      <div class="input-wrap">
+        <svg class="input-icon" viewBox="0 0 24 24" aria-hidden="true">
+          <circle cx="12" cy="7" r="4" />
+          <path d="M5 21v-3a7 7 0 0 1 14 0v3z" /></svg
+        ><input
+          id="username"
+          name="username"
+          type="text"
+          formControlName="username"
+          autocomplete="username"
+          placeholder="Введите ваше имя"
+          [attr.aria-invalid]="
+            registerForm.controls.username.touched && registerForm.controls.username.invalid
+          "
+          aria-describedby="username-error"
+        />
+      </div>
+      <div id="username-error">
+        @if (
+          registerForm.controls.username.touched &&
+          registerForm.controls.username.hasError('required')
+        ) {
+          <p class="field-error">Введите имя пользователя</p>
+        }
+        @if (
+          registerForm.controls.username.touched &&
+          registerForm.controls.username.hasError('minlength')
+        ) {
+          <p class="field-error">Минимум 3 символа</p>
+        }
+        @if (
+          registerForm.controls.username.touched &&
+          registerForm.controls.username.hasError('maxlength')
+        ) {
+          <p class="field-error">Максимум 50 символов</p>
+        }
+      </div>
+    </div>
+    <div class="field">
+      <label for="email">Email</label>
+      <div class="input-wrap">
+        <svg class="input-icon" viewBox="0 0 24 24" aria-hidden="true">
+          <rect x="3" y="5" width="18" height="14" rx="2" />
+          <path d="m3 6 9 7 9-7" /></svg
+        ><input
+          id="email"
+          name="email"
+          type="email"
+          formControlName="email"
+          autocomplete="email"
+          placeholder="example@domain.com"
+          [attr.aria-invalid]="
+            registerForm.controls.email.touched && registerForm.controls.email.invalid
+          "
+          aria-describedby="email-error"
+        />
+      </div>
+      <div id="email-error">
+        @if (
+          registerForm.controls.email.touched && registerForm.controls.email.hasError('required')
+        ) {
+          <p class="field-error">Введите email</p>
+        }
+        @if (registerForm.controls.email.touched && registerForm.controls.email.hasError('email')) {
+          <p class="field-error">Введите корректный email</p>
+        }
+      </div>
+    </div>
+    <div class="field">
+      <label for="password">Пароль</label>
+      <div class="input-wrap">
+        <svg class="input-icon" viewBox="0 0 24 24" aria-hidden="true">
+          <rect x="5" y="10" width="14" height="11" rx="2" />
+          <path d="M8 10V7a4 4 0 0 1 8 0v3m-4 5v3" /></svg
+        ><input
+          id="password"
+          name="password"
+          [type]="showPassword ? 'text' : 'password'"
+          formControlName="password"
+          autocomplete="new-password"
+          placeholder="Придумайте пароль"
+          [attr.aria-invalid]="
+            registerForm.controls.password.touched && registerForm.controls.password.invalid
+          "
+          aria-describedby="password-error"
+        /><button
+          class="visibility"
+          type="button"
+          (click)="showPassword = !showPassword"
+          [attr.aria-label]="showPassword ? 'Скрыть пароль' : 'Показать пароль'"
+          [attr.aria-pressed]="showPassword"
+        >
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7S2 12 2 12z" />
+            <circle cx="12" cy="12" r="3" />
+          </svg>
+        </button>
+      </div>
+      <div id="password-error">
+        @if (
+          registerForm.controls.password.touched &&
+          registerForm.controls.password.hasError('required')
+        ) {
+          <p class="field-error">Введите пароль</p>
+        }
+        @if (
+          registerForm.controls.password.touched &&
+          registerForm.controls.password.hasError('minlength')
+        ) {
+          <p class="field-error">Минимум 6 символов</p>
+        }
+        @if (
+          registerForm.controls.password.touched &&
+          registerForm.controls.password.hasError('maxlength')
+        ) {
+          <p class="field-error">Максимум 100 символов</p>
+        }
+      </div>
+    </div>
+    <div class="field">
+      <label for="confirmPassword">Подтверждение пароля</label>
+      <div class="input-wrap">
+        <svg class="input-icon" viewBox="0 0 24 24" aria-hidden="true">
+          <rect x="5" y="10" width="14" height="11" rx="2" />
+          <path d="M8 10V7a4 4 0 0 1 8 0v3m-4 5v3" /></svg
+        ><input
+          id="confirmPassword"
+          name="confirmPassword"
+          [type]="showConfirmPassword ? 'text' : 'password'"
+          formControlName="confirmPassword"
+          autocomplete="new-password"
+          placeholder="Повторите пароль"
+          [attr.aria-invalid]="
+            registerForm.controls.confirmPassword.touched &&
+            (registerForm.controls.confirmPassword.invalid ||
+              registerForm.hasError('passwordMismatch'))
+          "
+          aria-describedby="confirmPassword-error"
+        /><button
+          class="visibility"
+          type="button"
+          (click)="showConfirmPassword = !showConfirmPassword"
+          [attr.aria-label]="
+            showConfirmPassword ? 'Скрыть подтверждение пароля' : 'Показать подтверждение пароля'
+          "
+          [attr.aria-pressed]="showConfirmPassword"
+        >
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7S2 12 2 12z" />
+            <circle cx="12" cy="12" r="3" />
+          </svg>
+        </button>
+      </div>
+      <div id="confirmPassword-error">
+        @if (
+          registerForm.controls.confirmPassword.touched &&
+          registerForm.controls.confirmPassword.hasError('required')
+        ) {
+          <p class="field-error">Повторите пароль</p>
+        }
+        @if (
+          registerForm.controls.confirmPassword.touched &&
+          !registerForm.controls.confirmPassword.hasError('required') &&
+          registerForm.hasError('passwordMismatch')
+        ) {
+          <p class="field-error">Пароли не совпадают</p>
+        }
+      </div>
+    </div>
+    @if (message) {
+      <p
+        class="form-message"
+        [class.error]="isError"
+        [class.success]="!isError"
+        role="status"
+        aria-live="polite"
+      >
+        {{ message }}
+      </p>
+    }
+    <button class="submit" type="submit" [disabled]="loading">
+      {{ loading ? 'Регистрация...' : 'Зарегистрироваться' }}
+    </button>
+  </form>
+  <p class="auth-link">Уже есть аккаунт? <a routerLink="/login" queryParamsHandling="preserve">Войти</a></p></app-auth-shell
+>

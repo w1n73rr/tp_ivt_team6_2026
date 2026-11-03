@@ -1,0 +1,6 @@
+label { display: block; margin: 12px 0 6px; font-weight: 600; }
+input { box-sizing: border-box; width: 100%; padding: 11px; border: 1px solid #bac9e0; border-radius: 8px; font: inherit; }
+button { padding: 10px 16px; border: 1px solid #c9d5e8; border-radius: 8px; background: white; font: inherit; cursor: pointer; }
+button:disabled { opacity: .6; cursor: wait; } .primary { background: #2862ef; color: white; } .danger { background: #ba263c; color: white; }
+.error { color: #a82236; } .hint { color: #52647d; font-size: 12px; line-height: 1.5; } p, li { overflow-wrap: anywhere; }
+mat-dialog-actions { gap: 8px; padding: 16px 24px; } input:focus-visible, button:focus-visible { outline: 3px solid #93b7ff; outline-offset: 2px; }
