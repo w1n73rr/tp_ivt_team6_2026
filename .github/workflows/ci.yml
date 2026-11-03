@@ -211,6 +211,11 @@ jobs:
         run: cp frontend/nginx.conf ci/package/frontend/nginx.conf
       - name: Проверка конфигурации Compose
         run: docker compose config --quiet
+      - name: Проверка серверной конфигурации без запуска
+        env:
+          IMAGE_TAG: sha-${{ github.sha }}
+          SERVER_ORIGIN: http://127.0.0.1
+        run: docker compose -f docker-compose.yml -f compose.registry.yml -f compose.server.yml config --quiet
       - name: Сборка образа сервера
         uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7
         with:
