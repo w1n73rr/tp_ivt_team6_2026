@@ -1,0 +1,42 @@
+# Isolated PostgreSQL integration check: no developer volumes or fixed container names.
+services:
+  seaweedfs:
+    image: chrislusf/seaweedfs:4.48
+    command: ["server", "-dir=/data", "-s3", "-s3.port=8333", "-master.volumeSizeLimitMB=1024"]
+    environment:
+      AWS_ACCESS_KEY_ID: local-minio-access
+      AWS_SECRET_ACCESS_KEY: local-minio-secret-change-before-deploy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9333/cluster/healthz"]
+      interval: 2s
+      timeout: 3s
+      retries: 30
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: generation_test
+      POSTGRES_USER: generation_test
+      POSTGRES_PASSWORD: integration-only-password
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U generation_test -d generation_test"]
+      interval: 2s
+      timeout: 3s
+      retries: 30
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile.generation-test
+    ports:
+      - "127.0.0.1:${GENERATION_TEST_PORT:-18080}:8080"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/generation_test
+      SPRING_DATASOURCE_USERNAME: generation_test
+      SPRING_DATASOURCE_PASSWORD: integration-only-password
+      JWT_SECRET: integration-only-secret-key-at-least-32-bytes
+      JWT_EXPIRATION: 3600000
+      S3_ENDPOINT: http://seaweedfs:8333
+    depends_on:
+      db:
+        condition: service_healthy
+      seaweedfs:
+        condition: service_healthy
