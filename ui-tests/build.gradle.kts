@@ -19,10 +19,12 @@ dependencies {
 tasks.test {
     useJUnitPlatform()
     // Pass explicit overrides; BrowserSettings supplies defaults for both IDEA and Gradle.
-    listOf("ui.baseUrl", "ui.headless", "ui.disableSandbox", "ui.chromeDriver", "ui.chromeBinary").forEach { key ->
+    listOf("ui.baseUrl", "ui.headless", "ui.disableSandbox", "ui.chromeDriver", "ui.chromeBinary", "ui.controlledBaseUrl", "ui.controlUrl").forEach { key ->
         System.getProperty(key)?.let { systemProperty(key, it) }
     }
     // The application state is external to Gradle, so each Run executes the browser tests.
     outputs.upToDateWhen { false }
+    systemProperty("ui.generationReportDir", layout.buildDirectory.dir("reports/generation").get().asFile.absolutePath)
     testLogging { events("passed", "failed", "skipped") }
+    System.getProperty("ui.excludeTags")?.let { tags -> useJUnitPlatform { excludeTags(*tags.split(",").toTypedArray()) } }
 }

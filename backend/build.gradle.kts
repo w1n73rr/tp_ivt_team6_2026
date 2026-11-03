@@ -153,3 +153,11 @@ tasks.withType<JavaCompile> {
 tasks.bootJar {
 	archiveFileName.set("app.jar")
 }
+
+// Explicit test-only application; controlled beans are never packaged in bootJar.
+tasks.register<JavaExec>("generationUiServer") {
+    dependsOn(tasks.testClasses)
+    classpath = sourceSets.test.get().runtimeClasspath
+    mainClass.set("tech.genna.TY3.generationui.GenerationUiTestServer")
+    javaLauncher.set(javaToolchains.launcherFor { languageVersion.set(JavaLanguageVersion.of(25)) })
+}
