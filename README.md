@@ -442,3 +442,20 @@ HTTP-снимок и WebSocket доступны владельцу задачи;
 Ключ читается из окружения либо локального игнорируемого `.env.ml.local`; при отсутствии
 предлагается скрытый ввод с локальным сохранением. Файл не публиковать.
 `ML_LIVE_MATERIAL_PATH` — путь только локального тестового инструмента, не параметр API.
+
+## Проверка HTTP API материалов — tpivt6_26-41
+
+Требуются Git, Docker Desktop с Linux-контейнерами и Compose >= 2.24.4.
+Из корня репозитория выполните:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\scripts\materials-api.ps1
+```
+
+Скрипт выполняет `docker compose up` для отдельного одноразового стенда с реальными
+Backend, PostgreSQL и S3. Старые пользовательские данные и локальный `.env` не используются.
+После проверок стенд удаляется, отчёты остаются в `api-tests/build/reports`.
+JUnit HTML — `api-tests/build/reports/tests/test/index.html`, HTTP-коды и данные —
+`api-tests/build/reports/materials-http.md`, версия/окружение — `run-summary.md`.
+Ошибка запуска или теста возвращает ненулевой код. Подготовка, ограничения и
+покрытие кейсов описаны в [api-tests/README.md](api-tests/README.md).
