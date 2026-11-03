@@ -12,6 +12,7 @@ public final class MaterialRow extends NamedPage {
     @Name("Дата загрузки") public final SelenideElement uploadedAt;
     @Name("Изменить материал") public final SelenideElement editButton;
     @Name("Удалить материал") public final SelenideElement deleteButton;
+    @Name("Создать тест по материалу") public final SelenideElement generateButton;
 
     public MaterialRow(SelenideElement row) {
         this.row = row;
@@ -21,6 +22,7 @@ public final class MaterialRow extends NamedPage {
         uploadedAt = row.$x(".//time");
         editButton = row.$x(".//button[@aria-label='Изменить материал']");
         deleteButton = row.$x(".//button[@aria-label='Удалить материал']");
+        generateButton = row.$x(".//button[contains(normalize-space(.),'Создать тест')]");
         nameElements();
     }
 
