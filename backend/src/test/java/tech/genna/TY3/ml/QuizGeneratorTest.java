@@ -11,8 +11,32 @@ import static tech.genna.TY3.ml.GenerationEvent.Stage.*;
 import static tech.genna.TY3.ml.GenerationRequest.*;
 
 class QuizGeneratorTest {
+    @Test void difficultyRejectionIsRepairedAndNextRequestHasNoPreviousQuiz() {
+        var generations = new java.util.concurrent.atomic.AtomicInteger();
+        var reviews = new java.util.concurrent.atomic.AtomicInteger();
+        var generator = new QuizGenerator((system, user, first) -> {
+            if (isReview(system)) {
+                return reviews.incrementAndGet() == 1
+                        ? "{\"verdict\":\"reject\",\"issues\":[{\"questionId\":\"q2\",\"reason\":\"Только воспроизведение определения вместо применения правила\"}]}"
+                        : REVIEW_PASS;
+            }
+            int call = generations.incrementAndGet();
+            if (call == 2) {
+                assertTrue(user.contains("previousQuiz"));
+                assertTrue(user.contains("Только воспроизведение определения"));
+            } else {
+                assertFalse(user.contains("previousQuiz"));
+                assertFalse(user.contains("correction"));
+            }
+            return Json.write(output(QuestionType.multiple_choice, 5));
+        }, 60000);
+        assertEquals(5, generator.generate(request(QuestionType.multiple_choice, 5), e -> {}).questions().size());
+        assertEquals(5, generator.generate(request(QuestionType.multiple_choice, 5), e -> {}).questions().size());
+        assertEquals(3, generations.get());
+        assertEquals(3, reviews.get());
+    }
     static final String REVIEW_PASS = "{\"verdict\":\"pass\",\"issues\":[]}";
-    static boolean isReview(String system) { return system.startsWith("РОЛЬ ПРОВЕРЯЮЩЕГО"); }
+    static boolean isReview(String system) { return system.startsWith("ROLE: QUIZ REVIEWER"); }
     static GenerationRequest request(QuestionType type, int count) {
         return new GenerationRequest("job-1", "material-1", "Prepared lecture text", count, Difficulty.medium, type);
     }
@@ -43,7 +67,7 @@ class QuizGeneratorTest {
         for (int count : List.of(5, 10)) {
             var events = new ArrayList<GenerationEvent>();
             var generator = new QuizGenerator((system, user, first) -> {
-                assertTrue(system.contains("РОЛЬ"));
+                assertTrue(system.contains("ROLE:"));
                 assertTrue(user.contains("Prepared lecture text"));
                 if (isReview(system)) return REVIEW_PASS;
                 first.run();
@@ -211,7 +235,7 @@ class QuizGeneratorTest {
                 questions(root).getFirst().put("correctOptionIds", List.of("b"));
             } else {
                 assertTrue(user.contains("questions[0].correctOptionIds"));
-                assertTrue(user.contains("2 или 3"));
+                assertTrue(user.contains("2 or 3"));
             }
             return Json.write(root);
         }, 60000);

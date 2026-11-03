@@ -83,9 +83,9 @@ def run():
                     for v in initial[group]), "Seeds must be available")
         require(initial["questionTypeSelection"] == "SINGLE", "Wrong selection mode")
         request = {"materialId": str(uuid.uuid4()), **initial["defaults"]}
-        require(http("/api/quizzes", "POST", request, token)[0] == 501, "Valid settings should reach the lifecycle stub")
+        require(http("/api/quizzes", "POST", request, token)[0] == 404, "Valid settings should reach owner-scoped material lookup")
         for patch in ({"questionCount": 20}, {"questionCount": 5.5}, {"difficulty": "UNKNOWN"}, {"questionType": "OPEN"},
-                      {"questionType": ["SINGLE_CHOICE", "TRUE_FALSE"]}, {"topicIds": []},
+                      {"questionType": ["SINGLE_CHOICE", "TRUE_FALSE"]}, {"topicIds": [str(uuid.uuid4())]},
                       {"prioritizeWeakTopics": True}, {"questionTypes": ["TRUE_FALSE"]}):
             require(http("/api/quizzes", "POST", {**request, **patch}, token)[0] == 400,
                     "Forbidden settings accepted: " + repr(patch))

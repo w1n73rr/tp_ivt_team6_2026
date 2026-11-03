@@ -82,7 +82,7 @@ public final class QuizGenerator {
             catch (GenerationFailure failure) {
                 if (attempt != 0 || failure.code() != GenerationFailure.Code.INVALID_MODEL_OUTPUT) throw failure;
                 input.put("correction", Map.of("code", "INVALID_MODEL_OUTPUT", "issue", failure.validationHint(),
-                        "instruction", "Сформируй полный новый ответ. Проверь requestId, число вопросов и число правильных ответов в КАЖДОМ вопросе. " + selectedRules(request)));
+                        "instruction", "Return a complete new response. Check requestId, question count and the correct-answer count in EVERY question. " + selectedRules(request)));
                 emit.accept(REVISING); continue;
             }
             emit.accept(REVIEWING_CONTENT);
@@ -101,18 +101,23 @@ public final class QuizGenerator {
 
     private static String selectedRules(GenerationRequest request) {
         String rules = switch (request.questionType()) {
-            case single_choice -> "В каждом вопросе четыре варианта a,b,c,d и ровно один правильный. "
-                    + "Не помещай разные правильные части одного перечня в отдельные варианты.";
-            case multiple_choice -> "В КАЖДОМ вопросе четыре варианта a,b,c,d и ДВА ИЛИ ТРИ правильных. "
-                    + "Один правильный недопустим. Формулировка предлагает выбрать несколько утверждений. "
-                    + "Сначала выбери несколько независимых истинных положений на общую тему из материала, "
-                    + "затем добавь один или два ложных варианта. Не задавай вопрос, требующий единственного термина.";
-            case true_false -> "В каждом вопросе утверждение и варианты true/Верно, false/Неверно. "
-                    + "В тесте есть и верные, и неверные утверждения, примерно поровну. "
-                    + "Объяснение ложного утверждения исправляет его. Не объединяй независимые утверждения.";
+            case single_choice -> "Each question has exactly four options a,b,c,d and ONE correct answer. "
+                    + "Do not split several correct members of a list across different options.";
+            case multiple_choice -> "EVERY question has exactly four options a,b,c,d and TWO OR THREE correct answers. "
+                    + "One correct answer or four correct answers is invalid. Ask the learner to select all valid statements. "
+                    + "First choose several independent source-supported statements on one coherent topic, then add "
+                    + "one or two distractors. Do not ask for a single term or inflate the key using duplicates. "
+                    + "For medium or hard, ask which decisions or consequences follow from ONE scenario; "
+                    + "do not replace reasoning with a checklist of unrelated true statements. "
+                    + "Explain every correct statement.";
+            case true_false -> "Each question contains one statement and exactly the options true/Верно and false/Неверно. "
+                    + "Include both true and false answers, approximately balanced. The explanation corrects a false statement. "
+                    + "For medium or hard, present a short scenario and ONE conclusion to evaluate. "
+                    + "The conclusion must require the selected level of reasoning, not just recalling a number. "
+                    + "Do not combine independent claims into one statement.";
         };
-        return "\nНАСТРОЙКИ ЭТОГО ЗАПУСКА\nТип всех вопросов: " + request.questionType().name()
-                + ". Количество: " + request.questionCount() + ". " + rules + "\n";
+        return "\nRUN SETTINGS\nType of EVERY question: " + request.questionType().name()
+                + ". Exact count: " + request.questionCount() + ". " + rules + "\n";
     }
 
     private static String example(GenerationRequest request) {

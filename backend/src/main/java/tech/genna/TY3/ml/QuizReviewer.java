@@ -19,9 +19,27 @@ final class QuizReviewer {
     }
 
     List<Map<String, String>> review(GenerationRequest request, Quiz quiz) {
-        String user = Json.write(Map.of("material", Map.of("text", request.text()),
+        Map<String, Object> input = new LinkedHashMap<>(Map.of("material", Map.of("text", request.text()),
                 "difficulty", request.difficulty().name(), "quiz", quiz));
-        Map<?, ?> result = Json.read(client.complete(prompt, user, () -> {}));
+        for (int attempt = 0; attempt < 2; attempt++) {
+            // Only a fully received, malformed verdict may be corrected. Transport failures
+            // propagate without retry, because the provider may already have processed a call.
+            String raw = client.complete(prompt, Json.write(input), () -> {});
+            try { return parse(raw, quiz); }
+            catch (GenerationFailure failure) {
+                if (attempt == 1 || failure.code() != INVALID_MODEL_OUTPUT) throw failure;
+                input.put("correction", Map.of("code", "INVALID_REVIEW_FORMAT", "instruction",
+                        "Re-evaluate the original quiz against the source. Return ONE complete JSON verdict "
+                        + "with exactly verdict and issues. A pass requires an empty issues array; a reject "
+                        + "requires concrete issues with existing questionId and reason. No second object, "
+                        + "Markdown or trailing text. Do not assume the quiz passes."));
+            }
+        }
+        throw new GenerationFailure(INVALID_MODEL_OUTPUT);
+    }
+
+    private List<Map<String, String>> parse(String raw, Quiz quiz) {
+        Map<?, ?> result = Json.read(raw);
         if (result == null || !result.keySet().equals(Set.of("verdict", "issues"))
                 || !(result.get("issues") instanceof List<?> issues) || issues.size() > 12) {
             throw new GenerationFailure(INVALID_MODEL_OUTPUT);

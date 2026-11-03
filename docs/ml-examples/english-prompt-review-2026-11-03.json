@@ -1,0 +1,158 @@
+{
+  "date": "2026-11-03",
+  "model": "nvidia/nemotron-3.5-super-vl:free",
+  "reasoning": false,
+  "instructionLanguage": "en",
+  "materialLanguage": "ru",
+  "outputLanguage": "ru",
+  "questionCount": 10,
+  "difficulty": "medium",
+  "runs": {
+    "single_choice": {
+      "model": "nvidia/nemotron-3.5-super-vl:free",
+      "completedCalls": 3,
+      "events": [
+        {
+          "requestId": "live-demo-single_choice",
+          "stage": "PREPARING_PROMPT",
+          "sequence": 1
+        },
+        {
+          "requestId": "live-demo-single_choice",
+          "stage": "WAITING_FOR_MODEL",
+          "sequence": 2
+        },
+        {
+          "requestId": "live-demo-single_choice",
+          "stage": "RECEIVING_RESPONSE",
+          "sequence": 3
+        },
+        {
+          "requestId": "live-demo-single_choice",
+          "stage": "VALIDATING",
+          "sequence": 4
+        },
+        {
+          "requestId": "live-demo-single_choice",
+          "stage": "REVISING",
+          "sequence": 5
+        },
+        {
+          "requestId": "live-demo-single_choice",
+          "stage": "WAITING_FOR_MODEL",
+          "sequence": 6
+        },
+        {
+          "requestId": "live-demo-single_choice",
+          "stage": "RECEIVING_RESPONSE",
+          "sequence": 7
+        },
+        {
+          "requestId": "live-demo-single_choice",
+          "stage": "VALIDATING",
+          "sequence": 8
+        },
+        {
+          "requestId": "live-demo-single_choice",
+          "stage": "REVIEWING_CONTENT",
+          "sequence": 9
+        },
+        {
+          "requestId": "live-demo-single_choice",
+          "stage": "FAILED",
+          "sequence": 10
+        }
+      ],
+      "reasoning": false,
+      "code": "INVALID_MODEL_OUTPUT",
+      "status": "failed",
+      "seconds": 18.6946907
+    },
+    "multiple_choice": {
+      "model": "nvidia/nemotron-3.5-super-vl:free",
+      "completedCalls": 1,
+      "events": [
+        {
+          "requestId": "live-demo-multiple_choice",
+          "stage": "PREPARING_PROMPT",
+          "sequence": 1
+        },
+        {
+          "requestId": "live-demo-multiple_choice",
+          "stage": "WAITING_FOR_MODEL",
+          "sequence": 2
+        },
+        {
+          "requestId": "live-demo-multiple_choice",
+          "stage": "RECEIVING_RESPONSE",
+          "sequence": 3
+        },
+        {
+          "requestId": "live-demo-multiple_choice",
+          "stage": "VALIDATING",
+          "sequence": 4
+        },
+        {
+          "requestId": "live-demo-multiple_choice",
+          "stage": "REVIEWING_CONTENT",
+          "sequence": 5
+        },
+        {
+          "requestId": "live-demo-multiple_choice",
+          "stage": "FAILED",
+          "sequence": 6
+        }
+      ],
+      "reasoning": false,
+      "code": "MODEL_TIMEOUT",
+      "status": "failed",
+      "seconds": 101.4102493
+    },
+    "true_false": {
+      "status": "validated",
+      "model": "nvidia/nemotron-3.5-super-vl:free",
+      "reasoning": false,
+      "completedCalls": 2,
+      "events": [
+        {
+          "requestId": "live-demo-true_false",
+          "stage": "PREPARING_PROMPT",
+          "sequence": 1
+        },
+        {
+          "requestId": "live-demo-true_false",
+          "stage": "WAITING_FOR_MODEL",
+          "sequence": 2
+        },
+        {
+          "requestId": "live-demo-true_false",
+          "stage": "RECEIVING_RESPONSE",
+          "sequence": 3
+        },
+        {
+          "requestId": "live-demo-true_false",
+          "stage": "VALIDATING",
+          "sequence": 4
+        },
+        {
+          "requestId": "live-demo-true_false",
+          "stage": "REVIEWING_CONTENT",
+          "sequence": 5
+        },
+        {
+          "requestId": "live-demo-true_false",
+          "stage": "VALIDATED",
+          "sequence": 6
+        }
+      ],
+      "seconds": 5.0665079
+    }
+  },
+  "acceptance": "failed; quality improvement not demonstrated",
+  "humanReview": {
+    "true_false": "All answer keys supported by source, 5 true / 5 false; Russian output; mostly direct recall, medium difficulty not demonstrated.",
+    "single_choice": "Rejected: review JSON missing the final root closing brace; do not repair silently.",
+    "multiple_choice": "Candidate obtained, reviewer timed out; not a successfully generated quiz."
+  },
+  "comparisonLimit": "The change combines translation with clarified distractor rules; this is not an isolated test of language alone."
+}

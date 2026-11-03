@@ -29,14 +29,14 @@ public final class QuizValidator {
         check(Integer.valueOf(2).equals(quiz.get("schemaVersion")));
         check(r.materialId().equals(quiz.get("materialId")));
         List<?> questions = array(quiz.get("questions"));
-        check(questions.size() == r.questionCount(), "questions: требуется ровно " + r.questionCount() + " вопросов.");
+        check(questions.size() == r.questionCount(), "questions: expected exactly " + r.questionCount() + " questions.");
         List<Quiz.Question> result = new ArrayList<>();
         Set<String> questionTexts = new HashSet<>();
         for (int i = 0; i < questions.size(); i++) {
             Map<?, ?> q = object(questions.get(i));
             keys(q, "id", "type", "text", "options", "correctOptionIds", "explanation");
             check(("q" + (i + 1)).equals(q.get("id")));
-            check(r.questionType().name().equals(q.get("type")), "questions[" + i + "].type: требуется " + r.questionType().name());
+            check(r.questionType().name().equals(q.get("type")), "questions[" + i + "].type: expected " + r.questionType().name());
             String questionText = text(q.get("text"));
             check(questionTexts.add(normalize(questionText)));
             boolean tf = r.questionType() == GenerationRequest.QuestionType.true_false;
@@ -57,8 +57,8 @@ public final class QuizValidator {
             boolean multi = r.questionType() == GenerationRequest.QuestionType.multiple_choice;
             check(multi ? answers.size() >= 2 && answers.size() <= 3 : answers.size() == 1,
                     "questions[" + i + "].correctOptionIds: " + (multi
-                            ? "требуется 2 или 3 разных правильных ответа, один недопустим."
-                            : "требуется ровно один правильный ответ."));
+                            ? "expected 2 or 3 distinct correct answers; one is invalid."
+                            : "expected exactly one correct answer."));
             List<String> correct = answers.stream().map(QuizValidator::text).toList();
             check(new HashSet<>(correct).size() == correct.size() && optionIds.containsAll(correct));
             result.add(new Quiz.Question("q" + (i + 1), r.questionType(), questionText,
@@ -66,7 +66,7 @@ public final class QuizValidator {
         }
         if (r.questionType() == GenerationRequest.QuestionType.true_false) {
             long trueAnswers = result.stream().filter(q -> q.correctOptionIds().contains("true")).count();
-            check(trueAnswers > 0 && trueAnswers < result.size(), "В true_false нужны и верные, и неверные утверждения.");
+            check(trueAnswers > 0 && trueAnswers < result.size(), "A true_false quiz must contain both true and false answers.");
         }
         return new Quiz(2, r.materialId(), text(quiz.get("title")), result);
     }

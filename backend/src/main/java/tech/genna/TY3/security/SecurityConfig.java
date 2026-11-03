@@ -47,6 +47,8 @@ public class SecurityConfig {
                                 "/swagger-ui/**", "/swagger-ui.html").permitAll()
                         .requestMatchers("/error").permitAll()
                         .requestMatchers("/actuator/health").permitAll()
+                        // Browser WebSocket authenticates its first frame; the handler verifies JWT and job ownership.
+                        .requestMatchers("/api/ws/generation").permitAll()
                         .anyRequest().authenticated()
                 )
                 .sessionManagement(session ->
