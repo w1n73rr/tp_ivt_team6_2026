@@ -13,7 +13,7 @@ public final class QuizValidator {
     }
 
     private Quiz parseObject(Map<?, ?> root, GenerationRequest r) {
-        check(r.requestId().equals(root.get("requestId")));
+        check(r.requestId().equals(root.get("requestId")), "REQUEST_ID: must equal input requestId.");
         if ("error".equals(root.get("status"))) {
             keys(root, "requestId", "status", "error");
             Map<?, ?> error = object(root.get("error"));
@@ -26,8 +26,8 @@ public final class QuizValidator {
         check("success".equals(root.get("status")));
         Map<?, ?> quiz = object(root.get("quiz"));
         keys(quiz, "schemaVersion", "materialId", "title", "questions");
-        check(Integer.valueOf(2).equals(quiz.get("schemaVersion")));
-        check(r.materialId().equals(quiz.get("materialId")));
+        check(Integer.valueOf(2).equals(quiz.get("schemaVersion")), "SCHEMA_VERSION: expected integer 2.");
+        check(r.materialId().equals(quiz.get("materialId")), "MATERIAL_ID: must equal input material.id.");
         List<?> questions = array(quiz.get("questions"));
         check(questions.size() == r.questionCount(), "questions: expected exactly " + r.questionCount() + " questions.");
         List<Quiz.Question> result = new ArrayList<>();
@@ -35,14 +35,14 @@ public final class QuizValidator {
         for (int i = 0; i < questions.size(); i++) {
             Map<?, ?> q = object(questions.get(i));
             keys(q, "id", "type", "text", "options", "correctOptionIds", "explanation");
-            check(("q" + (i + 1)).equals(q.get("id")));
+            check(("q" + (i + 1)).equals(q.get("id")), "QUESTION_ID: expected sequential q1..qN.");
             check(r.questionType().name().equals(q.get("type")), "questions[" + i + "].type: expected " + r.questionType().name());
             String questionText = text(q.get("text"));
-            check(questionTexts.add(normalize(questionText)));
+            check(questionTexts.add(normalize(questionText)), "DUPLICATE_QUESTION: question texts must be distinct.");
             boolean tf = r.questionType() == GenerationRequest.QuestionType.true_false;
             List<String> ids = tf ? List.of("true", "false") : List.of("a", "b", "c", "d");
             List<?> options = array(q.get("options"));
-            check(options.size() == ids.size());
+            check(options.size() == ids.size(), "OPTIONS_COUNT: expected " + ids.size() + " options.");
             Set<String> optionIds = new HashSet<>(), optionTexts = new HashSet<>();
             List<Quiz.Option> converted = new ArrayList<>();
             for (Object value : options) {
@@ -74,7 +74,7 @@ public final class QuizValidator {
         return Normalizer.normalize(s, Normalizer.Form.NFKC).toLowerCase(Locale.ROOT)
                 .replaceAll("[\\p{P}\\s]+", " ").strip();
     }
-    private static void keys(Map<?, ?> m, String... names) { check(m.keySet().equals(Set.of(names))); }
+    private static void keys(Map<?, ?> m, String... names) { check(m.keySet().equals(Set.of(names)), "OBJECT_FIELDS: expected exactly " + String.join(",", names)); }
     private static Map<?, ?> object(Object o) { check(o instanceof Map); return (Map<?, ?>) o; }
     private static List<?> array(Object o) { check(o instanceof List); return (List<?>) o; }
     private static String text(Object o) {

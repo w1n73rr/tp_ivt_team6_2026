@@ -12,6 +12,7 @@ import static tech.genna.TY3.ml.GenerationEvent.Stage.*;
 
 /** Blocking operation: BE must call on its background job executor, not in the submit HTTP request. */
 public final class QuizGenerator {
+    private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(QuizGenerator.class);
     private final ModelClient client;
     private final QuizValidator validator = new QuizValidator();
     private final int maxInputChars;
@@ -42,8 +43,10 @@ public final class QuizGenerator {
         Objects.requireNonNull(listener);
         AtomicLong sequence = new AtomicLong();
         AtomicBoolean terminal = new AtomicBoolean();
+        var lastStage = new java.util.concurrent.atomic.AtomicReference<GenerationEvent.Stage>();
         Consumer<GenerationEvent.Stage> emit = stage -> {
             if (terminal.get()) return;
+            lastStage.set(stage);
             if ((stage == FAILED || stage == VALIDATED) && !terminal.compareAndSet(false, true)) return;
             // A disconnected UI must not turn successful model work into a retry/billed duplicate.
             try { listener.accept(new GenerationEvent(request.requestId(), stage, sequence.incrementAndGet())); }
@@ -62,7 +65,11 @@ public final class QuizGenerator {
                 if (ex.getCause() instanceof GenerationFailure failure) throw failure;
                 throw new GenerationFailure(GenerationFailure.Code.INVALID_MODEL_OUTPUT);
             }
-        } catch (GenerationFailure ex) { emit.accept(FAILED); throw ex; }
+        } catch (GenerationFailure ex) {
+            log.warn("Generation failed requestId={} stage={} code={} validation={}",
+                    request.requestId(), lastStage.get(), ex.code(), ex.validationHint());
+            emit.accept(FAILED); throw ex;
+        }
     }
 
     private Quiz run(GenerationRequest request, Consumer<GenerationEvent.Stage> emit) {

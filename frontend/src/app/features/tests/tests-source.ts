@@ -1,6 +1,6 @@
-import { InjectionToken, inject } from '@angular/core';
+import { Injectable, InjectionToken, inject } from '@angular/core';
 import { AuthService } from '../../core/auth/auth.service';
-import { HttpErrorResponse } from '@angular/common/http';
+import { HttpClient, HttpHeaders, HttpErrorResponse } from '@angular/common/http';
 import { Observable, defer, delay, of, switchMap, throwError } from 'rxjs';
 
 export interface TestSummary {
@@ -8,13 +8,13 @@ export interface TestSummary {
   name: string;
   materialName: string;
   format: 'PDF' | 'DOCX' | 'TXT';
-  questionCount: 5 | 10;
+  questionCount: number;
   difficulty: 'EASY' | 'MEDIUM' | 'HARD';
   questionType: 'SINGLE_CHOICE' | 'MULTIPLE_CHOICE' | 'TRUE_FALSE';
   createdAt: string;
 }
 export type DemoScenario = 'list' | 'empty' | 'error' | 'auth';
-// UI model only. Resolve /api/tests vs /api/quizzes with BE before implementing HTTP.
+// Both the real API adapter and isolated unit-test fixtures use this table model.
 export interface TestsSource {
   readonly demo: boolean;
   list(): Observable<{ items: TestSummary[] }>;
@@ -81,8 +81,13 @@ export class DemoTestsSource implements TestsSource {
   }
 }
 export const TESTS_SOURCE = new InjectionToken<TestsSource>('TESTS_SOURCE', {
-  providedIn: 'root', factory: () => {
-    const auth = inject(AuthService);
-    return new DemoTestsSource(() => auth.username());
-  },
+  providedIn: 'root', factory: () => inject(ApiTestsSource),
 });
+
+@Injectable({ providedIn: 'root' })
+export class ApiTestsSource implements TestsSource {
+  readonly demo = false;
+  private readonly http = inject(HttpClient);
+  private readonly auth = inject(AuthService);
+  list(): Observable<{ items: TestSummary[] }> { return this.http.get<{ items: TestSummary[] }>('/api/quizzes', { headers: new HttpHeaders({ Authorization: `Bearer ${this.auth.token ?? ''}` }) }); }
+}

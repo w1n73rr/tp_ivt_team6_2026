@@ -42,12 +42,12 @@ final class QuizReviewer {
         Map<?, ?> result = Json.read(raw);
         if (result == null || !result.keySet().equals(Set.of("verdict", "issues"))
                 || !(result.get("issues") instanceof List<?> issues) || issues.size() > 12) {
-            throw new GenerationFailure(INVALID_MODEL_OUTPUT);
+            throw new GenerationFailure(INVALID_MODEL_OUTPUT, "REVIEW_FIELDS: expected verdict and issues array with at most 12 items.");
         }
         String verdict = Objects.toString(result.get("verdict"), "");
         if (!(verdict.equals("pass") && issues.isEmpty()
                 || verdict.equals("reject") && !issues.isEmpty())) {
-            throw new GenerationFailure(INVALID_MODEL_OUTPUT);
+            throw new GenerationFailure(INVALID_MODEL_OUTPUT, "REVIEW_VERDICT: pass requires no issues; reject requires at least one issue.");
         }
         Set<String> ids = new HashSet<>();
         ids.add("quiz"); quiz.questions().forEach(q -> ids.add(q.id()));
@@ -56,7 +56,7 @@ final class QuizReviewer {
             if (!(issue instanceof Map<?, ?> item) || !item.keySet().equals(Set.of("questionId", "reason"))
                     || !(item.get("questionId") instanceof String id) || !ids.contains(id)
                     || !(item.get("reason") instanceof String reason) || reason.isBlank() || reason.length() > 1000) {
-                throw new GenerationFailure(INVALID_MODEL_OUTPUT);
+                throw new GenerationFailure(INVALID_MODEL_OUTPUT, "REVIEW_ISSUE: expected existing questionId and a nonempty reason up to 1000 characters.");
             }
             checked.add(Map.of("questionId", id, "reason", reason));
         }
