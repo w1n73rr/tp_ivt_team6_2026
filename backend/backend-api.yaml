@@ -12,7 +12,8 @@ info:
     Поиск, фильтрация и сортировка материалов выполняются на frontend.
     Backend принимает PDF, DOCX, TXT, хранит оригиналы в приватном MinIO/S3
     и выдаёт файлы только после проверки доступа. Ключи S3 и секреты не раскрываются.
-    Анализ и генерация асинхронны; клиент опрашивает состояние до завершения.
+    Генерация выполняется в фоне; WebSocket передаёт снимки, HTTP читает актуальное
+    состояние и служит резервным каналом. Подробности — backend/GENERATION.md.
     В MVP используется внешний LLM API. Провайдер и модель выбираются сервером;
     переход на собственную модель не меняет публичный контракт.
     Реализованные операции сохраняют поведение; подготовленные операции без
@@ -22,6 +23,12 @@ servers:
     description: Текущий сервер; локально http://localhost:8080
 security:
   - bearerAuth: []
+x-generation-websocket:
+  path: /api/ws/generation
+  authentication: 'Первый JSON-кадр SUBSCRIBE с token (JWT без Bearer) и jobId; ключи в URL запрещены. Origin проверяется по APP_CORS_ALLOWED_ORIGINS.'
+  clientMessage: { type: SUBSCRIBE, token: '<JWT>', jobId: '<UUID>' }
+  serverMessage: '#/components/schemas/GenerationJob'
+  recovery: 'После подключения и переподключения GET /api/generation-jobs/{jobId}; применять только более новую version. Терминальный снимок закрывает соединение с кодом 1000.'
 tags:
   - { name: Auth, description: 'Регистрация и авторизация' }
   - { name: Users, description: 'Профиль и настройки' }
@@ -635,11 +642,12 @@ paths:
       operationId: generateQuiz
       summary: Поставить генерацию теста по одному материалу в очередь
       description: |
-        Материал должен быть READY. topicIds принадлежат выбранному материалу;
-        пустой массив означает все темы. Нет выбора провайдера и клиентских API-ключей.
-        Дополнительные параметры исключения повторов, слабых тем и уровня — предпочтения;
-        при недостатке контента возвращается ошибка задачи INSUFFICIENT_CONTENT.
-        Ответы/оценки из LLM валидируются сервером, а тест оценивается детерминированно.
+        Один собственный сохранённый материал PDF/DOCX/TXT. Извлечение текста и ML
+        выполняются в фоне. 5 или 10 вопросов, ровно один тип. Темы и персонализация
+        не поддерживаются TY5: непустые topicIds и true у флагов отклоняются до ML.
+        Повтор с тем же UUID Idempotency-Key и нормализованными параметрами возвращает
+        ту же задачу в течение 24 часов; другие параметры с этим ключом дают 409.
+        Доступность настроек проверяется по справочнику БД GET /api/generation/parameters.
       parameters:
         - { $ref: '#/components/parameters/IdempotencyKey' }
       requestBody:
@@ -655,18 +663,70 @@ paths:
           content:
             application/json:
               schema: { $ref: '#/components/schemas/GenerationJob' }
-        '400': { $ref: '#/components/responses/BadRequest' }
+        '400':
+          description: VALIDATION_ERROR или GENERATION_OPTION_NOT_AVAILABLE
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
         '404': { $ref: '#/components/responses/NotFound' }
         '409': { $ref: '#/components/responses/Conflict' }
         '429': { $ref: '#/components/responses/RateLimited' }
-        '501': { $ref: '#/components/responses/NotImplemented' }
+        '501':
+          description: GENERATION_NOT_IMPLEMENTED — настройки допустимы, создание задач пока не подключено
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
+        '503':
+          description: GENERATION_CONFIG_UNAVAILABLE
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
+        default: { $ref: '#/components/responses/Error' }
+  /api/generation/parameters:
+    get:
+      tags: [GenerationParameters]
+      operationId: getGenerationParameters
+      summary: Получить справочник настроек генерации TY5
+      description: |
+        Все значения, включая недоступные, и defaults читаются из БД на каждый запрос.
+        Default всегда доступен; изменения видны после commit без перезапуска сервера.
+        Авторизация Bearer JWT. Значения публичного API в верхнем регистре;
+        на границе ML преобразуются в easy/medium/hard и single_choice/multiple_choice/true_false.
+        При недоступном или повреждённом справочнике — 503, без подстановки констант.
+      responses:
+        '200':
+          description: Поддерживаемые настройки и одиночный выбор типа
+          headers:
+            Cache-Control: { schema: { type: string }, description: 'no-store' }
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/GenerationParametersResponse' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '503':
+          description: GENERATION_CONFIG_UNAVAILABLE
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
+        default: { $ref: '#/components/responses/Error' }
+  /api/quizzes/generation-options:
+    get:
+      tags: [Quizzes]
+      operationId: getGenerationOptions
+      summary: Серверный справочник параметров TY5
+      responses:
+        '200':
+          description: Допустимые значения и настройки по умолчанию
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/GenerationOptions' }
         default: { $ref: '#/components/responses/Error' }
   /api/generation-jobs/{jobId}:
     get:
       tags: [Generation]
       operationId: getGenerationJob
       summary: Получить состояние генерации теста или тренировки
-      description: Polling раз в 2 секунды. При COMPLETED заполнен quizId; при FAILED заполнен error. Статус задачи не является HTTP-ошибкой получения состояния.
+      description: HTTP-снимок для открытия/восстановления; WebSocket /api/ws/generation передаёт изменения. При недоступном WS допустим polling раз в 2 секунды. При COMPLETED заполнен quizId, при FAILED — error. Ошибка задачи находится в теле HTTP 200.
       parameters:
         - { name: jobId, in: path, required: true, schema: { type: string, format: uuid } }
       responses:
@@ -1106,7 +1166,7 @@ components:
     TrainingLevel: { type: string, enum: [BEGINNER, INTERMEDIATE, ADVANCED] }
     Difficulty: { type: string, enum: [EASY, MEDIUM, HARD] }
     QuestionType: { type: string, enum: [SINGLE_CHOICE, MULTIPLE_CHOICE, TRUE_FALSE] }
-    QuestionCount: { type: integer, enum: [5, 10, 20] }
+    QuestionCount: { type: integer, enum: [5, 10] }
     LearningPreferences:
       type: object
       required: [questionCount, difficulty, language, hintsEnabled, explanationDetail, explanationStyle]
@@ -1212,7 +1272,7 @@ components:
       type: object
       required: [code, message, retryable]
       properties:
-        code: { type: string, description: 'MATERIAL_TOO_LONG, NO_TEXT_CONTENT, ENCRYPTED_DOCUMENT, INVALID_DOCUMENT, LLM_UNAVAILABLE, LLM_TIMEOUT, LLM_INVALID_RESPONSE, INSUFFICIENT_CONTENT, STORAGE_UNAVAILABLE' }
+        code: { type: string, description: 'DOCUMENT_TOO_LARGE, DOCUMENT_TEXT_TOO_LARGE, DOCUMENT_TOO_MANY_PAGES, DOCUMENT_NO_TEXT, DOCUMENT_PROTECTED, DOCUMENT_UNREADABLE, NOT_CONFIGURED, RATE_LIMITED, MODEL_UNAVAILABLE, MODEL_TIMEOUT, MODEL_OUTPUT_LIMIT, MODEL_REFUSED, INVALID_MODEL_OUTPUT, QUALITY_REJECTED, INSUFFICIENT_MATERIAL, INVALID_INPUT, CANCELLED, GENERATION_INTERRUPTED, ML_UNAVAILABLE, ML_INVALID_RESULT, GENERATION_FAILED, STORAGE_UNAVAILABLE' }
         message: { type: string }
         retryable: { type: boolean }
     BulkDeleteMaterialsRequest:
@@ -1241,29 +1301,78 @@ components:
       required: [items]
       properties:
         items: { type: array, items: { $ref: '#/components/schemas/Topic' } }
-    GenerateQuizRequest:
+    GenerationSettings:
       type: object
-      required: [materialId, questionCount, difficulty, questionTypes]
+      additionalProperties: false
+      required: [questionCount, difficulty, questionType]
       properties:
-        materialId: { type: string, format: uuid, description: 'Ровно один материал за генерацию' }
-        topicIds: { type: array, maxItems: 100, uniqueItems: true, items: { type: string, format: uuid } }
         questionCount: { $ref: '#/components/schemas/QuestionCount' }
         difficulty: { $ref: '#/components/schemas/Difficulty' }
-        questionTypes: { type: array, minItems: 1, maxItems: 3, uniqueItems: true, items: { $ref: '#/components/schemas/QuestionType' } }
+        questionType: { $ref: '#/components/schemas/QuestionType' }
+    QuestionCountOption:
+      type: object
+      required: [value, available]
+      properties:
+        value: { $ref: '#/components/schemas/QuestionCount' }
+        available: { type: boolean }
+    DifficultyOption:
+      type: object
+      required: [value, available]
+      properties:
+        value: { $ref: '#/components/schemas/Difficulty' }
+        available: { type: boolean }
+    QuestionTypeOption:
+      type: object
+      required: [value, available]
+      properties:
+        value: { $ref: '#/components/schemas/QuestionType' }
+        available: { type: boolean }
+    GenerationParametersResponse:
+      type: object
+      required: [questionCounts, difficulties, questionTypes, defaults, questionTypeSelection]
+      properties:
+        questionCounts: { type: array, minItems: 2, maxItems: 2, items: { $ref: '#/components/schemas/QuestionCountOption' } }
+        difficulties: { type: array, minItems: 3, maxItems: 3, items: { $ref: '#/components/schemas/DifficultyOption' } }
+        questionTypes: { type: array, minItems: 3, maxItems: 3, items: { $ref: '#/components/schemas/QuestionTypeOption' } }
+        defaults: { $ref: '#/components/schemas/GenerationSettings' }
+        questionTypeSelection: { type: string, enum: [SINGLE], description: 'Выбрать ровно один тип; несколько типов за запуск запрещены' }
+    GenerateQuizRequest:
+      type: object
+      additionalProperties: false
+      required: [materialId, questionCount, difficulty, questionType]
+      properties:
+        materialId: { type: string, format: uuid, description: 'Ровно один материал за генерацию' }
+        questionCount: { $ref: '#/components/schemas/QuestionCount' }
+        difficulty: { $ref: '#/components/schemas/Difficulty' }
+        questionType: { $ref: '#/components/schemas/QuestionType' }
+        name: { type: string, minLength: 1, maxLength: 100 }
+        topicIds: { type: array, maxItems: 0, uniqueItems: true, items: { type: string, format: uuid } }
         excludeAnswered: { type: boolean, default: false }
         prioritizeWeakTopics: { type: boolean, default: false }
         adaptToLevel: { type: boolean, default: false }
-        language: { type: string, enum: [ru, en], description: 'При отсутствии берётся из настроек пользователя' }
+        language: { type: string, enum: [ru] }
+    GenerationOptions:
+      type: object
+      required: [counts, difficulties, types, defaultCount, defaultDifficulty, defaultType]
+      properties:
+        counts: { type: array, items: { type: integer } }
+        difficulties: { type: array, items: { $ref: '#/components/schemas/Difficulty' } }
+        types: { type: array, items: { $ref: '#/components/schemas/QuestionType' } }
+        defaultCount: { type: integer }
+        defaultDifficulty: { $ref: '#/components/schemas/Difficulty' }
+        defaultType: { $ref: '#/components/schemas/QuestionType' }
     GenerationJob:
       type: object
-      required: [id, materialId, kind, status, progress, createdAt, updatedAt]
+      required: [id, materialId, kind, status, version, createdAt, updatedAt]
       properties:
         id: { type: string, format: uuid }
         materialId: { type: string, format: uuid }
         kind: { $ref: '#/components/schemas/QuizKind' }
         status: { type: string, enum: [QUEUED, RUNNING, COMPLETED, FAILED] }
-        stage: { type: string, enum: [PREPARING, GENERATING, VALIDATING] }
-        progress: { type: integer, minimum: 0, maximum: 100 }
+        stage: { type: string, enum: [PREPARING, GENERATING, VALIDATING, SAVING, COMPLETED, FAILED] }
+        detailStage: { type: string, enum: [EXTRACTING, PREPARING_PROMPT, WAITING_FOR_MODEL, RECEIVING_RESPONSE, VALIDATING, REVIEWING_CONTENT, REVISING, VALIDATED, FAILED] }
+        version: { type: integer, minimum: 0, description: 'Версия сохранённого снимка. Более старый снимок не заменяет новый.' }
+        progress: { type: integer, minimum: 0, maximum: 100, nullable: true, description: 'До COMPLETED отсутствует; после сохранения равен 100. Этапы не являются процентами.' }
         quizId: { type: string, format: uuid, description: 'Только при COMPLETED' }
         error: { $ref: '#/components/schemas/TaskError' }
         createdAt: { type: string, format: date-time }
@@ -1273,6 +1382,8 @@ components:
       type: object
       required: [id, name, materialId, materialName, subjectId, subjectName, topics, kind, difficulty, questionCount, createdAt]
       properties:
+        format: { $ref: '#/components/schemas/FileFormat' }
+        questionType: { $ref: '#/components/schemas/QuestionType' }
         id: { type: string, format: uuid }
         name: { type: string }
         materialId: { type: string, format: uuid, description: 'Снимок ссылки; материал может быть впоследствии удалён' }

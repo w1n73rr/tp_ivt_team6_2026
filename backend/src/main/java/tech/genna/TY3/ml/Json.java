@@ -15,6 +15,6 @@ final class Json {
     static String write(Object value) { return MAPPER.writeValueAsString(value); }
     static Map<?, ?> read(String value) {
         try { return MAPPER.readValue(value, Map.class); }
-        catch (RuntimeException ex) { throw new GenerationFailure(GenerationFailure.Code.INVALID_MODEL_OUTPUT); }
+        catch (RuntimeException ex) { throw new GenerationFailure(GenerationFailure.Code.INVALID_MODEL_OUTPUT, "JSON_SYNTAX: expected one complete JSON object; duplicate keys and trailing output are forbidden."); }
     }
 }

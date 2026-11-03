@@ -1,0 +1,260 @@
+{
+  "docx-result": {
+    "revision": "BE-60 merged with dev cfea136; local validation before merge commit",
+    "checks": [
+      "Register users and upload real TXT to S3 through backend",
+      "202/Location, replay has same jobId, conflict 409, invalid count 400, owner checks 401/404",
+      "Authenticated WebSocket terminal snapshot and reconnect agree with HTTP snapshot",
+      "Foreign WebSocket subscription closes with 1008 without exposing task data"
+    ],
+    "modelCalls": "real free provider via Java generator",
+    "jobId": "d6d8b2aa-a7d0-4436-9445-8cfa37916915",
+    "snapshots": [
+      {
+        "id": "d6d8b2aa-a7d0-4436-9445-8cfa37916915",
+        "materialId": "2e0c77e5-2a99-4afa-9c9a-25c27fd65201",
+        "kind": "TEST",
+        "status": "QUEUED",
+        "version": 0,
+        "createdAt": "2026-11-03T11:25:16.755583Z",
+        "updatedAt": "2026-11-03T11:25:16.755583Z",
+        "stage": "PREPARING"
+      },
+      {
+        "id": "d6d8b2aa-a7d0-4436-9445-8cfa37916915",
+        "materialId": "2e0c77e5-2a99-4afa-9c9a-25c27fd65201",
+        "kind": "TEST",
+        "status": "FAILED",
+        "version": 2,
+        "createdAt": "2026-11-03T11:25:16.755583Z",
+        "updatedAt": "2026-11-03T11:25:17.842274Z",
+        "error": {
+          "code": "DOCUMENT_TEXT_TOO_LARGE",
+          "message": "Документ превышает допустимые ограничения.",
+          "retryable": false
+        },
+        "stage": "FAILED"
+      }
+    ],
+    "terminal": {
+      "id": "d6d8b2aa-a7d0-4436-9445-8cfa37916915",
+      "materialId": "2e0c77e5-2a99-4afa-9c9a-25c27fd65201",
+      "kind": "TEST",
+      "status": "FAILED",
+      "version": 2,
+      "createdAt": "2026-11-03T11:25:16.755583Z",
+      "updatedAt": "2026-11-03T11:25:17.842274Z",
+      "error": {
+        "code": "DOCUMENT_TEXT_TOO_LARGE",
+        "message": "Документ превышает допустимые ограничения.",
+        "retryable": false
+      },
+      "stage": "FAILED"
+    },
+    "status": "failed",
+    "failureType": "RuntimeError",
+    "failure": "Real generation failed with safe code DOCUMENT_TEXT_TOO_LARGE"
+  },
+  "docx-small-result": {
+    "revision": "BE-60 merged with dev cfea136; local validation before merge commit",
+    "checks": [
+      "Register users and upload real TXT to S3 through backend",
+      "202/Location, replay has same jobId, conflict 409, invalid count 400, owner checks 401/404",
+      "Authenticated WebSocket terminal snapshot and reconnect agree with HTTP snapshot",
+      "Foreign WebSocket subscription closes with 1008 without exposing task data"
+    ],
+    "modelCalls": "real free provider via Java generator",
+    "jobId": "07ebf921-8ce6-48d2-a644-c40a9e184a9c",
+    "snapshots": [
+      {
+        "id": "07ebf921-8ce6-48d2-a644-c40a9e184a9c",
+        "materialId": "1d96b646-dd67-4b07-b1e7-3ccd53e29065",
+        "kind": "TEST",
+        "status": "RUNNING",
+        "version": 3,
+        "createdAt": "2026-11-03T11:27:16.495684Z",
+        "updatedAt": "2026-11-03T11:27:17.298387Z",
+        "detailStage": "WAITING_FOR_MODEL",
+        "stage": "GENERATING"
+      },
+      {
+        "id": "07ebf921-8ce6-48d2-a644-c40a9e184a9c",
+        "materialId": "1d96b646-dd67-4b07-b1e7-3ccd53e29065",
+        "kind": "TEST",
+        "status": "RUNNING",
+        "version": 4,
+        "createdAt": "2026-11-03T11:27:16.495684Z",
+        "updatedAt": "2026-11-03T11:27:20.419033Z",
+        "detailStage": "RECEIVING_RESPONSE",
+        "stage": "GENERATING"
+      },
+      {
+        "id": "07ebf921-8ce6-48d2-a644-c40a9e184a9c",
+        "materialId": "1d96b646-dd67-4b07-b1e7-3ccd53e29065",
+        "kind": "TEST",
+        "status": "RUNNING",
+        "version": 7,
+        "createdAt": "2026-11-03T11:27:16.495684Z",
+        "updatedAt": "2026-11-03T11:27:35.30455Z",
+        "detailStage": "WAITING_FOR_MODEL",
+        "stage": "GENERATING"
+      },
+      {
+        "id": "07ebf921-8ce6-48d2-a644-c40a9e184a9c",
+        "materialId": "1d96b646-dd67-4b07-b1e7-3ccd53e29065",
+        "kind": "TEST",
+        "status": "RUNNING",
+        "version": 8,
+        "createdAt": "2026-11-03T11:27:16.495684Z",
+        "updatedAt": "2026-11-03T11:27:36.611639Z",
+        "detailStage": "RECEIVING_RESPONSE",
+        "stage": "GENERATING"
+      },
+      {
+        "id": "07ebf921-8ce6-48d2-a644-c40a9e184a9c",
+        "materialId": "1d96b646-dd67-4b07-b1e7-3ccd53e29065",
+        "kind": "TEST",
+        "status": "RUNNING",
+        "version": 10,
+        "createdAt": "2026-11-03T11:27:16.495684Z",
+        "updatedAt": "2026-11-03T11:27:50.482964Z",
+        "detailStage": "REVIEWING_CONTENT",
+        "stage": "VALIDATING"
+      },
+      {
+        "id": "07ebf921-8ce6-48d2-a644-c40a9e184a9c",
+        "materialId": "1d96b646-dd67-4b07-b1e7-3ccd53e29065",
+        "kind": "TEST",
+        "status": "FAILED",
+        "version": 12,
+        "createdAt": "2026-11-03T11:27:16.495684Z",
+        "updatedAt": "2026-11-03T11:28:36.403866Z",
+        "error": {
+          "code": "INVALID_MODEL_OUTPUT",
+          "message": "Модель вернула некорректный тест.",
+          "retryable": false
+        },
+        "stage": "FAILED"
+      }
+    ],
+    "terminal": {
+      "id": "07ebf921-8ce6-48d2-a644-c40a9e184a9c",
+      "materialId": "1d96b646-dd67-4b07-b1e7-3ccd53e29065",
+      "kind": "TEST",
+      "status": "FAILED",
+      "version": 12,
+      "createdAt": "2026-11-03T11:27:16.495684Z",
+      "updatedAt": "2026-11-03T11:28:36.403866Z",
+      "error": {
+        "code": "INVALID_MODEL_OUTPUT",
+        "message": "Модель вернула некорректный тест.",
+        "retryable": false
+      },
+      "stage": "FAILED"
+    },
+    "status": "failed",
+    "failureType": "RuntimeError",
+    "failure": "Real generation failed with safe code INVALID_MODEL_OUTPUT"
+  },
+  "pdf-result": {
+    "revision": "BE-60 merged with dev cfea136; local validation before merge commit",
+    "checks": [
+      "Register users and upload real TXT to S3 through backend",
+      "202/Location, replay has same jobId, conflict 409, invalid count 400, owner checks 401/404",
+      "Authenticated WebSocket terminal snapshot and reconnect agree with HTTP snapshot",
+      "Foreign WebSocket subscription closes with 1008 without exposing task data"
+    ],
+    "modelCalls": "real free provider via Java generator",
+    "jobId": "85f1745e-6ac4-49c0-8dc4-a301d70701c7",
+    "snapshots": [
+      {
+        "id": "85f1745e-6ac4-49c0-8dc4-a301d70701c7",
+        "materialId": "f00506c2-0181-43d9-97cd-959fc3ab7b23",
+        "kind": "TEST",
+        "status": "RUNNING",
+        "version": 1,
+        "createdAt": "2026-11-03T11:24:22.885096Z",
+        "updatedAt": "2026-11-03T11:24:23.711237Z",
+        "detailStage": "EXTRACTING",
+        "stage": "PREPARING"
+      },
+      {
+        "id": "85f1745e-6ac4-49c0-8dc4-a301d70701c7",
+        "materialId": "f00506c2-0181-43d9-97cd-959fc3ab7b23",
+        "kind": "TEST",
+        "status": "RUNNING",
+        "version": 3,
+        "createdAt": "2026-11-03T11:24:22.885096Z",
+        "updatedAt": "2026-11-03T11:24:24.35456Z",
+        "detailStage": "WAITING_FOR_MODEL",
+        "stage": "GENERATING"
+      },
+      {
+        "id": "85f1745e-6ac4-49c0-8dc4-a301d70701c7",
+        "materialId": "f00506c2-0181-43d9-97cd-959fc3ab7b23",
+        "kind": "TEST",
+        "status": "RUNNING",
+        "version": 4,
+        "createdAt": "2026-11-03T11:24:22.885096Z",
+        "updatedAt": "2026-11-03T11:24:37.729781Z",
+        "detailStage": "RECEIVING_RESPONSE",
+        "stage": "GENERATING"
+      },
+      {
+        "id": "85f1745e-6ac4-49c0-8dc4-a301d70701c7",
+        "materialId": "f00506c2-0181-43d9-97cd-959fc3ab7b23",
+        "kind": "TEST",
+        "status": "RUNNING",
+        "version": 7,
+        "createdAt": "2026-11-03T11:24:22.885096Z",
+        "updatedAt": "2026-11-03T11:24:52.503787Z",
+        "detailStage": "WAITING_FOR_MODEL",
+        "stage": "GENERATING"
+      },
+      {
+        "id": "85f1745e-6ac4-49c0-8dc4-a301d70701c7",
+        "materialId": "f00506c2-0181-43d9-97cd-959fc3ab7b23",
+        "kind": "TEST",
+        "status": "RUNNING",
+        "version": 8,
+        "createdAt": "2026-11-03T11:24:22.885096Z",
+        "updatedAt": "2026-11-03T11:25:00.840569Z",
+        "detailStage": "RECEIVING_RESPONSE",
+        "stage": "GENERATING"
+      },
+      {
+        "id": "85f1745e-6ac4-49c0-8dc4-a301d70701c7",
+        "materialId": "f00506c2-0181-43d9-97cd-959fc3ab7b23",
+        "kind": "TEST",
+        "status": "FAILED",
+        "version": 11,
+        "createdAt": "2026-11-03T11:24:22.885096Z",
+        "updatedAt": "2026-11-03T11:25:12.91722Z",
+        "error": {
+          "code": "INVALID_MODEL_OUTPUT",
+          "message": "Модель вернула некорректный тест.",
+          "retryable": false
+        },
+        "stage": "FAILED"
+      }
+    ],
+    "terminal": {
+      "id": "85f1745e-6ac4-49c0-8dc4-a301d70701c7",
+      "materialId": "f00506c2-0181-43d9-97cd-959fc3ab7b23",
+      "kind": "TEST",
+      "status": "FAILED",
+      "version": 11,
+      "createdAt": "2026-11-03T11:24:22.885096Z",
+      "updatedAt": "2026-11-03T11:25:12.91722Z",
+      "error": {
+        "code": "INVALID_MODEL_OUTPUT",
+        "message": "Модель вернула некорректный тест.",
+        "retryable": false
+      },
+      "stage": "FAILED"
+    },
+    "status": "failed",
+    "failureType": "RuntimeError",
+    "failure": "Real generation failed with safe code INVALID_MODEL_OUTPUT"
+  }
+}

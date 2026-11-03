@@ -59,6 +59,8 @@ class OpenRouterClientTest {
             assertEquals("Bearer synthetic-test-key", exchange.getRequestHeaders().getFirst("Authorization"));
             Map<?, ?> body = Json.read(new String(exchange.getRequestBody().readAllBytes(), StandardCharsets.UTF_8));
             assertEquals(true, body.get("stream"));
+            assertEquals(Map.of("type", "json_object"), body.get("response_format"));
+            assertEquals(Map.of("require_parameters", true), body.get("provider"));
             assertEquals(Map.of("enabled", false), body.get("reasoning"));
             byte[] bytes = "do not expose upstream body".getBytes(StandardCharsets.UTF_8);
             exchange.sendResponseHeaders(429, bytes.length);

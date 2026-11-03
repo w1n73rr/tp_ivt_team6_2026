@@ -1,9 +1,9 @@
 param(
-    [ValidateSet('single_choice','multiple_choice','true_false','remaining','all')][string]$Type = 'single_choice',
+    [ValidateSet('single_choice','multiple_choice','true_false','remaining','all','choice_pair')][string]$Type = 'single_choice',
     [ValidateSet(5,10)][int]$Count = 5,
     [ValidateSet('easy','medium','hard')][string]$Difficulty = 'medium',
     [switch]$Reasoning,
-    [ValidatePattern('^[A-Za-z0-9._/-]+:free$')][string]$Model = 'nvidia/nemotron-3.5-lightning:free'
+    [ValidatePattern('^[A-Za-z0-9._/-]+:free$')][string]$Model = 'nvidia/nemotron-3.5-super-vl:free'
 )
 $ErrorActionPreference = 'Stop'
 $repoRoot = Split-Path $PSScriptRoot -Parent
@@ -25,13 +25,28 @@ $savedGradle = $env:GRADLE_USER_HOME
 $secret = $null
 $pointer = [IntPtr]::Zero
 try {
-    Write-Host 'OpenRouter FREE model. Key input is hidden. Do not send the key in chat.'
-    $secret = Read-Host 'Paste NEW OpenRouter API key and press Enter' -AsSecureString
+    $localEnvPath = Join-Path $repoRoot '.env.ml.local'
+    Write-Host 'OpenRouter FREE model. Credential values are never printed.'
+    if (-not [string]::IsNullOrWhiteSpace($savedKey)) {
+        $env:OPENROUTER_API_KEY = $savedKey
+    } elseif (Test-Path -LiteralPath $localEnvPath) {
+        $line = Get-Content -LiteralPath $localEnvPath | Where-Object { $_ -match '^OPENROUTER_API_KEY=' } | Select-Object -First 1
+        if (-not $line) { throw 'Local key entry missing.' }
+        $env:OPENROUTER_API_KEY = $line.Substring('OPENROUTER_API_KEY='.Length).Trim()
+        $line = $null
+    } else {
+    $secret = Read-Host 'Paste OpenRouter API key once to save in ignored .env.ml.local' -AsSecureString
     $pointer = [Runtime.InteropServices.Marshal]::SecureStringToBSTR($secret)
     $env:OPENROUTER_API_KEY = [Runtime.InteropServices.Marshal]::PtrToStringBSTR($pointer)
     [Runtime.InteropServices.Marshal]::ZeroFreeBSTR($pointer)
     $pointer = [IntPtr]::Zero
+    }
     if (-not $env:OPENROUTER_API_KEY.StartsWith('sk-or-')) { throw 'Invalid key format; nothing sent.' }
+    if ([string]::IsNullOrWhiteSpace($savedKey) -and -not (Test-Path -LiteralPath $localEnvPath)) {
+        if ($env:OPENROUTER_API_KEY -notmatch '^sk-or-[A-Za-z0-9_-]+$') { throw 'Invalid key format.' }
+        [System.IO.File]::WriteAllText($localEnvPath, "OPENROUTER_API_KEY=$($env:OPENROUTER_API_KEY)`n")
+        Write-Host 'Key saved locally. Next runs will reuse it.'
+    }
     $env:ML_LIVE_TEST = 'true'
     $env:ML_LIVE_TYPE = $Type
     $env:ML_LIVE_COUNT = [string]$Count
@@ -51,15 +66,19 @@ try {
     @{state='running'; type=$Type; count=$Count; difficulty=$Difficulty; model=$Model; reasoning=$Reasoning.IsPresent} | ConvertTo-Json | Set-Content $statusPath
     Push-Location $backendPath
     try {
-        & ./gradlew.bat --no-daemon '-Dorg.gradle.jvmargs=-Dfile.encoding=COMPAT' test --tests 'tech.genna.TY3.ml.OpenRouterLiveTest' --rerun-tasks --console=plain *> $logPath
-        $resultCode = $LASTEXITCODE
-    } finally { Pop-Location }
+        # Wait for the native process explicitly; stderr warnings are not PowerShell errors.
+        $process = Start-Process -FilePath $env:ComSpec -ArgumentList @('/d', '/c',
+            'gradlew.bat --no-daemon -Dorg.gradle.jvmargs=-Dfile.encoding=COMPAT test --tests tech.genna.TY3.ml.OpenRouterLiveTest --rerun-tasks --console=plain') `
+            -WorkingDirectory $backendPath -WindowStyle Hidden -PassThru -Wait `
+            -RedirectStandardOutput $logPath -RedirectStandardError (Join-Path $resultPath 'live-run.stderr.log')
+        $resultCode = $process.ExitCode
+    } finally { $ErrorActionPreference = 'Stop'; Pop-Location }
     @{state= $(if ($resultCode -eq 0) {'passed'} else {'failed'}); exitCode=$resultCode;
         type=$Type; count=$Count; difficulty=$Difficulty; model=$Model; reasoning=$Reasoning.IsPresent} | ConvertTo-Json | Set-Content $statusPath
     Write-Host "Test finished. Exit code: $resultCode. Output: $resultPath"
     Write-Host 'A passed test includes structural and model-assisted review; human content review is still needed.'
 } catch {
-    @{state='failed'; reason='Setup or test failed. No key is saved.'} | ConvertTo-Json | Set-Content $statusPath
+    @{state='failed'; reason='Setup or test failed. Local credential file, if present, is retained.'} | ConvertTo-Json | Set-Content $statusPath
     Write-Host 'Test could not complete. Check setup and the safe local test log.'
 } finally {
     if ($pointer -ne [IntPtr]::Zero) { [Runtime.InteropServices.Marshal]::ZeroFreeBSTR($pointer) }
