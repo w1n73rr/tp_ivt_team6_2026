@@ -105,10 +105,6 @@ public class MaterialService {
             if (Set.of("EXTRACTING", "ANALYZING").contains(material.getStatus())) {
                 throw new ResponseStatusException(HttpStatus.CONFLICT, "MATERIAL_IN_USE");
             }
-            if (Boolean.TRUE.equals(jdbc.queryForObject("SELECT EXISTS (SELECT 1 FROM generation_jobs "
-                    + "WHERE material_id = ? AND status IN ('QUEUED', 'RUNNING'))", Boolean.class, id))) {
-                throw new ResponseStatusException(HttpStatus.CONFLICT, "MATERIAL_IN_USE");
-            }
             // S3 deletion happens only AFTER commit. A rollback leaves the original intact.
             cleanup.enqueue(material.getFileId(), user.getId());
             materials.delete(material);

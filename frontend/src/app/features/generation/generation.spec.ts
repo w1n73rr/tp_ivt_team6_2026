@@ -8,19 +8,17 @@ import { Generation } from './generation';
 import { GENERATION_SOURCE, GenerationOptions } from './generation-source';
 import { MaterialsApi } from '../materials/materials.api';
 import { Material } from '../materials/materials.models';
-import { AuthService } from '../../core/auth/auth.service';
 import { Materials } from '../materials/materials';
 
 const material: Material = { id: 'one', name: 'Нормализация', format: 'PDF', sizeBytes: 2516582, subjectId: 'db', subjectName: 'Базы данных', uploadedAt: '2026-10-01' };
 const options: GenerationOptions = { counts: [5, 10], difficulties: ['EASY', 'MEDIUM', 'HARD'], types: ['SINGLE_CHOICE', 'MULTIPLE_CHOICE', 'TRUE_FALSE'], defaults: { questionCount: 10, difficulty: 'MEDIUM', questionType: 'MULTIPLE_CHOICE' } };
 describe('Generation prototype', () => {
-  let source: { demo: boolean; options: ReturnType<typeof vi.fn>; start: ReturnType<typeof vi.fn>; status: ReturnType<typeof vi.fn>; saved: ReturnType<typeof vi.fn> };
+  let source: { demo: boolean; options: ReturnType<typeof vi.fn>; start: ReturnType<typeof vi.fn> };
   beforeEach(() => {
-    sessionStorage.clear();
-    source = { status: vi.fn(), saved: vi.fn(), demo: true, options: vi.fn(() => of(structuredClone(options))), start: vi.fn(() => of({ state: 'DEMO_WAITING' })) };
+    source = { demo: true, options: vi.fn(() => of(structuredClone(options))), start: vi.fn(() => of({ state: 'DEMO_WAITING' })) };
     TestBed.configureTestingModule({ providers: [provideHttpClient(), provideRouter([
       { path: 'materials', component: Materials }, { path: 'materials/:materialId/generate', component: Generation },
-    ]), { provide: GENERATION_SOURCE, useValue: source }, { provide: AuthService, useValue: { token: 'test', username: () => 'owner' } }] });
+    ]), { provide: GENERATION_SOURCE, useValue: source }] });
     vi.spyOn(TestBed.inject(MaterialsApi), 'detail').mockImplementation(id => of({ material: { ...material, id }, tags: [] }));
     vi.spyOn(TestBed.inject(MaterialsApi), 'list').mockReturnValue(of({ items: [material] }));
   });
@@ -113,66 +111,4 @@ describe('Generation prototype', () => {
     const { page, harness } = await open(); page.start();
     expect(harness.routeNativeElement!.querySelector('[role=alert]')).toBeTruthy(); expect(source.start).not.toHaveBeenCalled();
   });
-  it('keeps the same key on an unknown POST outcome and creates a new key only for a new request', async () => {
-    source.demo = false; source.start.mockReturnValue(throwError(() => new Error('network')));
-    const { page } = await open(); page.start(); page.start();
-    expect(source.start.mock.calls[0][3]).toBe(source.start.mock.calls[1][3]);
-    expect(source.start.mock.calls[0][2]).toBe('Нормализация');
-    page.setName('Другое название'); page.start();
-    expect(source.start.mock.calls[2][3]).not.toBe(source.start.mock.calls[0][3]);
-  });
-  it('retains waiting after a temporary status error and confirms the saved test before ready', async () => {
-    source.demo = false;
-    const job = { id: 'job', materialId: 'one', status: 'QUEUED', version: 0 };
-    source.start.mockReturnValue(of(job)); source.status.mockReturnValue(throwError(() => new Error('network')));
-    const { page, harness } = await open(); vi.useFakeTimers();
-    try {
-      page.start(); await vi.advanceTimersByTimeAsync(1);
-      expect(page.state()).toBe('waiting'); expect(page.connectionError()).toContain('статус');
-      source.status.mockReturnValue(of({ ...job, status: 'COMPLETED', version: 2, quizId: 'quiz' }));
-      source.saved.mockReturnValue(throwError(() => new Error('list unavailable')));
-      await vi.advanceTimersByTimeAsync(2000); expect(page.state()).toBe('waiting');
-      source.saved.mockReturnValue(of({ id: 'quiz', name: 'Мой тест', questionCount: 5 }));
-      await vi.advanceTimersByTimeAsync(2000);
-      expect(page.state()).toBe('ready'); expect(page.quizId()).toBe('quiz'); expect(page.actualCount()).toBe(5);
-      harness.detectChanges(); expect(harness.routeNativeElement!.textContent).not.toContain('демонстрация');
-      expect(source.start).toHaveBeenCalledTimes(1);
-    } finally { vi.useRealTimers(); }
-  });
-  it('restores the accepted job after leaving and returning without a duplicate POST', async () => {
-    source.demo = false;
-    const job = { id: 'job', materialId: 'one', status: 'QUEUED', version: 0 };
-    source.start.mockReturnValue(of(job)); source.status.mockReturnValue(of(job));
-    const { page, harness } = await open(); page.start();
-    await harness.navigateByUrl('/materials');
-    const restored = await harness.navigateByUrl('/materials/one/generate', Generation);
-    expect(restored.state()).toBe('waiting'); expect(source.start).toHaveBeenCalledTimes(1);
-  });
-  it('uses a new key after terminal failure and retains settings and name', async () => {
-    source.demo = false;
-    const job = { id: 'job', materialId: 'one', status: 'QUEUED', version: 0 };
-    source.start.mockReturnValue(of(job)); source.status.mockReturnValue(of({ ...job, status: 'FAILED', version: 1 }));
-    const { page } = await open(); vi.useFakeTimers();
-    try {
-      page.setName('Повтор'); page.start(); await vi.advanceTimersByTimeAsync(1);
-      expect(page.state()).toBe('failed'); page.retryGeneration();
-      expect(source.start.mock.calls[1][3]).not.toBe(source.start.mock.calls[0][3]);
-      expect(source.start.mock.calls[1][2]).toBe('Повтор');
-    } finally { vi.useRealTimers(); }
-  });
-
-  it('stops HTTP polling on 401 without marking the accepted generation failed', async () => {
-    source.demo = false;
-    source.start.mockReturnValue(of({ id: 'job', materialId: 'one', status: 'QUEUED', version: 0 }));
-    source.status.mockReturnValue(throwError(() => new HttpErrorResponse({ status: 401 })));
-    const { page, harness } = await open(); vi.useFakeTimers();
-    try {
-      page.start(); await vi.advanceTimersByTimeAsync(1);
-      expect(page.authRequired()).toBe(true); expect(page.state()).toBe('waiting');
-      await vi.advanceTimersByTimeAsync(6000); expect(source.status).toHaveBeenCalledTimes(1);
-      expect(sessionStorage.getItem('generation:owner:one')).toContain('job');
-      harness.detectChanges(); expect(harness.routeNativeElement!.textContent).toContain('Войти и вернуться');
-    } finally { vi.useRealTimers(); }
-  });
-
 });

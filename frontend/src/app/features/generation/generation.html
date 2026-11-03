@@ -2,40 +2,39 @@
   <nav class="crumbs" aria-label="Хлебные крошки"><a routerLink="/materials">Мои материалы</a> / @if (material(); as item) { {{ item.subjectName }} / } Тест</nav>
   <header>
     <h1>{{ state() === 'waiting' ? 'Создаём тест' : state() === 'ready' ? 'Тест готов' : state() === 'failed' ? 'Ошибка генерации' : 'Настройка генерации теста' }}</h1>
-    <p>{{ state() === 'ready' ? (source.demo ? 'Генерация завершена — демонстрация' : 'Генерация завершена') : state() === 'waiting' || state() === 'failed' ? material()?.name : 'Выберите параметры теста по одной лекции.' }}</p>
+    <p>{{ state() === 'ready' ? 'Генерация завершена — демонстрация' : state() === 'waiting' || state() === 'failed' ? material()?.name : 'Выберите параметры теста по одной лекции.' }}</p>
   </header>
   @if (source.demo) { <p class="demo">Демонстрационный режим: параметры заданы локально, тест на сервере не создаётся.</p> }
-  @if (authRequired()) { <p role="alert">Требуется повторный вход. <a routerLink="/login" [queryParams]="{ returnTo: returnTo() }">Войти и вернуться к генерации</a></p> }
   @if (state() === 'loading') { <p role="status">Загружаем материал и параметры…</p> }
   @if (error()) { <div class="error" role="alert">{{ error() }} @if (state() === 'error') { <button type="button" (click)="retry()">Повторить</button> }</div> }
   @if (state() === 'settings' || state() === 'sending') {
     @if (settings(); as value) {
       <section class="card" aria-label="Параметры теста">
-        <div class="test-name"><label for="test-name">Название теста</label><input id="test-name" type="text" maxlength="100" required [disabled]="state() === 'sending' || authRequired()" [value]="name()" (input)="setName($any($event.target).value)" aria-describedby="name-hint"><p id="name-hint" class="hint">От 1 до 100 символов</p></div>
+        <div class="test-name"><label for="test-name">Название теста</label><input id="test-name" type="text" maxlength="100" required [disabled]="state() === 'sending'" [value]="name()" (input)="setName($any($event.target).value)" aria-describedby="name-hint"><p id="name-hint" class="hint">От 1 до 100 символов</p></div>
         <div class="material"><b>Учебный материал</b><h2>{{ material()!.name }}</h2><p>{{ material()!.format }} · @if (material()!.sizeBytes >= 1048576) { {{ material()!.sizeBytes / 1048576 | number:'1.0-1' }} МБ } @else if (material()!.sizeBytes >= 1024) { {{ material()!.sizeBytes / 1024 | number:'1.0-1' }} КБ } @else { {{ material()!.sizeBytes }} Б }</p></div>
-        <fieldset [disabled]="state() === 'sending' || authRequired()"><legend>Количество вопросов</legend><div class="choices">
+        <fieldset [disabled]="state() === 'sending'"><legend>Количество вопросов</legend><div class="choices">
           @for (count of options()!.counts; track count) { <label [class.selected]="value.questionCount === count"><input type="radio" name="count" [checked]="value.questionCount === count" (change)="choose({questionCount: count})">{{ count }} вопросов</label> }
         </div></fieldset>
-        <fieldset [disabled]="state() === 'sending' || authRequired()"><legend>Сложность</legend><div class="choices">
+        <fieldset [disabled]="state() === 'sending'"><legend>Сложность</legend><div class="choices">
           @for (difficulty of options()!.difficulties; track difficulty) { <label [class.selected]="value.difficulty === difficulty"><input type="radio" name="difficulty" [checked]="value.difficulty === difficulty" (change)="choose({difficulty})">{{ difficulties[difficulty] }}</label> }
         </div></fieldset>
-        <fieldset [disabled]="state() === 'sending' || authRequired()"><legend>Типы вопросов</legend><p class="hint">Выберите один из типов.</p><div class="choices">
+        <fieldset [disabled]="state() === 'sending'"><legend>Типы вопросов</legend><p class="hint">Выберите один из типов.</p><div class="choices">
           @for (type of options()!.types; track type) { <label [class.selected]="value.questionType === type"><input type="radio" name="type" [checked]="value.questionType === type" (change)="choose({questionType: type})">{{ value.questionType === type ? '✓ ' : '' }}{{ types[type] }}</label> }
         </div></fieldset>
-        <div class="summary" aria-live="polite"><b>{{ value.questionCount }} вопросов · {{ summaries[value.difficulty] }} сложность</b><p>Тест будет составлен по выбранной лекции. {{ types[value.questionType] }}.</p></div>
+        <div class="summary" aria-live="polite"><b>{{ value.questionCount }} вопросов · {{ summaries[value.difficulty] }} сложность</b><p>Тест будет составлен по выбранной лекции.</p></div>
       </section>
-      <div class="actions"><a class="button" routerLink="/materials">Назад к материалам</a><button class="primary" type="button" [disabled]="state() === 'sending' || authRequired()" (click)="start()">{{ state() === 'sending' ? 'Отправляем…' : 'Создать тест' }}</button></div>
+      <div class="actions"><a class="button" routerLink="/materials">Назад к материалам</a><button class="primary" type="button" [disabled]="state() === 'sending'" (click)="start()">{{ state() === 'sending' ? 'Отправляем…' : 'Создать тест' }}</button></div>
     }
   }
   @if (state() === 'waiting') {
-    <section class="card waiting" role="status"><span class="spinner" aria-hidden="true"></span><h2>{{ source.demo ? 'Демонстрация экрана ожидания' : stage() || 'Ожидаем результат генерации' }}</h2>@if (source.demo) { <p>Сейчас запрос не отправлен. Автоматического завершения и сохранения теста нет.</p> } @else { <p>Это может занять несколько минут.</p> } @if (connectionError()) { <p role="alert">{{ connectionError() }}</p> }<p>{{ settings()!.questionCount }} вопросов · {{ summaries[settings()!.difficulty] }} сложность · {{ types[settings()!.questionType] }}</p></section>
+    <section class="card waiting" role="status"><span class="spinner" aria-hidden="true"></span><h2>Демонстрация экрана ожидания</h2><p>После подключения сервера здесь будет отображаться состояние генерации.</p><p>Сейчас запрос не отправлен. Автоматического завершения и сохранения теста нет.</p><p>{{ settings()!.questionCount }} вопросов · {{ summaries[settings()!.difficulty] }} сложность · {{ types[settings()!.questionType] }}</p></section>
     @if (source.demo) { <div class="actions" aria-label="Проверка демонстрационных состояний"><button type="button" (click)="demoResult(true)">Демо: тест готов</button><button type="button" (click)="demoResult(true, 3)">Демо: меньше вопросов</button><button type="button" (click)="demoResult(false)">Демо: ошибка</button></div> }
   }
   @if (state() === 'ready') {
-    <section class="card waiting result" role="status"><span class="success-mark" aria-hidden="true">✓</span><h2>Тест готов{{ source.demo ? ' — демонстрация' : '' }}</h2><p>«{{ name() }}»</p><p>{{ actualCount() }} вопросов · {{ difficulties[settings()!.difficulty] }} сложность · {{ types[settings()!.questionType] }}</p>@if (actualCount() < settings()!.questionCount) { <p>Подготовлено {{ actualCount() }} из {{ settings()!.questionCount }} вопросов.</p> }@if (source.demo) { <p>Тест на сервере не сохранён. Настоящий результат появится после интеграции.</p> }<div class="actions">@if (quizId()) { <a class="primary" routerLink="/tests" [queryParams]="{ test: quizId() }">К готовому тесту</a> } @else { <button type="button" disabled title="Недоступно без сохранённого теста и его ID">К готовому тесту</button> }<a class="button" routerLink="/tests">Все тесты</a></div></section>
+    <section class="card waiting result" role="status"><span class="success-mark" aria-hidden="true">✓</span><h2>Тест готов — демонстрация</h2><p>«{{ name() }}»</p><p>{{ actualCount() }} вопросов · {{ difficulties[settings()!.difficulty] }} сложность · {{ types[settings()!.questionType] }}</p>@if (actualCount() < settings()!.questionCount) { <p>В демонстрации подготовлено {{ actualCount() }} из {{ settings()!.questionCount }} вопросов.</p> }<p>Тест на сервере не сохранён. Настоящий результат появится после интеграции.</p><div class="actions"><button type="button" disabled title="Недоступно без сохранённого теста и его ID">К готовому тесту</button><a class="button" routerLink="/tests">Все тесты</a></div></section>
   }
   @if (state() === 'failed') {
-    <section class="card waiting failure" role="alert"><h2>Не удалось создать тест</h2><p>{{ failureMessage() }}</p><p>«{{ name() }}»</p><p>Материал, название и параметры сохранены.</p><div class="actions"><button class="primary" type="button" (click)="retryGeneration()">Повторить генерацию</button><button type="button" (click)="backToSettings()">К настройкам</button></div></section>
+    <section class="card waiting failure" role="alert"><h2>Не удалось создать тест</h2><p>Сервис генерации временно недоступен. Попробуйте ещё раз.</p><p>«{{ name() }}»</p><p>Материал, название и параметры сохранены.</p><div class="actions"><button class="primary" type="button" (click)="retryGeneration()">Повторить генерацию</button><button type="button" (click)="backToSettings()">К настройкам</button></div></section>
   }
   @if (state() === 'error') { <div class="actions"><a class="button" routerLink="/materials">Назад к материалам</a></div> }
 </app-materials-shell>

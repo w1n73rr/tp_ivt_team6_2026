@@ -9,6 +9,5 @@ export const testsAccess: CanActivateFn = () => {
 
 // Allow only an explicitly supported local destination, never an arbitrary URL.
 export function authDestination(route: ActivatedRoute): string {
-  const destination = route.snapshot.queryParamMap.get('returnTo') ?? '';
-  return destination === '/tests' || /^\/materials\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\/generate$/i.test(destination) ? destination : '/dashboard';
+  return route.snapshot.queryParamMap.get('returnTo') === '/tests' ? '/tests' : '/dashboard';
 }

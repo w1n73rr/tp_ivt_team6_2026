@@ -10,7 +10,7 @@ public class MlConfiguration {
     @Bean
     public QuizGenerator quizGenerator(
             @Value("${ml.openrouter.api-key:${OPENROUTER_API_KEY:}}") String key,
-            @Value("${ml.openrouter.model:${OPENROUTER_MODEL:nvidia/nemotron-3.5-super-vl:free}}") String model,
+            @Value("${ml.openrouter.model:${OPENROUTER_MODEL:nvidia/nemotron-3.5-lightning:free}}") String model,
             @Value("${ml.openrouter.timeout-seconds:${OPENROUTER_TIMEOUT_SECONDS:90}}") long timeout,
             @Value("${ml.openrouter.max-output-tokens:${OPENROUTER_MAX_OUTPUT_TOKENS:12000}}") int output,
             @Value("${ml.openrouter.reasoning:${OPENROUTER_REASONING_ENABLED:false}}") boolean reasoning,

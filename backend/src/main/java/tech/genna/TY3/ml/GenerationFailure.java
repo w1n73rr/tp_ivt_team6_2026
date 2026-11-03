@@ -7,7 +7,7 @@ public final class GenerationFailure extends RuntimeException {
         QUALITY_REJECTED, INSUFFICIENT_MATERIAL, CANCELLED }
     private final Code code;
     private final String validationHint;
-    public GenerationFailure(Code code) { this(code, "The response must be one valid JSON object with the required structure and no extra fields."); }
+    public GenerationFailure(Code code) { this(code, "Ответ должен быть корректным JSON по заданной структуре без лишних полей."); }
     GenerationFailure(Code code, String validationHint) {
         super(code.name()); this.code = code; this.validationHint = validationHint;
     }
