@@ -12,10 +12,6 @@ on:
         description: Контрольный красный прогон (неверный путь к API)
         type: boolean
         default: false
-      publish:
-        description: Опубликовать проверенные образы в GHCR
-        type: boolean
-        default: false
 
 concurrency:
   group: ci-${{ github.ref }}
@@ -271,7 +267,7 @@ jobs:
   publish:
     name: Публикация проверенных образов
     needs: [changes, frontend, backend, integration]
-    if: needs.integration.result == 'success' && ((github.event_name == 'push' && (github.ref == 'refs/heads/dev' || github.ref == 'refs/heads/master')) || (github.event_name == 'workflow_dispatch' && inputs.publish && !inputs.negative_smoke))
+    if: needs.integration.result == 'success' && github.event_name == 'push' && github.ref == 'refs/heads/master'
     runs-on: ubuntu-24.04
     timeout-minutes: 15
     permissions:
@@ -302,7 +298,6 @@ jobs:
             image="ghcr.io/${repository}-${service}"
             echo "${service}_tags<<TAGS" >> "$GITHUB_ENV"
             echo "${image}:sha-${SHA}" >> "$GITHUB_ENV"
-            if [ "$REF" = refs/heads/dev ]; then echo "${image}:dev" >> "$GITHUB_ENV"; fi
             if [ "$REF" = refs/heads/master ]; then echo "${image}:master" >> "$GITHUB_ENV"; fi
             echo TAGS >> "$GITHUB_ENV"
           done
