@@ -470,6 +470,8 @@ public class QuizGenerationUiTest {
         $("select[aria-label='Сортировка тестов']").selectOptionByValue("name:desc");
         tests.rows.findBy(text(quizName + " изменён")).$("button[title='Удалить']").click();
         $x("//app-test-dialog//button[normalize-space()='Отмена']").click();
+        // Wait for MatDialog's closing animation and afterClosed callback before reopening.
+        $(".cdk-overlay-pane").shouldNot(exist);
         tests.rows.findBy(text(quizName + " изменён")).shouldBe(visible);
         tests.rows.findBy(text(quizName + " изменён")).$("button[title='Удалить']").click();
         $x("//app-test-dialog//button[normalize-space()='Удалить']").click();
