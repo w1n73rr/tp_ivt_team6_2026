@@ -50,7 +50,7 @@ public class GenerationParametersService {
         return new SelectedGenerationSettings(request.getQuestionCount().getValue(), request.getDifficulty(), request.getQuestionType());
     }
 
-    /** Future job service calls this inside its short job-creation transaction, before invoking ML. */
+    /** Called by GenerationStore.enqueue for a new accepted job, before the model is invoked. */
     @Transactional
     public SelectedGenerationSettings saveForRun(UUID jobId, GenerateQuizRequest request) {
         if (jobId == null) {

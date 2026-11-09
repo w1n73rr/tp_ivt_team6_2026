@@ -31,9 +31,6 @@ public class GenerationController implements QuizzesApi, GenerationApi {
     @Override public ResponseEntity<GenerationJob> getGenerationJob(UUID jobId) {
         return ResponseEntity.ok(store.get(jobId, currentUser.get()));
     }
-    @Override public ResponseEntity<QuizListResponse> listQuizzes() {
-        return ResponseEntity.ok(store.list(currentUser.get()));
-    }
     @Override public ResponseEntity<GenerationOptions> getGenerationOptions() {
         currentUser.get();
         var catalog = parameters.getParameters();

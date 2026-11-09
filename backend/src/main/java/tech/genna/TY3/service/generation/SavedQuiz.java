@@ -10,7 +10,15 @@ record SavedQuiz(int schemaVersion, UUID materialId, String title, List<Question
 
     static SavedQuiz from(MlGenerator.Result result, GenerationParameters parameters) {
         if (result.quiz() == null) throw new GenerationFailure("ML_INVALID_RESULT");
-        var quiz = result.quiz();
+        final tech.genna.TY3.ml.Quiz quiz;
+        try {
+            quiz = new tech.genna.TY3.ml.QuizValidator().validate(result.quiz(), new tech.genna.TY3.ml.GenerationRequest(
+                    result.jobId().toString(), parameters.materialId().toString(), "Validated result", parameters.questionCount(),
+                    tech.genna.TY3.ml.GenerationRequest.Difficulty.valueOf(parameters.difficulty().name().toLowerCase(Locale.ROOT)),
+                    tech.genna.TY3.ml.GenerationRequest.QuestionType.valueOf(parameters.questionType().name().toLowerCase(Locale.ROOT))));
+        } catch (tech.genna.TY3.ml.GenerationFailure failure) {
+            throw new GenerationFailure("ML_INVALID_RESULT");
+        }
         var questions = quiz.questions().stream().map(q -> {
             Map<String, UUID> ids = new HashMap<>();
             var options = q.options().stream().map(option -> {

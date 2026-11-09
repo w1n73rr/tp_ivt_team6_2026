@@ -1,5 +1,12 @@
 # tp_ivt_team6_2026
 
+Backend CRUD сохранённых тестов: `GET /api/quizzes`, `GET/PATCH/DELETE /api/quizzes/{id}`.
+Использует существующую генерацию и единый механизм записи результата.
+[Инструкция запуска и проверки CRUD](backend/QUIZZES.md),
+[отчёт AC/DoD](backend/QUIZZES-REPORT.md). Полная локальная проверка без внешнего LLM:
+`.\backend\scripts\check-quiz-crud.ps1` (JDK 25 + Docker Desktop).
+
+
 Учебный монорепозиторий: Angular, Spring Boot, PostgreSQL и SeaweedFS (S3).
 Сфера — источник кода и место ревью; GitHub — зеркало для Actions и реестра GHCR.
 
