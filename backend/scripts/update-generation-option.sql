@@ -1,5 +1,5 @@
 -- Run via psql -v ON_ERROR_STOP=1 with category, value, available, make_default.
--- Example is in docs/generation-parameters.md. Values are quoted as SQL literals by psql.
+-- Example is in backend/GENERATION-PARAMETERS.md. Values are quoted as SQL literals by psql.
 BEGIN;
 LOCK TABLE generation_options IN SHARE ROW EXCLUSIVE MODE;
 CREATE TEMPORARY TABLE generation_option_change ON COMMIT DROP AS
