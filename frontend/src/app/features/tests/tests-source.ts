@@ -90,4 +90,11 @@ export class ApiTestsSource implements TestsSource {
   private readonly http = inject(HttpClient);
   private readonly auth = inject(AuthService);
   list(): Observable<{ items: TestSummary[] }> { return this.http.get<{ items: TestSummary[] }>('/api/quizzes', { headers: new HttpHeaders({ Authorization: `Bearer ${this.auth.token ?? ''}` }) }); }
+  rename(id: string, name: string): Observable<TestSummary> {
+    return this.http.patch<TestSummary>(`/api/quizzes/${encodeURIComponent(id)}`, { name: name.trim() }, { headers: new HttpHeaders({ Authorization: `Bearer ${this.auth.token ?? ''}` }) });
+  }
+  remove(id: string): Observable<void> {
+    return this.http.delete<void>(`/api/quizzes/${encodeURIComponent(id)}`, { headers: new HttpHeaders({ Authorization: `Bearer ${this.auth.token ?? ''}` }) });
+  }
+
 }

@@ -454,4 +454,27 @@ public class QuizGenerationUiTest {
             generation.selectedTypes.shouldHave(size(1));
         }
     }
+
+    @Test @Tag("controlled") @DisplayName("CRUD: переименование и удаление сохранённого теста через настоящий API")
+    void renameAndDeletePersistedQuiz() {
+        openSettings(); generation.nameInput.setValue(quizName); generation.fiveQuestions.click();
+        generation.createButton.click(); generation.readyPanel.shouldBe(visible, Duration.ofSeconds(60));
+        generation.readyLink.click();
+        var row = tests.rows.findBy(text(quizName)); row.shouldBe(visible);
+        row.$("button[title='Переименовать']").click();
+        var input = $("#test-rename"); input.shouldBe(focused);
+        input.setValue("  " + quizName + " изменён  ");
+        $x("//app-test-dialog//button[normalize-space()='Сохранить']").click();
+        $("app-test-dialog").shouldNot(exist);
+        refresh(); tests.rows.findBy(text(quizName + " изменён")).shouldBe(visible);
+        $("select[aria-label='Сортировка тестов']").selectOptionByValue("name:desc");
+        tests.rows.findBy(text(quizName + " изменён")).$("button[title='Удалить']").click();
+        $x("//app-test-dialog//button[normalize-space()='Отмена']").click();
+        tests.rows.findBy(text(quizName + " изменён")).shouldBe(visible);
+        tests.rows.findBy(text(quizName + " изменён")).$("button[title='Удалить']").click();
+        $x("//app-test-dialog//button[normalize-space()='Удалить']").click();
+        $("app-test-dialog").shouldNot(exist); tests.rows.shouldHave(size(0));
+        refresh(); tests.rows.shouldHave(size(0));
+        $x("//h2[normalize-space()='Тестов пока нет']").shouldBe(visible);
+    }
 }
