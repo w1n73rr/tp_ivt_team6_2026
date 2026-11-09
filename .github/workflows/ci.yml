@@ -63,7 +63,7 @@ jobs:
         with:
           node-version: '24'
       - name: Проверка правил выбора этапов
-        run: node --test ci/changes.test.mjs
+        run: node --test ci/changes.test.mjs ci/generation-check.test.mjs
       - name: Выбор проверок по изменённым файлам
         id: select
         env:

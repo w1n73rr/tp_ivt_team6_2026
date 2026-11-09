@@ -77,10 +77,10 @@ try {
 
 ## Быстрый автоматизированный сценарий API
 
-Нужен Python 3.12+ только для проверочного клиента, не для работы backend. Из второго окна в корне репозитория:
+Нужен Node.js 24+ только для проверочного клиента, не для работы backend. Из второго окна в корне репозитория:
 
 ```powershell
-python ci/generation_check.py --base-url http://localhost:8080 --file backend/src/test/resources/ml/demo-lecture.txt
+node ci/generation-check.mjs --base-url http://localhost:8080 --file backend/src/test/resources/ml/demo-lecture.txt
 ```
 
 Для реального материала замените --file на путь к своему PDF/DOCX/UTF-8 TXT. Путь используется только локальным тестовым клиентом: он загружает байты через API, production-генератор не получает путь.
@@ -90,7 +90,7 @@ python ci/generation_check.py --base-url http://localhost:8080 --file backend/sr
 Без provider key отдельный негативный сценарий:
 
 ```powershell
-python ci/generation_check.py --base-url http://localhost:8080 --expect-unconfigured
+node ci/generation-check.mjs --base-url http://localhost:8080 --expect-unconfigured
 ```
 
 Он ожидает NOT_CONFIGURED и отсутствие сохранённого теста; не выдавайте его за реальную генерацию.
