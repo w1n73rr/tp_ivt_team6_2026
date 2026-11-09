@@ -94,13 +94,21 @@ describe('Generation prototype', () => {
     expect(source.start).toHaveBeenLastCalledWith('one', { questionCount: 10, difficulty: 'HARD', questionType: 'TRUE_FALSE' });
     expect(page.state()).toBe('waiting'); page.demoResult(false); page.backToSettings(); expect(page.name()).toBe('Повтор');
     page.start(); page.demoResult(true, 0); expect(page.state()).toBe('failed');
-    page.retryGeneration(); page.demoResult(true, 3); expect(page.actualCount()).toBe(3); expect(page.state()).toBe('ready');
+    page.retryGeneration(); page.demoResult(true, 3); expect(page.actualCount()).toBe(3); expect(page.state()).toBe('failed');
   });
   it('handles unavailable settings and allows retry without losing the route', async () => {
     source.options.mockReturnValue(throwError(() => new Error()));
     const { page, harness } = await open(); expect(page.state()).toBe('error');
     source.options.mockReturnValue(of(options)); page.retry(); harness.detectChanges();
     expect(page.state()).toBe('settings'); expect(page.material()!.id).toBe('one');
+  });
+  it('shows a disabled test action and an available list link after generation', async () => {
+    const { page, harness } = await open();
+    page.start(); page.demoResult(true); harness.detectChanges();
+    const root = harness.routeNativeElement!;
+    const button = Array.from(root.querySelectorAll('button')).find(item => item.textContent?.trim() === 'Перейти к тесту');
+    expect(button?.disabled).toBe(true);
+    expect(Array.from(root.querySelectorAll('a')).some(item => item.textContent?.trim() === 'Все тесты')).toBe(true);
   });
   it('handles empty settings without showing an editable form', async () => {
     source.options.mockReturnValue(of({ ...options, types: [] }));

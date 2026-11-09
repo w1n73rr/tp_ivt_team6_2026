@@ -27,4 +27,5 @@ tasks.test {
     systemProperty("ui.generationReportDir", layout.buildDirectory.dir("reports/generation").get().asFile.absolutePath)
     testLogging { events("passed", "failed", "skipped") }
     System.getProperty("ui.excludeTags")?.let { tags -> useJUnitPlatform { excludeTags(*tags.split(",").toTypedArray()) } }
+    System.getProperty("ui.includeTags")?.let { tags -> useJUnitPlatform { includeTags(*tags.split(",").toTypedArray()) } }
 }

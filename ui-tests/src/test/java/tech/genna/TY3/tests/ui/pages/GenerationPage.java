@@ -28,7 +28,7 @@ public final class GenerationPage extends NamedPage {
     @Name("Демонстрационный режим") public final SelenideElement demoNotice = $x("//app-generation//p[@class='demo']");
     @Name("Ожидание") public final SelenideElement waitingPanel = $x("//app-generation//section[@role='status']");
     @Name("Готовый тест") public final SelenideElement readyPanel = $x("//app-generation//section[contains(concat(' ',normalize-space(@class),' '),' result ')]");
-    @Name("К готовому тесту") public final SelenideElement readyLink = $x("//app-generation//a[normalize-space()='К готовому тесту']");
+    @Name("Все тесты") public final SelenideElement readyLink = $x("//app-generation//a[normalize-space()='Все тесты']");
     @Name("Ошибка формы") public final SelenideElement validationError = $x("//app-generation//div[@role='alert']");
     @Name("Ошибка генерации") public final SelenideElement failurePanel = $x("//app-generation//section[@role='alert']");
     @Name("Повторить генерацию") public final SelenideElement retryButton = $x("//app-generation//button[normalize-space()='Повторить генерацию']");

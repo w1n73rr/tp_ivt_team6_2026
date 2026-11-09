@@ -245,9 +245,42 @@ jobs:
           else
             node ci/smoke.mjs --base-url http://localhost:18085
           fi
+      - name: Запуск управляемого стенда генерации без ключа модели
+        if: needs.changes.outputs.browser == 'true'
+        env:
+          SPRING_DATASOURCE_URL: jdbc:postgresql://127.0.0.1:15433/generation_ui_controlled
+          SPRING_DATASOURCE_USERNAME: ci_user
+          SPRING_DATASOURCE_PASSWORD: ci-only-password
+          JWT_SECRET: ci-only-jwt-secret-never-use-on-a-deployed-server
+          JWT_EXPIRATION: '3600000'
+          SPRING_CONFIG_IMPORT: ''
+          SERVER_ADDRESS: 127.0.0.1
+          SERVER_PORT: '18083'
+          S3_ENDPOINT: http://127.0.0.1:18334
+          S3_ACCESS_KEY: ci-only-access
+          S3_SECRET_KEY: ci-only-secret
+          S3_BUCKET_NAME: controlled-ui
+          APP_CORS_ALLOWED_ORIGINS: http://localhost:13002
+          SPRING_JPA_SHOW_SQL: 'false'
+          LOGGING_LEVEL_ORG_HIBERNATE_SQL: WARN
+          LOGGING_LEVEL_ORG_SPRINGFRAMEWORK_SECURITY: WARN
+        run: |
+          docker compose -p "controlled-${GITHUB_RUN_ID}" -f compose.ui-controlled.yml up -d --wait --wait-timeout 120
+          ./backend/gradlew -p backend generationUiServer --no-daemon --console=plain > "$RUNNER_TEMP/controlled-backend.log" 2>&1 &
+          echo "$!" > "$RUNNER_TEMP/controlled-backend.pid"
+          ready=false
+          for attempt in $(seq 1 180); do
+            if curl -fsS http://127.0.0.1:18084/control >/dev/null && curl -fsS http://127.0.0.1:18083/actuator/health >/dev/null; then ready=true; break; fi
+            sleep 2
+          done
+          if [ "$ready" != true ]; then tail -n 100 "$RUNNER_TEMP/controlled-backend.log"; exit 1; fi
+          sed -e 's/listen 80;/listen 13002;/' -e 's/exam-ai-backend:8080/127.0.0.1:18083/g' frontend/nginx.conf > "$RUNNER_TEMP/controlled-nginx.conf"
+          docker run -d --name "controlled-ui-${GITHUB_RUN_ID}" --network host \
+            -v "$RUNNER_TEMP/controlled-nginx.conf:/etc/nginx/conf.d/default.conf:ro" "$CI_FRONTEND_IMAGE"
+          curl --fail --retry 10 --retry-connrefused --retry-delay 1 http://127.0.0.1:13002/ >/dev/null
       - name: Браузерные тесты на работающем приложении
         if: needs.changes.outputs.browser == 'true'
-        run: ./backend/gradlew -p ui-tests test -Dui.headless=true -Dui.baseUrl=http://localhost:18085 --no-daemon --console=plain
+        run: ./backend/gradlew -p ui-tests test -Dui.headless=true -Dui.baseUrl=http://localhost:18085 -Dui.controlledBaseUrl=http://localhost:13002 -Dui.controlUrl=http://127.0.0.1:18084 -Dui.excludeTags=live-ml --no-daemon --console=plain
       - name: Журналы тестовых сервисов при ошибке
         if: failure()
         run: docker compose logs --no-color --tail 150
@@ -262,7 +295,11 @@ jobs:
           retention-days: 7
       - name: Удаление временных контейнеров
         if: always()
-        run: docker compose down --remove-orphans
+        run: |
+          docker compose down --remove-orphans
+          docker rm -f "controlled-ui-${GITHUB_RUN_ID}" 2>/dev/null || true
+          docker compose -p "controlled-${GITHUB_RUN_ID}" -f compose.ui-controlled.yml down --remove-orphans
+          if [ -f "$RUNNER_TEMP/controlled-backend.pid" ]; then kill "$(cat "$RUNNER_TEMP/controlled-backend.pid")" 2>/dev/null || true; fi
 
   publish:
     name: Публикация проверенных образов

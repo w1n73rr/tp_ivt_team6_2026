@@ -57,7 +57,7 @@ export class Generation {
   demoResult(success: boolean, count = this.settings()?.questionCount ?? 0): void {
     if (!this.source.demo || this.state() !== 'waiting') return;
     this.actualCount.set(Math.max(0, Math.min(count, this.settings()?.questionCount ?? 0)));
-    this.state.set(success && this.actualCount() > 0 ? 'ready' : 'failed');
+    this.state.set(success && this.actualCount() === this.settings()?.questionCount && this.actualCount() > 0 ? 'ready' : 'failed');
   }
   backToSettings(): void { if (this.state() === 'failed' || this.source.demo) this.state.set('settings'); }
   retryGeneration(): void { if (this.state() === 'failed') { this.backToSettings(); this.start(); } }

@@ -89,8 +89,18 @@ public class GenerationWorker {
                 else store.saveQuiz(current, completedResult);
             }));
         } catch (RuntimeException e) {
-            // Do not repeat a possibly completed provider request. Expiry marks interrupted work as FAILED.
-            log.warn("Unable to commit generation result; task will expire as interrupted", e);
+            // The result transaction has ended. Re-read under a new lock: a lost commit
+            // acknowledgement must never turn an already completed quiz into FAILED.
+            log.warn("Unable to commit generation result; recording failure separately", e);
+            try {
+                transactions.executeWithoutResult(tx -> store.lock(job.id()).ifPresent(current -> {
+                    if ("RUNNING".equals(current.status()) && claim.token().equals(current.claimToken()))
+                        store.fail(job.id(), "GENERATION_FAILED");
+                }));
+            } catch (RuntimeException unavailable) {
+                // If the database is unavailable, expiry recovers the claim later.
+                log.warn("Unable to record generation failure; task will expire as interrupted", unavailable);
+            }
         }
     }
 
