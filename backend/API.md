@@ -17,7 +17,7 @@ Swagger UI: `/swagger-ui.html`; исходный YAML: `/backend-api.yaml`.
 `POST /api/quizzes` проверяет тот же справочник, но допустимый запрос пока возвращает
 501 GENERATION_NOT_IMPLEMENTED: lifecycle и ML в этой ветке не подключены.
 Формат, серверное изменение через SQL, снимки, ограничения и тесты описаны в
-[generation-parameters.md](../docs/generation-parameters.md).
+[GENERATION-PARAMETERS.md](GENERATION-PARAMETERS.md).
 
 `GET /api/materials/allowed-formats` возвращает HTTP 200 и
 `{"extensions":["pdf","docx","txt"]}`. Требуется Bearer JWT.

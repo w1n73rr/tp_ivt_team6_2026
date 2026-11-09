@@ -19,8 +19,8 @@ jobs:
     timeout-minutes: 30
     env:
       COMPOSE_PROJECT_NAME: live-ml-${{ github.run_id }}
-      COMPOSE_FILE: docker-compose.yml:compose.ci.yml
-      COMPOSE_ENV_FILES: .env.ci.example
+      COMPOSE_FILE: docker-compose.yml:deploy/compose/ci.yml
+      COMPOSE_ENV_FILES: deploy/env/ci.env.example
     steps:
       - name: Получение принятого кода
         uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
@@ -31,7 +31,7 @@ jobs:
         with:
           node-version: '24'
       - name: Проверка правил приёмки результата API
-        run: node --test ci/generation-check.test.mjs
+        run: node --test tests/checks/generation-check.test.mjs
       - name: Сборка одноразового окружения без секрета
         run: docker compose build
       - name: Запуск с ключом только в окружении backend
@@ -43,7 +43,7 @@ jobs:
           if [ -z "$OPENROUTER_MODEL" ]; then echo 'Добавьте переменную OPENROUTER_MODEL в Environment DEV'; exit 1; fi
           docker compose up -d --no-build --wait --wait-timeout 300
       - name: Настоящая генерация через API и проверка сохранения
-        run: node ci/generation-check.mjs --base-url http://localhost:18085 --file ui-tests/src/test/resources/generation/lecture.txt
+        run: node tests/checks/generation-check.mjs --base-url http://localhost:18085 --file tests/ui/src/test/resources/generation/lecture.txt
       - name: Безопасная диагностика ошибки модели
         if: failure()
         run: |
@@ -57,7 +57,7 @@ jobs:
         uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
         with:
           name: отчёт-реальная-генерация-dev
-          path: ci/test-results/generation.json
+          path: tests/checks/test-results/generation.json
           retention-days: 7
       - name: Удаление одноразового окружения
         if: always()
