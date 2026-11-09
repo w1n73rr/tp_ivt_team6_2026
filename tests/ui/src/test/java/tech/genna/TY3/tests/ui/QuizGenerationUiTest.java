@@ -225,6 +225,8 @@ public class QuizGenerationUiTest {
             assertEquals(difficulty, traffic.submitted.get("difficulty"));
             assertEquals(type, traffic.submitted.get("questionType"));
             generation.waitingPanel.shouldBe(visible);
+            generation.waitingPanel.$$(".generation-steps li").shouldHave(size(3));
+            generation.waitingPanel.$$(".generation-steps [aria-current='step']").shouldHave(size(1));
             generation.waitingPanel.shouldHave(text(count + " вопросов"));
             generation.waitingPanel.shouldHave(text(switch (type) { case "SINGLE_CHOICE" -> "Один ответ"; case "MULTIPLE_CHOICE" -> "Несколько ответов"; default -> "Верно/неверно"; }));
             generation.title.shouldHave(exactText("Создаём тест"));
