@@ -23,6 +23,7 @@ import tech.genna.TY3.service.file.FileStorageService;
 import tech.genna.TY3.service.material.MaterialService;
 import tech.genna.TY3.service.subject.SubjectService;
 import tech.genna.TY3.service.tag.TagService;
+import tech.genna.TY3.service.generation.GenerationParametersService;
 
 import java.util.List;
 import java.util.UUID;
@@ -60,7 +61,7 @@ class GeneratedApiContractTest {
                         new TagController(tagService, currentUser), new AuthController(authService),
                         new MaterialController(materialService, currentUser),
                         new FileController(mock(FileStorageService.class), mock(MaterialRepository.class), currentUser),
-                        new MvpController())
+                        new MvpController(), new GenerationController(mock(tech.genna.TY3.service.generation.GenerationStore.class), currentUser, mock(GenerationParametersService.class)), new GenerationParametersController(mock(GenerationParametersService.class)))
                 .setControllerAdvice(new GlobalExceptionHandler())
                 .build();
     }
@@ -154,7 +155,7 @@ class GeneratedApiContractTest {
         var context = mockMvc.getDispatcherServlet().getWebApplicationContext();
         var mappings = context.getBean(RequestMappingHandlerMapping.class).getHandlerMethods().keySet();
         for (Class<?> api : List.of(AuthApi.class, SubjectsApi.class, TagsApi.class, MaterialsApi.class, FilesApi.class,
-                QuizzesApi.class, GenerationApi.class, AttemptsApi.class, TrainingApi.class,
+                QuizzesApi.class, GenerationApi.class, GenerationParametersApi.class, AttemptsApi.class, TrainingApi.class,
                 AnalyticsApi.class, UsersApi.class)) {
             for (var method : api.getDeclaredMethods()) {
                 var expected = method.getAnnotation(RequestMapping.class);

@@ -53,7 +53,8 @@ public final class OpenRouterClient implements ModelClient {
             throw new GenerationFailure(NOT_CONFIGURED);
         }
         String body = Json.write(Map.of("model", model, "stream", true, "temperature", 0.2,
-                "max_tokens", maxTokens, "reasoning", Map.of("enabled", reasoning), "messages", List.of(
+                "max_tokens", maxTokens, "response_format", Map.of("type", "json_object"),
+                "provider", Map.of("require_parameters", true), "reasoning", Map.of("enabled", reasoning), "messages", List.of(
                         Map.of("role", "system", "content", system),
                         Map.of("role", "user", "content", user))));
         HttpRequest request = HttpRequest.newBuilder(endpoint).timeout(timeout)

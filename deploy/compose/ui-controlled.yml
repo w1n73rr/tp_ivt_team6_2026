@@ -1,0 +1,28 @@
+# Отдельные одноразовые зависимости тестового Java-сервера на runner.
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: generation_ui_controlled
+      POSTGRES_USER: ci_user
+      POSTGRES_PASSWORD: ci-only-password
+    ports: ["127.0.0.1:15433:5432"]
+    tmpfs: [/var/lib/postgresql/data]
+    healthcheck:
+      test: [CMD-SHELL, "pg_isready -U ci_user -d generation_ui_controlled"]
+      interval: 2s
+      timeout: 3s
+      retries: 30
+  s3:
+    image: chrislusf/seaweedfs:4.48
+    command: [server, "-dir=/data", "-s3", "-s3.port=8333", "-master.volumeSizeLimitMB=1024", "-volume.max=32"]
+    environment:
+      AWS_ACCESS_KEY_ID: ci-only-access
+      AWS_SECRET_ACCESS_KEY: ci-only-secret
+    ports: ["127.0.0.1:18334:8333"]
+    tmpfs: [/data]
+    healthcheck:
+      test: [CMD, curl, -f, "http://localhost:9333/cluster/healthz"]
+      interval: 2s
+      timeout: 3s
+      retries: 30

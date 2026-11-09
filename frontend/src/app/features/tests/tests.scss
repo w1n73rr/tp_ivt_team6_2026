@@ -38,3 +38,5 @@ tbody tr:nth-child(even) { background: #fbfcff; }
 .notice button { padding: 4px 8px; margin-left: 8px; }
 .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
 @media (max-width: 700px) { .toolbar { grid-template-columns: 1fr; } .folder { padding: 12px; } h1 { font-size: 28px; } .materials-link { padding: 14px; gap: 12px; } }
+
+.created-test { outline: 2px solid #315de7; outline-offset: -2px; }

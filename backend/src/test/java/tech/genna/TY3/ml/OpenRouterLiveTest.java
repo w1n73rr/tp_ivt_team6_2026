@@ -16,6 +16,7 @@ class OpenRouterLiveTest {
     void generatesRealQuizFromPreparedLecture(GenerationRequest.QuestionType type) throws Exception {
         String selection = System.getenv().getOrDefault("ML_LIVE_TYPE", "single_choice");
         assumeTrue(selection.equals("all") || selection.equals(type.name())
+                || selection.equals("choice_pair") && type != GenerationRequest.QuestionType.true_false
                 || selection.equals("remaining") && type != GenerationRequest.QuestionType.single_choice);
         String key = System.getenv("OPENROUTER_API_KEY");
         assertNotNull(key, "Set OPENROUTER_API_KEY locally; do not commit it");
@@ -23,7 +24,10 @@ class OpenRouterLiveTest {
                 System.getenv().getOrDefault("ML_LIVE_DIFFICULTY", "medium"));
         int count = Integer.parseInt(System.getenv().getOrDefault("ML_LIVE_COUNT", "5"));
         String source;
-        try (var input = getClass().getResourceAsStream("/ml/demo-lecture.txt")) {
+        String materialPath = System.getenv("ML_LIVE_MATERIAL_PATH");
+        if (materialPath != null && !materialPath.isBlank()) {
+            source = Files.readString(Path.of(materialPath), java.nio.charset.StandardCharsets.UTF_8);
+        } else try (var input = getClass().getResourceAsStream("/ml/demo-lecture.txt")) {
             assertNotNull(input);
             source = new String(input.readAllBytes(), java.nio.charset.StandardCharsets.UTF_8);
         }
@@ -46,7 +50,7 @@ class OpenRouterLiveTest {
         var calls = new java.util.concurrent.atomic.AtomicInteger();
         ModelClient recording = (system, user, first) -> {
             String raw = client.complete(system, user, first);
-            boolean review = system.startsWith("РОЛЬ ПРОВЕРЯЮЩЕГО");
+            boolean review = system.startsWith("ROLE: QUIZ REVIEWER");
             int number = calls.incrementAndGet();
             try {
                 Files.writeString(folder.resolve(prefix + ".call-" + number + (review ? ".review.json" : ".generation.json")), raw);

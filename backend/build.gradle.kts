@@ -19,12 +19,14 @@ repositories {
 }
 
 dependencies {
+    implementation("org.apache.pdfbox:pdfbox:3.0.8")
     implementation("software.amazon.awssdk:s3:2.25.50")
 	implementation("org.springframework.boot:spring-boot-starter-data-jpa")
 	implementation("org.springframework.boot:spring-boot-starter-flyway")
 	implementation("org.springframework.boot:spring-boot-starter-security")
 	implementation("org.springframework.boot:spring-boot-starter-validation")
 	implementation("org.springframework.boot:spring-boot-starter-web")
+	implementation("org.springframework.boot:spring-boot-starter-websocket")
 	implementation("org.springframework.boot:spring-boot-starter-actuator")
 	implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:3.0.3")
 	implementation("io.jsonwebtoken:jjwt-api:0.12.6")
@@ -150,4 +152,12 @@ tasks.withType<JavaCompile> {
 
 tasks.bootJar {
 	archiveFileName.set("app.jar")
+}
+
+// Explicit test-only application; controlled beans are never packaged in bootJar.
+tasks.register<JavaExec>("generationUiServer") {
+    dependsOn(tasks.testClasses)
+    classpath = sourceSets.test.get().runtimeClasspath
+    mainClass.set("tech.genna.TY3.generationui.GenerationUiTestServer")
+    javaLauncher.set(javaToolchains.launcherFor { languageVersion.set(JavaLanguageVersion.of(25)) })
 }

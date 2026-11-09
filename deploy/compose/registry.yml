@@ -1,0 +1,8 @@
+# Use only a SHA tag from a successful published run; no deployment secrets here.
+# docker compose -f docker-compose.yml -f deploy/compose/registry.yml pull
+# docker compose -f docker-compose.yml -f deploy/compose/registry.yml up -d --no-build --wait
+services:
+  exam-ai-backend:
+    image: ghcr.io/w1n73rr/tp_ivt_team6_2026-backend:${IMAGE_TAG:?Set IMAGE_TAG to sha-<full commit SHA>}
+  exam-ai-frontend:
+    image: ghcr.io/w1n73rr/tp_ivt_team6_2026-frontend:${IMAGE_TAG:?Set IMAGE_TAG to sha-<full commit SHA>}
