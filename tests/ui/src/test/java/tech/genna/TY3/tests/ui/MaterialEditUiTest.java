@@ -206,6 +206,8 @@ public class MaterialEditUiTest {
         materialsPage.material(ORIGINAL_NAME).editButton.click();
         EditMaterialModal editor = materialsPage.editModal;
         editor.modal.shouldBe(visible);
+        // MatDialog moves focus after its opening animation. Wait before typing in another field.
+        editor.nameInput.shouldBe(focused);
         editor.nameInput.shouldHave(value(ORIGINAL_NAME));
         editor.subjectInput.shouldHave(value(ORIGINAL_SUBJECT));
         editor.editableFields.shouldHave(size(2));
