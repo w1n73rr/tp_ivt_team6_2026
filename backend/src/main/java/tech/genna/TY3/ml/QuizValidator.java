@@ -6,6 +6,17 @@ import static tech.genna.TY3.ml.GenerationFailure.Code.*;
 
 /** Formal M1 v2 validation plus request-dependent invariants. Does not prove factual correctness. */
 public final class QuizValidator {
+    /** The persistence boundary reuses the same structural checks as the model response parser. */
+    public Quiz validate(Quiz quiz, GenerationRequest request) {
+        try {
+            return parse(Json.write(Map.of("requestId", request.requestId(), "status", "success", "quiz", quiz)), request);
+        } catch (GenerationFailure ex) {
+            throw ex;
+        } catch (RuntimeException ex) {
+            throw new GenerationFailure(INVALID_MODEL_OUTPUT);
+        }
+    }
+
     public Quiz parse(String raw, GenerationRequest request) {
         try { return parseObject(Json.read(raw), request); }
         catch (GenerationFailure ex) { throw ex; }

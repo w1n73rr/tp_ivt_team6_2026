@@ -55,8 +55,9 @@ public final class GenerationUiTestServer {
                     boolean tf = type == GenerationRequest.QuestionType.true_false;
                     var options = tf ? List.of(new Quiz.Option("true", "Верно"), new Quiz.Option("false", "Неверно"))
                             : List.of(new Quiz.Option("a", facts[i]), new Quiz.Option("b", "Отчёт содержит шаги воспроизведения"), new Quiz.Option("c", "Мок доказывает реальную интеграцию"), new Quiz.Option("d", "Один тест доказывает отсутствие всех дефектов"));
-                    var correct = tf ? List.of("true") : type == GenerationRequest.QuestionType.multiple_choice ? List.of("a", "b") : List.of("a");
-                    String question = "Проверка " + (i + 1) + ": " + facts[i] + "?";
+                    var correct = tf ? List.of(i % 2 == 0 ? "true" : "false") : type == GenerationRequest.QuestionType.multiple_choice ? List.of("a", "b") : List.of("a");
+                    String question = tf ? (i % 2 == 0 ? facts[i] : "Неверно, что " + facts[i]) + "."
+                            : "Проверка " + (i + 1) + ": " + facts[i] + "?";
                     source.add(new Quiz.Question("q" + (i + 1), type, question, options, correct, facts[i]));
                     mapped.add(new MlGenerator.Question(p.questionType(), question,
                             options.stream().map(o -> new MlGenerator.Option(o.text(), correct.contains(o.id()))).toList(), facts[i]));

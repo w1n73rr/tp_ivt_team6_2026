@@ -128,14 +128,16 @@ public class GenerationStore {
     public void saveQuiz(Job job, MlGenerator.Result result) {
         UUID quizId = job.id();
         var p = job.parameters();
-        var summary = new QuizSummary(quizId, p.name(), p.materialId(), job.materialName(),
-                job.subjectId(), job.subjectName(), List.of(), QuizKind.TEST, p.difficulty(),
-                result.questions().size(), OffsetDateTime.now())
-                .format(FileFormat.fromValue(job.format())).questionType(p.questionType());
+        var persisted = SavedQuiz.from(result, p);
+        var createdAt = OffsetDateTime.now(java.time.ZoneOffset.UTC).truncatedTo(java.time.temporal.ChronoUnit.MICROS);
+        var summary = new QuizSummary().id(quizId).name(p.name()).materialId(p.materialId())
+                .materialName(job.materialName()).subjectId(job.subjectId()).subjectName(job.subjectName())
+                .kind(QuizKind.TEST).difficulty(p.difficulty()).questionCount(persisted.questions().size())
+                .createdAt(createdAt).format(FileFormat.fromValue(job.format())).questionType(p.questionType());
         jdbc.update("""
-                INSERT INTO quizzes(id, job_id, user_id, summary_json, result_json)
-                VALUES (?, ?, ?, ?, ?) ON CONFLICT (job_id) DO NOTHING
-                """, quizId, job.id(), job.userId(), json.writeValueAsString(summary), json.writeValueAsString(SavedQuiz.from(result, p)));
+                INSERT INTO quizzes(id, job_id, user_id, summary_json, result_json, created_at)
+                VALUES (?, ?, ?, ?, ?, ?) ON CONFLICT (job_id) DO NOTHING
+                """, quizId, job.id(), job.userId(), json.writeValueAsString(summary), json.writeValueAsString(persisted), createdAt);
         jdbc.update("UPDATE generation_jobs SET status = 'COMPLETED', stage = 'COMPLETED', detail_stage = NULL, "
                 + "error_code = NULL, state_version = state_version + 1, updated_at = CURRENT_TIMESTAMP WHERE id = ?", job.id());
     }

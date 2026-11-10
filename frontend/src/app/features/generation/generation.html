@@ -28,7 +28,11 @@
     }
   }
   @if (state() === 'waiting') {
-    <section class="card waiting" role="status"><span class="spinner" aria-hidden="true"></span><h2>{{ source.demo ? 'Демонстрация экрана ожидания' : stage() || 'Ожидаем результат генерации' }}</h2>@if (source.demo) { <p>Сейчас запрос не отправлен. Автоматического завершения и сохранения теста нет.</p> } @else { <p>Это может занять несколько минут.</p> } @if (connectionError()) { <p role="alert">{{ connectionError() }}</p> }<p>{{ settings()!.questionCount }} вопросов · {{ summaries[settings()!.difficulty] }} сложность · {{ types[settings()!.questionType] }}</p></section>
+    <section class="card waiting" role="status"><ol class="generation-steps" aria-label="Этапы создания теста">
+      @for (label of progressSteps; track label; let index = $index) {
+        <li [class.step-done]="index < currentStep()" [class.step-current]="index === currentStep()" [attr.aria-current]="index === currentStep() ? 'step' : null"><span class="step-number" aria-hidden="true">{{ index < currentStep() ? '✓' : index + 1 }}</span><span>{{ label }}</span><small>{{ index < currentStep() ? 'Завершён' : index === currentStep() ? 'Текущий этап' : 'Впереди' }}</small></li>
+      }
+    </ol><p class="step-caption">Этап {{ currentStep() + 1 }} из {{ progressSteps.length }}</p><span class="spinner" aria-hidden="true"></span><h2>{{ source.demo ? 'Демонстрация экрана ожидания' : stage() || 'Ожидаем результат генерации' }}</h2>@if (source.demo) { <p>Сейчас запрос не отправлен. Автоматического завершения и сохранения теста нет.</p> } @else { <p>Это может занять несколько минут.</p> } @if (connectionError()) { <p role="alert">{{ connectionError() }}</p> }<p>{{ settings()!.questionCount }} вопросов · {{ summaries[settings()!.difficulty] }} сложность · {{ types[settings()!.questionType] }}</p></section>
     @if (source.demo) { <div class="actions" aria-label="Проверка демонстрационных состояний"><button type="button" (click)="demoResult(true)">Демо: тест готов</button><button type="button" (click)="demoResult(true, 3)">Демо: меньше вопросов</button><button type="button" (click)="demoResult(false)">Демо: ошибка</button></div> }
   }
   @if (state() === 'ready') {

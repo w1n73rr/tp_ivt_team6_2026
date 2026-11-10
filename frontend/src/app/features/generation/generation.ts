@@ -1,4 +1,4 @@
-import { generationStage, generationFailure } from './generation-status';
+import { generationStage, generationFailure, generationStep } from './generation-status';
 import { HttpErrorResponse } from '@angular/common/http';
 import { AuthService } from '../../core/auth/auth.service';
 import { Component, DestroyRef, Injectable, inject, signal } from '@angular/core';
@@ -40,6 +40,8 @@ export class Generation {
   private version = -1;
   readonly quizId = signal<string | null>(null);
   readonly stage = signal('');
+  readonly currentStep = signal(0);
+  readonly progressSteps = ['Подготовка материала', 'Генерация вопросов', 'Проверка и сохранение'];
   readonly connectionError = signal('');
   readonly authRequired = signal(false);
   readonly returnTo = () => '/materials/' + this.route.snapshot.paramMap.get('materialId') + '/generate';
@@ -139,7 +141,7 @@ export class Generation {
     this.sending = (this.source.demo ? this.source.start(material.id, { ...settings }) : this.source.start(material.id, { ...settings }, this.name(), this.pending.key)).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: job => {
         this.state.set('waiting');
-        if (!this.source.demo && 'id' in job) { this.activeJob = job; this.persist(); this.stage.set(generationStage(job)); this.watch(job); }
+        if (!this.source.demo && 'id' in job) { this.activeJob = job; this.persist(); this.stage.set(generationStage(job)); this.currentStep.set(generationStep(job)); this.watch(job); }
       },
       error: error => { if (error instanceof HttpErrorResponse && error.status === 401) this.authRequired.set(true); this.error.set('Не удалось запустить генерацию. Параметры сохранены. Повторите попытку.'); this.state.set('settings'); },
     });
@@ -148,7 +150,7 @@ export class Generation {
     if (!initial.id || initial.materialId !== this.material()?.id || !this.source.status) {
       this.connectionError.set('Не удалось подтвердить задачу генерации.'); return;
     }
-    this.version = initial.version; this.quizId.set(null);
+    this.version = initial.version; this.quizId.set(null); this.currentStep.set(generationStep(initial));
     this.watching?.unsubscribe();
     const owner = this.auth.username();
     this.watching = timer(0, 2000).pipe(
@@ -175,10 +177,11 @@ export class Generation {
     ).subscribe(result => {
       if (!result) return;
       const { job, saved } = result;
-      this.version = job.version; this.connectionError.set(''); this.stage.set(generationStage(job));
+      this.version = job.version; this.connectionError.set(''); this.stage.set(generationStage(job)); this.currentStep.set(generationStep(job));
       if (job.status === 'FAILED' || job.status === 'COMPLETED' && saved) {
         this.pending = undefined; this.activeJob = undefined; this.persist(); this.watching?.unsubscribe();
-        if (saved) { this.quizId.set(saved.id); this.name.set(saved.name); this.actualCount.set(saved.questionCount); this.state.set('ready'); }
+        if (saved && saved.questionCount !== this.settings()?.questionCount) { this.failureMessage.set('Не удалось подготовить запрошенное количество вопросов. Повторите генерацию.'); this.actualCount.set(saved.questionCount); this.state.set('failed'); }
+        else if (saved) { this.quizId.set(saved.id); this.name.set(saved.name); this.actualCount.set(saved.questionCount); this.state.set('ready'); }
         else { this.failureMessage.set(generationFailure(job.error?.code)); this.state.set('failed'); }
       }
     });

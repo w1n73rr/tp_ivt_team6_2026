@@ -1,4 +1,4 @@
-import { generationFailure, generationStage } from './generation-status';
+import { generationFailure, generationStage, generationStep } from './generation-status';
 import { GenerationJob } from './generation-source';
 const job: GenerationJob = { id: 'job', materialId: 'material', status: 'RUNNING', version: 1, stage: 'VALIDATING' };
 describe('Real generation stages and safe errors', () => {
@@ -19,4 +19,14 @@ describe('Real generation stages and safe errors', () => {
     expect(generationFailure('MODEL_OUTPUT_LIMIT')).toContain('лимит вывода');
     expect(generationFailure('internal stacktrace')).not.toContain('stacktrace');
   });
+});
+
+describe('Generation step indicator', () => {
+ it('shows actual phases and allows a return to generation after review', () => {
+  expect(generationStep({...job,status:'QUEUED'})).toBe(0);
+  expect(generationStep({...job,stage:'GENERATING'})).toBe(1);
+  expect(generationStep({...job,stage:'VALIDATING',detailStage:'REVIEWING_CONTENT'})).toBe(2);
+  expect(generationStep({...job,stage:'GENERATING',detailStage:'REVISING'})).toBe(1);
+  expect(generationStep({...job,stage:'SAVING'})).toBe(2);
+ });
 });

@@ -626,16 +626,17 @@ paths:
         default: { $ref: '#/components/responses/Error' }
   /api/quizzes:
     get:
-      tags: [Quizzes]
+      tags: [SavedQuizzes]
       operationId: listQuizzes
       summary: Получить свои сформированные тесты
       responses:
         '200':
-          description: Тесты без правильных ответов
+          description: Собственные тесты без ключа ответов, по createdAt DESC и id DESC; пустой список items=[]
           content:
             application/json:
               schema: { $ref: '#/components/schemas/QuizListResponse' }
-        '501': { $ref: '#/components/responses/NotImplemented' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '503': { $ref: '#/components/responses/Error' }
         default: { $ref: '#/components/responses/Error' }
     post:
       tags: [Quizzes]
@@ -739,20 +740,63 @@ paths:
         '501': { $ref: '#/components/responses/NotImplemented' }
         default: { $ref: '#/components/responses/Error' }
   /api/quizzes/{quizId}:
+    parameters:
+      - { $ref: '#/components/parameters/QuizId' }
     get:
-      tags: [Quizzes]
+      tags: [SavedQuizzes]
       operationId: getQuiz
-      summary: Получить тест с вопросами без правильных ответов
-      parameters:
-        - { $ref: '#/components/parameters/QuizId' }
+      summary: Получить собственный сохранённый тест без ключа ответов
       responses:
         '200':
-          description: Сформированный тест
+          description: Тест, снимок настроек запуска и вопросы без правильных ответов и объяснений
           content:
             application/json:
               schema: { $ref: '#/components/schemas/QuizDetail' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
         '404': { $ref: '#/components/responses/NotFound' }
-        '501': { $ref: '#/components/responses/NotImplemented' }
+        '503': { $ref: '#/components/responses/Error' }
+        default: { $ref: '#/components/responses/Error' }
+    patch:
+      tags: [SavedQuizzes]
+      operationId: renameQuiz
+      summary: Изменить только название собственного теста
+      description: |
+        Пробелы по краям обрезаются; после этого от 1 до 100 символов (UTF-16, как в FE).
+        При переименовании нельзя занять точное имя другого своего теста; регистр учитывается, прежнее имя допустимо.
+        Чужой и отсутствующий ID дают одинаковый 404. Другие поля запрещены.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/RenameQuizRequest' }
+      responses:
+        '200':
+          description: Сохранённая строка таблицы тестов с новым названием
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/QuizSummary' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409':
+          description: QUIZ_NAME_ALREADY_EXISTS
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
+        '503': { $ref: '#/components/responses/Error' }
+        default: { $ref: '#/components/responses/Error' }
+    delete:
+      tags: [SavedQuizzes]
+      operationId: deleteQuiz
+      summary: Удалить собственный тест со всеми вопросами и вариантами
+      description: |
+        Удаление атомарно; приватные вопросы и варианты удаляются вместе с записью теста. Материал и его файл сохраняются.
+        Снимок настроек запуска сохраняется для аудита. Повторное удаление даёт 404.
+      responses:
+        '204': { description: 'Тест и дочерние записи удалены, тело отсутствует' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '503': { $ref: '#/components/responses/Error' }
         default: { $ref: '#/components/responses/Error' }
   /api/quizzes/{quizId}/attempts:
     post:
@@ -1378,14 +1422,20 @@ components:
         createdAt: { type: string, format: date-time }
         updatedAt: { type: string, format: date-time }
     QuizKind: { type: string, enum: [TEST, TRAINING] }
+    RenameQuizRequest:
+      type: object
+      additionalProperties: false
+      required: [name]
+      properties:
+        name: { type: string, minLength: 1, maxLength: 4000, description: 'После trim от 1 до 100 символов UTF-16; остальные поля запрещены' }
     QuizSummary:
       type: object
-      required: [id, name, materialId, materialName, subjectId, subjectName, topics, kind, difficulty, questionCount, createdAt]
+      required: [id, name, materialId, materialName, subjectId, subjectName, format, kind, difficulty, questionType, questionCount, createdAt]
       properties:
         format: { $ref: '#/components/schemas/FileFormat' }
         questionType: { $ref: '#/components/schemas/QuestionType' }
         id: { type: string, format: uuid }
-        name: { type: string }
+        name: { type: string, minLength: 1, maxLength: 100 }
         materialId: { type: string, format: uuid, description: 'Снимок ссылки; материал может быть впоследствии удалён' }
         materialName: { type: string, description: 'Снимок имени для сохранения истории' }
         subjectId: { type: string, format: uuid }
@@ -1393,7 +1443,7 @@ components:
         topics: { type: array, items: { $ref: '#/components/schemas/TopicReference' }, description: 'Снимки названий тем для списка тестов и истории' }
         kind: { $ref: '#/components/schemas/QuizKind' }
         difficulty: { $ref: '#/components/schemas/Difficulty' }
-        questionCount: { type: integer, minimum: 1, maximum: 20 }
+        questionCount: { type: integer, minimum: 1, maximum: 10, description: 'Фактически сохранённое число вопросов' }
         createdAt: { type: string, format: date-time }
     TopicReference:
       type: object
@@ -1408,14 +1458,15 @@ components:
         items: { type: array, items: { $ref: '#/components/schemas/QuizSummary' } }
     QuizDetail:
       type: object
-      required: [quiz, questions]
+      required: [quiz, settings, questions]
       properties:
         quiz: { $ref: '#/components/schemas/QuizSummary' }
-        questions: { type: array, minItems: 1, maxItems: 20, items: { $ref: '#/components/schemas/Question' } }
+        settings: { $ref: '#/components/schemas/GenerationSettings' }
+        questions: { type: array, minItems: 1, maxItems: 10, items: { $ref: '#/components/schemas/Question' } }
     Question:
       type: object
       description: Публичный вопрос без correctOptionIds, isCorrect и explanation. SINGLE_CHOICE — 4 варианта; TRUE_FALSE — 2; MULTIPLE_CHOICE — 4, минимум 2 правильных. Ключ ответа хранится только на сервере.
-      required: [id, topicId, topicName, type, text, options, position]
+      required: [id, type, text, options, position]
       properties:
         id: { type: string, format: uuid }
         topicId: { type: string, format: uuid }

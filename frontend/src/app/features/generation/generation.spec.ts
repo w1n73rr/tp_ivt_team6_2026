@@ -140,9 +140,9 @@ describe('Generation prototype', () => {
       source.status.mockReturnValue(of({ ...job, status: 'COMPLETED', version: 2, quizId: 'quiz' }));
       source.saved.mockReturnValue(throwError(() => new Error('list unavailable')));
       await vi.advanceTimersByTimeAsync(2000); expect(page.state()).toBe('waiting');
-      source.saved.mockReturnValue(of({ id: 'quiz', name: 'Мой тест', questionCount: 5 }));
+      source.saved.mockReturnValue(of({ id: 'quiz', name: 'Мой тест', questionCount: 10 }));
       await vi.advanceTimersByTimeAsync(2000);
-      expect(page.state()).toBe('ready'); expect(page.quizId()).toBe('quiz'); expect(page.actualCount()).toBe(5);
+      expect(page.state()).toBe('ready'); expect(page.quizId()).toBe('quiz'); expect(page.actualCount()).toBe(10);
       harness.detectChanges(); expect(harness.routeNativeElement!.textContent).not.toContain('демонстрация');
       expect(source.start).toHaveBeenCalledTimes(1);
     } finally { vi.useRealTimers(); }
@@ -181,6 +181,17 @@ describe('Generation prototype', () => {
       expect(sessionStorage.getItem('generation:owner:one')).toContain('job');
       harness.detectChanges(); expect(harness.routeNativeElement!.textContent).toContain('Войти и вернуться');
     } finally { vi.useRealTimers(); }
+  });
+
+  it('rejects a saved result with fewer questions than requested', async () => {
+    source.demo=false;
+    const job={id:'job',materialId:'one',status:'QUEUED',version:0};
+    source.start.mockReturnValue(of(job));
+    source.status.mockReturnValue(of({...job,status:'COMPLETED',version:1,quizId:'quiz'}));
+    source.saved.mockReturnValue(of({id:'quiz',name:'Неполный',questionCount:3}));
+    const {page}=await open(); vi.useFakeTimers();
+    try { page.start(); await vi.advanceTimersByTimeAsync(1); expect(page.state()).toBe('failed'); expect(page.quizId()).toBeNull(); expect(page.failureMessage()).toContain('количество'); }
+    finally { vi.useRealTimers(); }
   });
 
 });

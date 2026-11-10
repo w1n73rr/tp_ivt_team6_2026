@@ -170,3 +170,12 @@ trim. При переносе между предметами теги преж�
 [Gradle plugin](https://openapi-generator.tech/docs/plugins/),
 [springdoc для Spring Boot 4](https://springdoc.org/) и
 [Gradle 9.1 / Java 25](https://docs.gradle.org/9.1.0/release-notes.html).
+
+## CRUD сохранённых тестов
+
+Реализованы защищённые GET /api/quizzes, GET/PATCH/DELETE /api/quizzes/{id}.
+PATCH принимает только name; имя после trim — 1–100 символов, чужой ID даёт 404.
+Ответы и объяснения не раскрываются ни списком, ни detail. Запись остаётся в
+GenerationWorker → GenerationStore.saveQuiz; COMPLETED и тест фиксируются атомарно.
+Схема V6 и приватный JSON-формат сохранены, V8 добавляет только индекс поиска имени.
+Правила, примеры, запуск Compose и изолированные проверки: [QUIZZES.md](QUIZZES.md).
