@@ -225,6 +225,8 @@ public class QuizGenerationUiTest {
             assertEquals(difficulty, traffic.submitted.get("difficulty"));
             assertEquals(type, traffic.submitted.get("questionType"));
             generation.waitingPanel.shouldBe(visible);
+            generation.waitingPanel.$$(".generation-steps li").shouldHave(size(3));
+            generation.waitingPanel.$$(".generation-steps [aria-current='step']").shouldHave(size(1));
             generation.waitingPanel.shouldHave(text(count + " вопросов"));
             generation.waitingPanel.shouldHave(text(switch (type) { case "SINGLE_CHOICE" -> "Один ответ"; case "MULTIPLE_CHOICE" -> "Несколько ответов"; default -> "Верно/неверно"; }));
             generation.title.shouldHave(exactText("Создаём тест"));
@@ -453,5 +455,30 @@ public class QuizGenerationUiTest {
             (switch (defaults.get("questionType").toString()) { case "SINGLE_CHOICE" -> generation.singleChoice; case "MULTIPLE_CHOICE" -> generation.multipleChoice; default -> generation.trueFalse; }).shouldBe(selected);
             generation.selectedTypes.shouldHave(size(1));
         }
+    }
+
+    @Test @Tag("controlled") @DisplayName("CRUD: переименование и удаление сохранённого теста через настоящий API")
+    void renameAndDeletePersistedQuiz() {
+        openSettings(); generation.nameInput.setValue(quizName); generation.fiveQuestions.click();
+        generation.createButton.click(); generation.readyPanel.shouldBe(visible, Duration.ofSeconds(60));
+        generation.readyLink.click();
+        var row = tests.rows.findBy(text(quizName)); row.shouldBe(visible);
+        row.$("button[title='Переименовать']").click();
+        var input = $("#test-rename"); input.shouldBe(focused);
+        input.setValue("  " + quizName + " изменён  ");
+        $x("//app-test-dialog//button[normalize-space()='Сохранить']").click();
+        $("app-test-dialog").shouldNot(exist);
+        refresh(); tests.rows.findBy(text(quizName + " изменён")).shouldBe(visible);
+        $("select[aria-label='Сортировка тестов']").selectOptionByValue("name:desc");
+        tests.rows.findBy(text(quizName + " изменён")).$("button[title='Удалить']").click();
+        $x("//app-test-dialog//button[normalize-space()='Отмена']").click();
+        // Wait for MatDialog's closing animation and afterClosed callback before reopening.
+        $(".cdk-overlay-pane").shouldNot(exist);
+        tests.rows.findBy(text(quizName + " изменён")).shouldBe(visible);
+        tests.rows.findBy(text(quizName + " изменён")).$("button[title='Удалить']").click();
+        $x("//app-test-dialog//button[normalize-space()='Удалить']").click();
+        $("app-test-dialog").shouldNot(exist); tests.rows.shouldHave(size(0));
+        refresh(); tests.rows.shouldHave(size(0));
+        $x("//h2[normalize-space()='Тестов пока нет']").shouldBe(visible);
     }
 }

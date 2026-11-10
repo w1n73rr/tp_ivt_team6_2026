@@ -33,3 +33,10 @@ const errors: Record<string, string> = {
 export function generationFailure(code?: string): string {
   return errors[code ?? ''] ?? 'Не удалось обработать материал или сохранить тест. Попробуйте повторить генерацию.';
 }
+
+export function generationStep(job: GenerationJob): number {
+  if (job.status === 'QUEUED' || job.stage === 'PREPARING') return 0;
+  if (job.detailStage === 'REVISING') return 1;
+  if (job.stage === 'VALIDATING' || job.stage === 'SAVING' || job.status === 'COMPLETED') return 2;
+  return job.stage === 'GENERATING' ? 1 : 0;
+}
