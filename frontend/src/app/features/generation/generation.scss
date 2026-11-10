@@ -39,3 +39,12 @@ fieldset:disabled label, button:disabled { opacity: .6; cursor: wait; }
 @keyframes spin { to { transform: rotate(360deg); } }
 @media (prefers-reduced-motion: reduce) { .spinner { animation: none; } }
 @media (max-width: 700px) { h1 { font-size: 25px; } .card, .waiting { padding: 20px; } .choices { gap: 10px; } .choices label { padding: 12px 14px; } }
+
+.generation-steps { display: flex; list-style: none; padding: 0; margin: 0 0 12px; gap: 12px; }
+.generation-steps li { flex: 1; display: grid; grid-template-columns: 32px 1fr; gap: 6px 10px; padding: 14px; border-top: 4px solid #dce4f1; color: #687b98; font-size: 14px; }
+.step-number { display: grid; place-items: center; width: 30px; height: 30px; border-radius: 50%; background: #eff4ff; grid-row: span 2; font-weight: bold; }
+.generation-steps small { font-size: 12px; }
+.generation-steps .step-current { border-color: #2861f2; background: #eff4ff; border-radius: 9px; color: #17243b; }
+.step-current .step-number { background: #2861f2; color: white; }
+.generation-steps .step-done { border-color: #2861f2; color: #2861f2; }
+@media (max-width: 700px) { .generation-steps { flex-direction: column; gap: 4px; } .generation-steps li { border-top: 0; border-left: 4px solid #dce4f1; padding: 10px; } }

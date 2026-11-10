@@ -1,0 +1,18 @@
+# Third file, after docker-compose.yml and deploy/compose/ci.yml; disposable data only.
+services:
+  exam-ai-frontend:
+    profiles: [unused-ui]
+  api-tests:
+    build:
+      context: .
+      dockerfile: tests/api/Dockerfile
+    environment:
+      API_BASE_URL: http://exam-ai-backend:8080
+      API_TEST_DISPOSABLE: "true"
+      API_TEST_VERSION: ${API_TEST_VERSION:-unspecified}
+    volumes:
+      - ./tests/api/build:/results
+    networks: [exam-ai-network]
+    depends_on:
+      exam-ai-backend:
+        condition: service_healthy

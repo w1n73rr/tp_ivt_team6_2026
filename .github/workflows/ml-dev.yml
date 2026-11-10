@@ -1,0 +1,64 @@
+name: Реальная генерация DEV
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: live-ml-dev
+  cancel-in-progress: false
+
+jobs:
+  live:
+    name: Реальный путь API → модель → сохранение
+    if: github.ref == 'refs/heads/dev'
+    environment: DEV
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    env:
+      COMPOSE_PROJECT_NAME: live-ml-${{ github.run_id }}
+      COMPOSE_FILE: docker-compose.yml:deploy/compose/ci.yml
+      COMPOSE_ENV_FILES: deploy/env/ci.env.example
+    steps:
+      - name: Получение принятого кода
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          persist-credentials: false
+      - name: Подготовка Node.js 24
+        uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version: '24'
+      - name: Проверка правил приёмки результата API
+        run: node --test tests/checks/generation-check.test.mjs
+      - name: Сборка одноразового окружения без секрета
+        run: docker compose build
+      - name: Запуск с ключом только в окружении backend
+        env:
+          OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
+          OPENROUTER_MODEL: ${{ vars.OPENROUTER_MODEL }}
+        run: |
+          if [ -z "$OPENROUTER_API_KEY" ]; then echo 'Добавьте OPENROUTER_API_KEY в Environment DEV'; exit 1; fi
+          if [ -z "$OPENROUTER_MODEL" ]; then echo 'Добавьте переменную OPENROUTER_MODEL в Environment DEV'; exit 1; fi
+          docker compose up -d --no-build --wait --wait-timeout 300
+      - name: Настоящая генерация через API и проверка сохранения
+        run: node tests/checks/generation-check.mjs --base-url http://localhost:18085 --file tests/ui/src/test/resources/generation/lecture.txt
+      - name: Безопасная диагностика ошибки модели
+        if: failure()
+        run: |
+          # Только специально сформированная ML-диагностика: без сырых ответов,
+          # HTTP-заголовков, текста лекции и полного дампа окружения.
+          docker compose logs --no-color --tail 300 exam-ai-backend \
+            | grep -E 'Generation failed requestId=[0-9a-f-]+ stage=[A-Z_]+ code=[A-Z_]+ validation=' \
+            || echo 'Безопасная ML-диагностика отсутствует; проверьте первый упавший шаг и JUnit-отчёт.'
+      - name: Сохранение безопасного отчёта API
+        if: always()
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
+        with:
+          name: отчёт-реальная-генерация-dev
+          path: tests/checks/test-results/generation.json
+          retention-days: 7
+      - name: Удаление одноразового окружения
+        if: always()
+        run: docker compose down --remove-orphans

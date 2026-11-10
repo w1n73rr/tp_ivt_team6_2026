@@ -4,7 +4,7 @@ import { TestDialog, TestDialogResult } from './test-dialog';
 import { TEST_SORTS, TestSort, sortTests } from './tests-sort';
 import { DatePipe } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
-import { RouterLink } from '@angular/router';
+import { ActivatedRoute, RouterLink } from '@angular/router';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Subscription } from 'rxjs';
 import { MaterialsShell } from '../materials/materials-shell';
@@ -16,6 +16,7 @@ import { AuthService } from '../../core/auth/auth.service';
   templateUrl: './tests.html', styleUrl: './tests.scss' })
 export class TestsPage {
   readonly source = inject(TESTS_SOURCE);
+  readonly selectedTest = inject(ActivatedRoute).snapshot.queryParamMap.get('test');
   private readonly auth = inject(AuthService);
   private readonly destroyRef = inject(DestroyRef);
   private request?: Subscription;
