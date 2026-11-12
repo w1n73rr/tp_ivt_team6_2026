@@ -9,7 +9,10 @@ dependencies {
     testRuntimeOnly("org.junit.platform:junit-platform-launcher:1.13.4")
 }
 tasks.test {
-    useJUnitPlatform()
+    useJUnitPlatform {
+        if (project.hasProperty("quizCrud")) includeTags("quiz-crud")
+        else excludeTags("quiz-crud")
+    }
     outputs.upToDateWhen { false }
     testLogging { events("passed", "failed", "skipped") }
 }

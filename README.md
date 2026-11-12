@@ -65,6 +65,7 @@ Backend требует JDK 25. Его интеграционным тестам 
 затем выполните `./backend/gradlew -p backend test bootJar`. Рабочую БД не используйте.
 Подготовка и ограничения: [тестирование backend](backend/TESTING.md).
 Внешние наборы: [API](tests/api/README.md), [UI](tests/ui/README.md).
+Проверка задачи 79: [CRUD API сохранённых тестов](tests/api/quiz-crud/README.md).
 Для задачи 81 используйте [инструкцию браузерной проверки страницы «Тесты»](tests/ui/quiz-list/README.md).
 
 Каждый push в GitHub запускает поиск секретов Gitleaks и выбор проверок.
