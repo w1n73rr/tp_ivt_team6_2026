@@ -10,8 +10,15 @@ dependencies {
 }
 tasks.test {
     useJUnitPlatform {
-        if (project.hasProperty("quizCrud")) includeTags("quiz-crud")
-        else excludeTags("quiz-crud")
+        when {
+            project.hasProperty("generationApiLive") -> includeTags("generation-live")
+            project.hasProperty("generationApi") -> {
+                includeTags("generation-api")
+                excludeTags("generation-live")
+            }
+            project.hasProperty("quizCrud") -> includeTags("quiz-crud")
+            else -> excludeTags("quiz-crud", "generation-api")
+        }
     }
     outputs.upToDateWhen { false }
     testLogging { events("passed", "failed", "skipped") }
