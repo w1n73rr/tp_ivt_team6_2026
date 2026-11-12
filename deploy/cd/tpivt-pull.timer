@@ -1,0 +1,10 @@
+[Unit]
+Description=Check for a published TPIVT release every two minutes
+
+[Timer]
+OnBootSec=2min
+OnUnitInactiveSec=2min
+AccuracySec=1s
+
+[Install]
+WantedBy=timers.target
