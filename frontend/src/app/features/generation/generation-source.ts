@@ -1,3 +1,4 @@
+import { generationRequestKey } from './generation-request-key';
 import { Injectable, InjectionToken, inject } from '@angular/core';
 import { Observable, defer, delay, of, map } from 'rxjs';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
@@ -56,7 +57,7 @@ export class ApiGenerationSource implements GenerationSource {
       return { counts: value.questionCounts.filter(v => v.available).map(v => v.value), difficulties: value.difficulties.filter(v => v.available).map(v => v.value), types: value.questionTypes.filter(v => v.available).map(v => v.value), defaults: value.defaults };
     }));
   }
-  start(materialId: string, settings: GenerationSettings, name = 'Тест', key: string = crypto.randomUUID()): Observable<GenerationJob> {
+  start(materialId: string, settings: GenerationSettings, name = 'Тест', key: string = generationRequestKey()): Observable<GenerationJob> {
     return this.http.post<GenerationJob>('/api/quizzes', { materialId, ...settings, name, language: 'ru' }, { headers: this.headers().set('Idempotency-Key', key) });
   }
   status(id: string): Observable<GenerationJob> { return this.http.get<GenerationJob>(`/api/generation-jobs/${encodeURIComponent(id)}`, { headers: this.headers() }); }
