@@ -29,6 +29,33 @@ Flyway V9 создаёт отдельные таблицы на чистой т�
 проекцию. Все SQL используют параметры. PUT блокирует строку попытки до commit;
 некорректный запрос не пишет состояние. Закрытие использует ту же блокировку.
 
+## Завершение
+
+`POST /api/attempts/{attemptId}/complete`, без тела, возвращает AttemptCompletion:
+балл `score` (= correctCount), процент, totalQuestions, correctCount, incorrectCount,
+skippedCount, durationSeconds, completedAt и снимок данных теста. Счётчики раздельны:
+correctCount + incorrectCount + skippedCount = totalQuestions. Пропуск даёт 0 баллов,
+но не увеличивает incorrectCount. Процент = 100 * score / totalQuestions, HALF_UP
+до двух знаков. Только полное совпадение множеств даёт 1 балл для всех трёх типов.
+
+Итог берётся только из серверного снимка и сохранённых ответов. Поля входящего
+тела не влияют на балл/статус. INSERT/UPDATE результата, время и COMPLETED — один
+UPDATE и одна транзакция; CHECK V10 запрещает частичный итог. PUT ответа и complete
+берут одну row lock: сначала записанный ответ войдёт в итог, после complete PUT
+получит 409. Повтор complete возвращает сохранённые значения без пересчёта.
+ABANDONED → 409, чужая/отсутствующая попытка → одинаковый 404, нет входа → 401.
+Complete не возвращает ключи или сравнение по вопросам.
+
+Ручная проверка: после PUT выполните complete дважды, сравните JSON, попробуйте
+ещё один PUT (409). В новой попытке оставьте ответ пустым: correctCount=0,
+incorrectCount=0, skippedCount=totalQuestions. Используйте токен второго аккаунта
+для complete (404) и уберите Authorization (401).
+
+AttemptScorerTest покрывает три типа, множества в разном порядке, лишние/недостающие
+варианты, пропуски, неверные ответы и округление. AttemptCompletionIntegrationTest
+проверяет настоящий HTTP/PostgreSQL: повтор, закрытую запись, двух пользователей,
+rollback при отказе БД и конкурентный запуск PUT/complete с общей стартовой защёлкой.
+
 ## Проверки
 
 Unit без БД: `./backend/gradlew -p backend test --tests '*AttemptServiceTest'`.

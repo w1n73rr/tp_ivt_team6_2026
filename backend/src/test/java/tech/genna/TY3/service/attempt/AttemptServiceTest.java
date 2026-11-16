@@ -83,4 +83,24 @@ class AttemptServiceTest {
         assertFalse(response.contains("correctOptionIds"));
         assertFalse(response.contains("explanation"));
     }
+    @Test void completionUsesOnlyServerSnapshotAndReplayReturnsStoredResult() {
+        var a=fixture("single_choice","IN_PROGRESS");
+        ((tools.jackson.databind.node.ObjectNode)a.answers()).set(q.toString(),json.valueToTree(new SavedAnswer(q,Set.of(x),OffsetDateTime.now())));
+        var result=service.complete(id,owner);
+        assertEquals(1,result.getScore());assertEquals(100,result.getScorePercent());
+        verify(repo).complete(id,owner,result);
+        fixture("single_choice","COMPLETED");
+        when(repo.completion(id,owner)).thenReturn(result);
+        clearInvocations(repo);
+        assertSame(result,service.complete(id,owner));
+        verify(repo,never()).complete(any(),any(),any());
+    }
+    @Test void completionRejectsAbandonedOrForeignAttemptAndDependencyFailure() {
+        fixture("single_choice","ABANDONED");
+        assertEquals(409,assertThrows(ResponseStatusException.class,()->service.complete(id,owner)).getStatusCode().value());
+        assertEquals(404,assertThrows(ResponseStatusException.class,()->service.complete(id,UUID.randomUUID())).getStatusCode().value());
+        fixture("single_choice","IN_PROGRESS");
+        doThrow(new org.springframework.dao.DataAccessResourceFailureException("private SQL")).when(repo).complete(any(),any(),any());
+        assertEquals(503,assertThrows(ResponseStatusException.class,()->service.complete(id,owner)).getStatusCode().value());
+    }
 }

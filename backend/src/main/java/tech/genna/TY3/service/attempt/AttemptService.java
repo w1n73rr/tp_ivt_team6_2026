@@ -25,6 +25,7 @@ public class AttemptService {
     public AttemptService(AttemptRepository attempts, QuizRepository quizzes, ObjectMapper json, PlatformTransactionManager manager) {
         this.attempts=attempts; this.quizzes=quizzes; this.json=json;
         writes=new TransactionTemplate(manager);
+        writes.setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRES_NEW);
     }
     public AttemptDetail start(UUID quizId, UUID owner, String key) {
         if (key == null || key.isBlank() || key.length()>128) throw error(400,"INVALID_IDEMPOTENCY_KEY");
@@ -44,6 +45,21 @@ public class AttemptService {
         }));
     }
     public AttemptDetail get(UUID id, UUID owner) { return database(() -> detail(owned(id,owner,false))); }
+    public AttemptCompletion complete(UUID id, UUID owner) {
+        return database(() -> writes.execute(tx -> {
+            var a=owned(id,owner,true);
+            if(a.status().equals("COMPLETED")) return attempts.completion(id,owner);
+            if(!a.status().equals("IN_PROGRESS")) throw error(409,"ATTEMPT_CLOSED");
+            var score=AttemptScorer.score(a.questions(),a.answers());
+            var now=OffsetDateTime.now(ZoneOffset.UTC).truncatedTo(java.time.temporal.ChronoUnit.MICROS);
+            var result=new AttemptCompletion().attemptId(id).quiz(json.treeToValue(a.quiz(),QuizSummary.class))
+                    .totalQuestions(score.total()).correctCount(score.correct()).incorrectCount(score.incorrect())
+                    .skippedCount(score.skipped()).score(score.correct()).scorePercent(score.percent())
+                    .durationSeconds(Math.max(0,java.time.Duration.between(a.startedAt(),now).getSeconds())).completedAt(now);
+            attempts.complete(id,owner,result);
+            return result;
+        }));
+    }
     public SavedAnswer save(UUID id, UUID owner, UUID questionId, SaveAnswerRequest request) {
         return database(() -> writes.execute(tx -> {
             var a=owned(id,owner,true);
@@ -88,6 +104,10 @@ public class AttemptService {
         }
         var summary=new AttemptSummary(a.id(),json.treeToValue(a.quiz(),QuizSummary.class),
                 AttemptStatus.fromValue(a.status()),a.startedAt(),answered);
+        if(a.status().equals("COMPLETED")) {
+            var result=attempts.completion(a.id(),a.owner());
+            summary.completedAt(result.getCompletedAt()).scorePercent(result.getScorePercent());
+        }
         return new AttemptDetail(summary,questions,answers,first==0?questions.size():first);
     }
     static Question publicQuestion(JsonNode q,int position) {

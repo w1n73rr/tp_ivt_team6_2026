@@ -58,7 +58,7 @@ class AttemptIntegrationTest extends BaseTest {
         builder.method(method,body==null?HttpRequest.BodyPublishers.noBody():HttpRequest.BodyPublishers.ofString(json.writeValueAsString(body)));
         try(var client=HttpClient.newHttpClient()) {
             var response=client.send(builder.build(),HttpResponse.BodyHandlers.ofString());
-            assertEquals(expected,response.statusCode(),"Unexpected status for "+method+" "+path);
+            if(expected>0) assertEquals(expected,response.statusCode(),"Unexpected status for "+method+" "+path);
             return response;
         }
     }

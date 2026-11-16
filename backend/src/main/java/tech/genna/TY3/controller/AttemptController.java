@@ -23,4 +23,7 @@ public class AttemptController implements AttemptsApi {
     public ResponseEntity<SavedAnswer> saveAnswer(UUID attemptId,UUID questionId,SaveAnswerRequest request) {
         return ResponseEntity.ok().cacheControl(CacheControl.noStore()).body(attempts.save(attemptId,user.get().getId(),questionId,request));
     }
+    public ResponseEntity<AttemptCompletion> completeAttempt(UUID attemptId) {
+        return ResponseEntity.ok().cacheControl(CacheControl.noStore()).body(attempts.complete(attemptId,user.get().getId()));
+    }
 }

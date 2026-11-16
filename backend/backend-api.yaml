@@ -883,7 +883,7 @@ paths:
       summary: Завершить попытку и вычислить результат
       description: |
         Идемпотентно: повторный вызов возвращает тот же результат, статистика
-        учитывается один раз. Пропущенные вопросы считаются неверными.
+        учитывается один раз. Пропуски считаются отдельно: correctCount + incorrectCount + skippedCount = totalQuestions.
         MULTIPLE_CHOICE верен только при полном совпадении множества выбранных
         вариантов с ключом; частичные баллы не начисляются. Все вопросы имеют вес 1.
         ABANDONED завершать нельзя (409 ATTEMPT_CLOSED).
@@ -894,10 +894,9 @@ paths:
           description: Зафиксированный итог
           content:
             application/json:
-              schema: { $ref: '#/components/schemas/AttemptResult' }
+              schema: { $ref: '#/components/schemas/AttemptCompletion' }
         '404': { $ref: '#/components/responses/NotFound' }
         '409': { $ref: '#/components/responses/Conflict' }
-        '501': { $ref: '#/components/responses/NotImplemented' }
         default: { $ref: '#/components/responses/Error' }
   /api/attempts/{attemptId}/abandon:
     post:
@@ -1521,6 +1520,20 @@ components:
         questionId: { type: string, format: uuid }
         selectedOptionIds: { type: array, uniqueItems: true, items: { type: string, format: uuid } }
         savedAt: { type: string, format: date-time }
+    AttemptCompletion:
+      type: object
+      required: [attemptId, quiz, totalQuestions, correctCount, incorrectCount, skippedCount, scorePercent, durationSeconds, completedAt, score]
+      properties:
+        attemptId: { type: string, format: uuid }
+        quiz: { $ref: '#/components/schemas/QuizSummary' }
+        totalQuestions: { type: integer, minimum: 1 }
+        score: { type: integer, minimum: 0, description: Число баллов; равно correctCount }
+        correctCount: { type: integer, minimum: 0 }
+        incorrectCount: { type: integer, minimum: 0, description: 'Без пропущенных; correctCount + incorrectCount + skippedCount = totalQuestions' }
+        skippedCount: { type: integer, minimum: 0 }
+        scorePercent: { type: number, format: double, minimum: 0, maximum: 100, description: '100 * correctCount / totalQuestions; округление до двух знаков' }
+        durationSeconds: { type: integer, format: int64, minimum: 0, description: 'От startedAt до completedAt по часам сервера' }
+        completedAt: { type: string, format: date-time }
     AttemptResult:
       type: object
       required: [attemptId, quiz, totalQuestions, correctCount, incorrectCount, skippedCount, scorePercent, durationSeconds, completedAt, topics]

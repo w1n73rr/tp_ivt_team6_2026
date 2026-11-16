@@ -68,7 +68,15 @@ def run():
         foreign = http(path, "PUT", payload, other)
         missing = http(f"/api/attempts/{uuid.uuid4()}/answers/{question}", "PUT", payload, other)
         require(foreign[:2] == missing[:2] and foreign[0] == 404, "Owner isolation failed")
-        print("PASS: Compose + PostgreSQL + real HTTP/JWT; start, save, replay, replace, clear, validation and ownership.", flush=True)
+        require(http(path, "PUT", payload, token)[0] == 200, "Final selection failed")
+        complete_path = f"/api/attempts/{attempt_id}/complete"
+        status, completed, _ = http(complete_path, "POST", token=token)
+        require(status == 200 and completed["score"] == 1 and completed["scorePercent"] == 100, "Scoring failed")
+        require(completed["correctCount"] + completed["incorrectCount"] + completed["skippedCount"] == completed["totalQuestions"], "Counters overlap")
+        require(http(complete_path, "POST", token=token)[1] == completed, "Completion replay changed result")
+        require(http(path, "PUT", payload, token)[0] == 409, "Completed attempt accepted answer")
+        require(http(complete_path, "POST", token=other)[0] == 404, "Foreign completion accepted")
+        print("PASS: Compose + PostgreSQL + real HTTP/JWT; answers, ownership, atomic completion, scoring and replay.", flush=True)
     finally:
         result = compose("down", "--volumes", "--remove-orphans", check=False)
         require(result.returncode == 0, "Could not remove disposable Compose project")

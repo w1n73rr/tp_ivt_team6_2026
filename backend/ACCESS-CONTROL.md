@@ -16,7 +16,7 @@ owner-scoped запросы и безопасные 404. Cache-Control: no-store
 | GET /generation-jobs/{id} | Owner в SQL; QuizCrudIntegrationTest и AccessControlIntegrationTest. Чужой/отсутствующий job → одинаковый 404 |
 | /ws/generation | Handshake публичен, но SUBSCRIBE требует JWT и owner-scoped job; повторная подписка закрывается. JWT перепроверяется при доставке. Проверен код; WebSocket transport этим HTTP-набором не проверяется |
 | POST /quizzes/{id}/attempts; GET /attempts/{id}; PUT /attempts/{id}/answers/{questionId} | Снимок только своего теста; AttemptRepository фильтрует user_id. Вложенные questionId/optionIds проверяются в снимке. AttemptServiceTest, AttemptIntegrationTest, AccessControlIntegrationTest |
-| POST /attempts/{id}/complete; GET /attempts/{id}/result | В этой ветке безопасные заглушки 501 для вошедших; anonymous 401. Реализация и проверки владельца/статуса добавляются зависимыми ветками complete и result |
+| POST /attempts/{id}/complete; GET /attempts/{id}/result | Complete реализован: owner-scoped row lock, только IN_PROGRESS/повтор COMPLETED; AttemptCompletionIntegrationTest. GET result пока 501; anonymous 401. Проверки результата добавляются зависимой веткой result |
 | GET /attempts, POST /attempts/{id}/abandon, /review, /hint, /explanation | Заглушки 501, не читают БД и не возвращают ключей/оценок. /review удаляется следующей веткой result; подсказки и история вне этих задач |
 | /materials/bulk-delete, /processing, /processing/retry, /topics | Заглушки generated interface: 501 после авторизации, не имеют обхода хранения |
 
