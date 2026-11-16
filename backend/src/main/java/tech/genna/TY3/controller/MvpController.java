@@ -10,7 +10,7 @@ import tech.genna.TY3.api.UsersApi;
 import java.util.Optional;
 
 @RestController
-public class MvpController implements AttemptsApi,
+public class MvpController implements
         TrainingApi, AnalyticsApi, UsersApi {
 
     @Override

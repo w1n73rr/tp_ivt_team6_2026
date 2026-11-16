@@ -61,7 +61,7 @@ class GeneratedApiContractTest {
                         new TagController(tagService, currentUser), new AuthController(authService),
                         new MaterialController(materialService, currentUser),
                         new FileController(mock(FileStorageService.class), mock(MaterialRepository.class), currentUser),
-                        new MvpController(), new QuizController(mock(tech.genna.TY3.service.quiz.QuizService.class), currentUser), new GenerationController(mock(tech.genna.TY3.service.generation.GenerationStore.class), currentUser, mock(GenerationParametersService.class)), new GenerationParametersController(mock(GenerationParametersService.class)))
+                        new MvpController(), new AttemptController(mock(tech.genna.TY3.service.attempt.AttemptService.class), currentUser), new QuizController(mock(tech.genna.TY3.service.quiz.QuizService.class), currentUser), new GenerationController(mock(tech.genna.TY3.service.generation.GenerationStore.class), currentUser, mock(GenerationParametersService.class)), new GenerationParametersController(mock(GenerationParametersService.class)))
                 .setControllerAdvice(new GlobalExceptionHandler())
                 .build();
     }
