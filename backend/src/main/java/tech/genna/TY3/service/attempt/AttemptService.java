@@ -25,22 +25,38 @@ public class AttemptService {
     public AttemptService(AttemptRepository attempts, QuizRepository quizzes, ObjectMapper json, PlatformTransactionManager manager) {
         this.attempts=attempts; this.quizzes=quizzes; this.json=json;
         writes=new TransactionTemplate(manager);
+        writes.setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRES_NEW);
     }
-    public AttemptDetail start(UUID quizId, UUID owner, String key) {
-        if (key == null || key.isBlank() || key.length()>128) throw error(400,"INVALID_IDEMPOTENCY_KEY");
+    public record StartOutcome(AttemptDetail detail, boolean created) {}
+
+    public StartOutcome start(UUID quizId, UUID owner, String key) {
+        final String normalizedKey;
+        try {
+            normalizedKey=UUID.fromString(Objects.requireNonNull(key)).toString();
+            if(!normalizedKey.equalsIgnoreCase(key)) throw new IllegalArgumentException();
+        } catch (IllegalArgumentException | NullPointerException ex) {
+            throw error(400,"INVALID_IDEMPOTENCY_KEY");
+        }
         return database(() -> writes.execute(tx -> {
             quizzes.lockOwner(owner);
-            var replay=attempts.replay(owner,key);
-            if(replay.isPresent()) {
-                var a=owned(replay.get(),owner,false);
-                if(!a.quizId().equals(quizId)) throw error(409,"IDEMPOTENCY_KEY_REUSED");
-                return detail(a);
-            }
+            // The source must still be accessible, including when retrying an earlier start request.
             var quiz=quizzes.findOwned(quizId,owner).orElseThrow(() -> error(404,"QUIZ_NOT_FOUND"));
+            var replay=attempts.replay(owner,normalizedKey);
+            if(replay.isPresent()) {
+                var a=owned(replay.get(),owner,true);
+                if(!a.quizId().equals(quizId)) throw error(409,"IDEMPOTENCY_KEY_REUSED");
+                return new StartOutcome(detail(a),false);
+            }
+            var active=attempts.active(quizId,owner);
+            if(active.isPresent()) {
+                attempts.bindStartKey(owner,normalizedKey,active.get().id());
+                return new StartOutcome(detail(active.get()),false);
+            }
             var a=new Attempt(UUID.randomUUID(),owner,quizId,json.valueToTree(quiz.summary()),
                     quiz.result().get("questions"),json.createObjectNode(),"IN_PROGRESS",OffsetDateTime.now(ZoneOffset.UTC).truncatedTo(java.time.temporal.ChronoUnit.MICROS));
-            attempts.create(a,key);
-            return detail(a);
+            attempts.create(a,normalizedKey);
+            attempts.bindStartKey(owner,normalizedKey,a.id());
+            return new StartOutcome(detail(a),true);
         }));
     }
     public AttemptDetail get(UUID id, UUID owner) { return database(() -> detail(owned(id,owner,false))); }
