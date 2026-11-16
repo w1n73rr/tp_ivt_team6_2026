@@ -803,7 +803,7 @@ paths:
       tags: [Attempts]
       operationId: startAttempt
       summary: Начать или повторить прохождение существующего теста
-      description: Каждый вызов с новым Idempotency-Key создаёт новую попытку, включая повтор теста. Список вопросов фиксируется снимком.
+      description: Каждый вызов с новым Idempotency-Key создаёт новую попытку, включая повтор теста. Список вопросов фиксируется приватным снимком. Ключ идемпотентности сохраняется на срок жизни попытки.
       parameters:
         - { $ref: '#/components/parameters/QuizId' }
         - { $ref: '#/components/parameters/IdempotencyKey' }
@@ -814,7 +814,6 @@ paths:
             application/json:
               schema: { $ref: '#/components/schemas/AttemptDetail' }
         '404': { $ref: '#/components/responses/NotFound' }
-        '501': { $ref: '#/components/responses/NotImplemented' }
         default: { $ref: '#/components/responses/Error' }
   /api/attempts:
     get:
@@ -848,7 +847,6 @@ paths:
             application/json:
               schema: { $ref: '#/components/schemas/AttemptDetail' }
         '404': { $ref: '#/components/responses/NotFound' }
-        '501': { $ref: '#/components/responses/NotImplemented' }
         default: { $ref: '#/components/responses/Error' }
   /api/attempts/{attemptId}/answers/{questionId}:
     put:
@@ -877,7 +875,6 @@ paths:
         '400': { $ref: '#/components/responses/BadRequest' }
         '404': { $ref: '#/components/responses/NotFound' }
         '409': { $ref: '#/components/responses/Conflict' }
-        '501': { $ref: '#/components/responses/NotImplemented' }
         default: { $ref: '#/components/responses/Error' }
   /api/attempts/{attemptId}/complete:
     post:
