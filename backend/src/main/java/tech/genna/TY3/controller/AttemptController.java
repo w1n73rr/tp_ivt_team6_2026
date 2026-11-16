@@ -1,0 +1,26 @@
+package tech.genna.TY3.controller;
+
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.*;
+import org.springframework.web.bind.annotation.RestController;
+import tech.genna.TY3.api.AttemptsApi;
+import tech.genna.TY3.api.model.*;
+import tech.genna.TY3.security.CurrentUser;
+import tech.genna.TY3.service.attempt.AttemptService;
+import java.util.UUID;
+
+@RestController
+@RequiredArgsConstructor
+public class AttemptController implements AttemptsApi {
+    private final AttemptService attempts;
+    private final CurrentUser user;
+    public ResponseEntity<AttemptDetail> startAttempt(UUID quizId,UUID idempotencyKey) {
+        return ResponseEntity.status(201).cacheControl(CacheControl.noStore()).body(attempts.start(quizId,user.get().getId(),idempotencyKey.toString()));
+    }
+    public ResponseEntity<AttemptDetail> getAttempt(UUID attemptId) {
+        return ResponseEntity.ok().cacheControl(CacheControl.noStore()).body(attempts.get(attemptId,user.get().getId()));
+    }
+    public ResponseEntity<SavedAnswer> saveAnswer(UUID attemptId,UUID questionId,SaveAnswerRequest request) {
+        return ResponseEntity.ok().cacheControl(CacheControl.noStore()).body(attempts.save(attemptId,user.get().getId(),questionId,request));
+    }
+}

@@ -463,17 +463,23 @@ public class QuizGenerationUiTest {
         generation.createButton.click(); generation.readyPanel.shouldBe(visible, Duration.ofSeconds(60));
         generation.readyLink.click();
         var row = tests.rows.findBy(text(quizName)); row.shouldBe(visible);
+        tests.demoNotice.shouldNot(exist);
+        refresh();
+        row.shouldBe(visible);
+        var originalDetails = row.$$("td").texts();
         row.$("button[title='Переименовать']").click();
         var input = $("#test-rename"); input.shouldBe(focused);
         input.setValue("  " + quizName + " изменён  ");
         $x("//app-test-dialog//button[normalize-space()='Сохранить']").click();
         $("app-test-dialog").shouldNot(exist);
         refresh(); tests.rows.findBy(text(quizName + " изменён")).shouldBe(visible);
+        assertEquals(originalDetails, tests.rows.findBy(text(quizName + " изменён")).$$("td").texts());
         $("select[aria-label='Сортировка тестов']").selectOptionByValue("name:desc");
         tests.rows.findBy(text(quizName + " изменён")).$("button[title='Удалить']").click();
         $x("//app-test-dialog//button[normalize-space()='Отмена']").click();
         // Wait for MatDialog's closing animation and afterClosed callback before reopening.
         $(".cdk-overlay-pane").shouldNot(exist);
+        refresh();
         tests.rows.findBy(text(quizName + " изменён")).shouldBe(visible);
         tests.rows.findBy(text(quizName + " изменён")).$("button[title='Удалить']").click();
         $x("//app-test-dialog//button[normalize-space()='Удалить']").click();
