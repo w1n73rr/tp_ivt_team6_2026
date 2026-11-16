@@ -56,6 +56,31 @@ AttemptScorerTest покрывает три типа, множества в ра
 проверяет настоящий HTTP/PostgreSQL: повтор, закрытую запись, двух пользователей,
 rollback при отказе БД и конкурентный запуск PUT/complete с общей стартовой защёлкой.
 
+## Получение результата
+
+`GET /api/attempts/{attemptId}/result` возвращает AttemptResult: сохранённые поля
+AttemptCompletion и `items` для каждого вопроса в исходном порядке. Каждый item:
+question (id, position, type, text, options), selectedOptionIds, correctOptionIds,
+outcome (CORRECT/INCORRECT/SKIPPED), score (0/1). Никаких новых обращений к ML.
+Сводные поля/время читаются из сохранённого итога; сравнение строится из неизменяемых
+снимков вопроса и выбора. /review удалён из OpenAPI и маршрутов (404).
+
+Активная/ABANDONED попытка → 409 RESULT_NOT_READY без деталей. Чужой/отсутствующий
+ID → одинаковый 404, без входа → 401. Cache-Control: no-store. Новый запуск теста
+создаёт другой attemptId и не меняет прежний результат, даже после переименования
+или удаления теста. Клиент должен хранить ID попытки в маршруте результата.
+
+Ручная проверка: GET result до complete (409); после complete (200) сравните
+сводку и порядок с AttemptDetail; запустите тот же тест новым Idempotency-Key,
+завершите с другим выбором; повторный GET старого result должен вернуть прежний
+JSON. Второй аккаунт и случайный ID → одинаковый 404. GET /review → 404.
+
+AttemptResultIntegrationTest проверяет настоящий HTTP/PostgreSQL: три исхода,
+33.33%, порядок, Cache-Control, двух пользователей, две попытки, стабильный снимок
+после rename/delete. Unit AttemptServiceTest покрывает статус/права, состав,
+сохранённую длительность/счётчики и отказ хранилища.
+[Клиентский контракт](../frontend/ATTEMPTS-CONTRACT.md) использует только /result.
+
 ## Проверки
 
 Unit без БД: `./backend/gradlew -p backend test --tests '*AttemptServiceTest'`.

@@ -7,6 +7,13 @@ Backend CRUD сохранённых тестов: `GET /api/quizzes`, `GET/PATCH
 `.\backend\scripts\check-quiz-crud.ps1` (JDK 25 + Docker Desktop).
 
 
+API попыток: запуск/продолжение, сохранение выбора, завершение и `GET /result`.
+[Инструкция и проверки](backend/ATTEMPTS.md), [контроль доступа](backend/ACCESS-CONTROL.md),
+[контракт клиента](frontend/ATTEMPTS-CONTRACT.md),
+[отчёт по четырём задачам и порядок PR](backend/ATTEMPTS-REPORT.md).
+Проверка без внешней LLM: сначала `.\backend\scripts\check-quiz-crud.ps1`, затем
+`python backend/scripts/check-attempts.py` (JDK 25, Docker Desktop, Python 3).
+
 Учебный монорепозиторий: Angular, Spring Boot, PostgreSQL и SeaweedFS (S3).
 Сфера — источник кода и место ревью; GitHub — зеркало для Actions и реестра GHCR.
 
@@ -199,7 +206,3 @@ curl -fsS http://127.0.0.1/ >/dev/null
 Неполное количество вопросов считается ошибкой. На готовности «Перейти к тесту»
 пока отключена, «Все тесты» открывает реальный список. Новых переменных окружения нет.
 Подробности и границы проверки — [frontend/CRUD-INTEGRATION.md](frontend/CRUD-INTEGRATION.md).
-
-Попытки: [запуск, продолжение, сохранение и изменение ответов](backend/ATTEMPTS.md).
-
-[Перечень маршрутов и проверка прав доступа](backend/ACCESS-CONTROL.md).

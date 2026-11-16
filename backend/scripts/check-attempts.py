@@ -76,7 +76,19 @@ def run():
         require(http(complete_path, "POST", token=token)[1] == completed, "Completion replay changed result")
         require(http(path, "PUT", payload, token)[0] == 409, "Completed attempt accepted answer")
         require(http(complete_path, "POST", token=other)[0] == 404, "Foreign completion accepted")
-        print("PASS: Compose + PostgreSQL + real HTTP/JWT; answers, ownership, atomic completion, scoring and replay.", flush=True)
+        result_path = f"/api/attempts/{attempt_id}/result"
+        status, result, headers = http(result_path, token=token)
+        require(status == 200 and "no-store" in headers.get("Cache-Control", ""), "Result/cache failed")
+        require(result["items"][0]["correctOptionIds"] == [a] and result["items"][0]["outcome"] == "CORRECT", "Comparison failed")
+        require(http(result_path, token=other)[0] == 404, "Foreign result exposed")
+        require(http(f"/api/attempts/{attempt_id}/review", token=token)[0] == 404, "Legacy review still registered")
+        status, second, _ = http(f"/api/quizzes/{quiz}/attempts", "POST", token=token)
+        require(status == 201, "Repeat start failed")
+        second_id = second["attempt"]["id"]
+        require(http(f"/api/attempts/{second_id}/result", token=token)[0] == 409, "Active result exposed")
+        require(http(f"/api/attempts/{second_id}/complete", "POST", token=token)[1]["skippedCount"] == 1, "Skip counters failed")
+        require(http(result_path, token=token)[1] == result, "Historical result changed")
+        print("PASS: Compose + PostgreSQL + real HTTP/JWT; answers, ownership, completion, result, replay and repeat attempt.", flush=True)
     finally:
         result = compose("down", "--volumes", "--remove-orphans", check=False)
         require(result.returncode == 0, "Could not remove disposable Compose project")
