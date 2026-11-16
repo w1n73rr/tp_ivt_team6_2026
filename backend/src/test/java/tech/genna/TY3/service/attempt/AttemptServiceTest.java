@@ -103,4 +103,44 @@ class AttemptServiceTest {
         doThrow(new org.springframework.dao.DataAccessResourceFailureException("private SQL")).when(repo).complete(any(),any(),any());
         assertEquals(503,assertThrows(ResponseStatusException.class,()->service.complete(id,owner)).getStatusCode().value());
     }
+    @Test void resultRequiresCompletedOwnerAndReturnsStoredTotalsWithOrderedComparison() {
+        fixture("single_choice","IN_PROGRESS");
+        assertEquals(409,assertThrows(ResponseStatusException.class,()->service.result(id,owner)).getStatusCode().value());
+        assertEquals(404,assertThrows(ResponseStatusException.class,()->service.result(id,UUID.randomUUID())).getStatusCode().value());
+        var a=fixture("single_choice","COMPLETED");
+        ((tools.jackson.databind.node.ObjectNode)a.answers()).set(q.toString(),json.valueToTree(new SavedAnswer(q,Set.of(y),OffsetDateTime.now())));
+        var stored=new AttemptCompletion().attemptId(id).quiz(new QuizSummary()).totalQuestions(1)
+                .correctCount(0).incorrectCount(1).skippedCount(0).score(0).scorePercent(0.0)
+                .durationSeconds(42L).completedAt(OffsetDateTime.now());
+        when(repo.completion(id,owner)).thenReturn(stored);
+        var result=service.result(id,owner);
+        assertEquals(42L,result.getDurationSeconds());assertEquals(1,result.getIncorrectCount());
+        assertEquals(0,result.getSkippedCount());assertEquals(stored.getCompletedAt(),result.getCompletedAt());
+        assertEquals(q,result.getItems().getFirst().getQuestion().getId());
+        assertEquals(1,result.getItems().getFirst().getQuestion().getPosition());
+        assertEquals(Set.of(y),result.getItems().getFirst().getSelectedOptionIds());
+        assertEquals(Set.of(x),result.getItems().getFirst().getCorrectOptionIds());
+        assertEquals(QuestionResult.OutcomeEnum.INCORRECT,result.getItems().getFirst().getOutcome());
+        verify(repo,never()).complete(any(),any(),any());
+    }
+    @Test void resultStorageFailureIsSafe() {
+        fixture("single_choice","COMPLETED");
+        when(repo.completion(id,owner)).thenThrow(new org.springframework.dao.DataAccessResourceFailureException("private result"));
+        assertEquals(503,assertThrows(ResponseStatusException.class,()->service.result(id,owner)).getStatusCode().value());
+    }
+    @Test void actualOptionOfAnotherQuestionCannotReplaceThisAnswer() {
+        var a=fixture("single_choice","IN_PROGRESS");
+        UUID secondQuestion=UUID.randomUUID(),secondOption=UUID.randomUUID();
+        var extra=((tools.jackson.databind.node.ArrayNode)a.questions()).addObject()
+                .put("id",secondQuestion.toString()).put("type","single_choice").put("text","Other question");
+        extra.putArray("options").addObject().put("id",secondOption.toString()).put("text","Other option");
+        extra.putArray("correctOptionIds").add(secondOption.toString());
+        var saved=service.save(id,owner,q,new SaveAnswerRequest(Set.of(x)));
+        ((tools.jackson.databind.node.ObjectNode)a.answers()).set(q.toString(),json.valueToTree(saved));
+        clearInvocations(repo);
+        assertEquals(400,assertThrows(ResponseStatusException.class,
+                ()->service.save(id,owner,q,new SaveAnswerRequest(Set.of(secondOption)))).getStatusCode().value());
+        verify(repo,never()).answers(any(),any(),any());
+        assertEquals(saved,json.treeToValue(a.answers().get(q.toString()),SavedAnswer.class));
+    }
 }

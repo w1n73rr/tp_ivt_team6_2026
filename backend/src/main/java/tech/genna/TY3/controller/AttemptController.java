@@ -26,4 +26,7 @@ public class AttemptController implements AttemptsApi {
     public ResponseEntity<AttemptCompletion> completeAttempt(UUID attemptId) {
         return ResponseEntity.ok().cacheControl(CacheControl.noStore()).body(attempts.complete(attemptId,user.get().getId()));
     }
+    public ResponseEntity<AttemptResult> getAttemptResult(UUID attemptId) {
+        return ResponseEntity.ok().cacheControl(CacheControl.noStore()).body(attempts.result(attemptId,user.get().getId()));
+    }
 }

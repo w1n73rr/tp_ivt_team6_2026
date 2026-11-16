@@ -45,6 +45,32 @@ public class AttemptService {
         }));
     }
     public AttemptDetail get(UUID id, UUID owner) { return database(() -> detail(owned(id,owner,false))); }
+    public AttemptResult result(UUID id, UUID owner) {
+        return database(() -> {
+            var a=owned(id,owner,false);
+            if(!a.status().equals("COMPLETED")) throw error(409,"RESULT_NOT_READY");
+            // Totals/time are persisted, never recalculated on read. Keys/selections are immutable after completion.
+            var saved=attempts.completion(id,owner);
+            var result=new AttemptResult().attemptId(saved.getAttemptId()).quiz(saved.getQuiz())
+                    .score(saved.getScore()).scorePercent(saved.getScorePercent()).totalQuestions(saved.getTotalQuestions())
+                    .correctCount(saved.getCorrectCount()).incorrectCount(saved.getIncorrectCount())
+                    .skippedCount(saved.getSkippedCount()).durationSeconds(saved.getDurationSeconds()).completedAt(saved.getCompletedAt());
+            var items=new ArrayList<QuestionResult>();
+            for(var q:a.questions()) {
+                var selected=new LinkedHashSet<UUID>();
+                for(var option:a.answers().path(q.path("id").asText()).path("selectedOptionIds"))
+                    selected.add(UUID.fromString(option.asText()));
+                var correct=new LinkedHashSet<UUID>();
+                for(var option:q.path("correctOptionIds")) correct.add(UUID.fromString(option.asText()));
+                var outcome=selected.isEmpty()?QuestionResult.OutcomeEnum.SKIPPED:
+                        selected.equals(correct)?QuestionResult.OutcomeEnum.CORRECT:QuestionResult.OutcomeEnum.INCORRECT;
+                items.add(new QuestionResult().question(publicQuestion(q,items.size()+1))
+                        .selectedOptionIds(selected).correctOptionIds(correct).outcome(outcome)
+                        .score(outcome==QuestionResult.OutcomeEnum.CORRECT?1:0));
+            }
+            return result.items(items);
+        });
+    }
     public AttemptCompletion complete(UUID id, UUID owner) {
         return database(() -> writes.execute(tx -> {
             var a=owned(id,owner,true);
