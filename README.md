@@ -201,3 +201,5 @@ curl -fsS http://127.0.0.1/ >/dev/null
 Подробности и границы проверки — [frontend/CRUD-INTEGRATION.md](frontend/CRUD-INTEGRATION.md).
 
 Попытки: [запуск, продолжение, сохранение и изменение ответов](backend/ATTEMPTS.md).
+
+[Перечень маршрутов и проверка прав доступа](backend/ACCESS-CONTROL.md).

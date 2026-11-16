@@ -1508,6 +1508,8 @@ components:
         totalElements: { type: integer, format: int64, minimum: 0 }
     SaveAnswerRequest:
       type: object
+      additionalProperties: false
+      x-class-extra-annotation: '@tools.jackson.databind.annotation.JsonDeserialize(using = tech.genna.TY3.service.attempt.SaveAnswerDeserializer.class)'
       required: [selectedOptionIds]
       properties:
         selectedOptionIds: { type: array, maxItems: 4, uniqueItems: true, items: { type: string, format: uuid } }
