@@ -62,7 +62,7 @@ public class MaterialFileCleanup {
                         storage.deleteFile(item.fileId(), item.userId(), FileStorageService.FileScope.MATERIALS);
                         cancel(item.fileId());
                     } catch (tech.genna.TY3.model.exception.FileStorageException e) {
-                        log.warn("Material file cleanup will be retried for {}", item.fileId());
+                        log.warn("Material file cleanup will be retried for {}", item.fileId(), e);
                         jdbc.update("""
                                 UPDATE material_file_cleanup
                                 SET available_at = CURRENT_TIMESTAMP + INTERVAL '1 minute'
@@ -73,7 +73,7 @@ public class MaterialFileCleanup {
                 }
             });
         } catch (RuntimeException e) {
-            log.error("Material file cleanup failed; durable tasks will be retried");
+            log.error("Material file cleanup failed; durable tasks will be retried", e);
         }
     }
 

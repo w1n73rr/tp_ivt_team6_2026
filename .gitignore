@@ -13,4 +13,3 @@ docker-compose.local.yml
 *.jks
 *.keystore
 **/test-results/
-__pycache__/

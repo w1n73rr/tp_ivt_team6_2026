@@ -36,14 +36,14 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(tech.genna.TY3.model.exception.ResourceNotFoundException.class)
     public ResponseEntity<Map<String, String>> handleNotFound(
             tech.genna.TY3.model.exception.ResourceNotFoundException e) {
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", "Ресурс не найден или недоступен"));
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", e.getMessage()));
     }
 
     @ExceptionHandler(FileStorageException.class)
     public ResponseEntity<Map<String, String>> handleFileStorage(FileStorageException e) {
-        log.error("File storage operation failed");
+        log.error("File storage operation failed", e);
         return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE)
-                .body(Map.of("error", "Хранилище временно недоступно"));
+                .body(Map.of("error", e.getMessage()));
     }
 
     @ExceptionHandler({MissingServletRequestPartException.class,
@@ -105,7 +105,7 @@ public class GlobalExceptionHandler {
             return ResponseEntity.status(error.getStatusCode()).body(new ErrorResponse(
                     statusCode(error.getStatusCode().value()), "Не удалось выполнить запрос"));
         }
-        logger.error("Необработанная ошибка API: {}", exception.getClass().getSimpleName());
+        logger.error("Необработанная ошибка API", exception);
         return ResponseEntity.internalServerError()
                 .body(new ErrorResponse("INTERNAL_ERROR", "Внутренняя ошибка сервера"));
     }

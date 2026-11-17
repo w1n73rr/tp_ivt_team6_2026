@@ -803,7 +803,7 @@ paths:
       tags: [Attempts]
       operationId: startAttempt
       summary: Начать или повторить прохождение существующего теста
-      description: Каждый вызов с новым Idempotency-Key создаёт новую попытку, включая повтор теста. Список вопросов фиксируется приватным снимком. Ключ идемпотентности сохраняется на срок жизни попытки.
+      description: Каждый вызов с новым Idempotency-Key создаёт новую попытку, включая повтор теста. Список вопросов фиксируется снимком.
       parameters:
         - { $ref: '#/components/parameters/QuizId' }
         - { $ref: '#/components/parameters/IdempotencyKey' }
@@ -814,6 +814,7 @@ paths:
             application/json:
               schema: { $ref: '#/components/schemas/AttemptDetail' }
         '404': { $ref: '#/components/responses/NotFound' }
+        '501': { $ref: '#/components/responses/NotImplemented' }
         default: { $ref: '#/components/responses/Error' }
   /api/attempts:
     get:
@@ -847,6 +848,7 @@ paths:
             application/json:
               schema: { $ref: '#/components/schemas/AttemptDetail' }
         '404': { $ref: '#/components/responses/NotFound' }
+        '501': { $ref: '#/components/responses/NotImplemented' }
         default: { $ref: '#/components/responses/Error' }
   /api/attempts/{attemptId}/answers/{questionId}:
     put:
@@ -875,6 +877,7 @@ paths:
         '400': { $ref: '#/components/responses/BadRequest' }
         '404': { $ref: '#/components/responses/NotFound' }
         '409': { $ref: '#/components/responses/Conflict' }
+        '501': { $ref: '#/components/responses/NotImplemented' }
         default: { $ref: '#/components/responses/Error' }
   /api/attempts/{attemptId}/complete:
     post:
@@ -883,7 +886,7 @@ paths:
       summary: Завершить попытку и вычислить результат
       description: |
         Идемпотентно: повторный вызов возвращает тот же результат, статистика
-        учитывается один раз. Пропуски считаются отдельно: correctCount + incorrectCount + skippedCount = totalQuestions.
+        учитывается один раз. Пропущенные вопросы считаются неверными.
         MULTIPLE_CHOICE верен только при полном совпадении множества выбранных
         вариантов с ключом; частичные баллы не начисляются. Все вопросы имеют вес 1.
         ABANDONED завершать нельзя (409 ATTEMPT_CLOSED).
@@ -894,9 +897,10 @@ paths:
           description: Зафиксированный итог
           content:
             application/json:
-              schema: { $ref: '#/components/schemas/AttemptCompletion' }
+              schema: { $ref: '#/components/schemas/AttemptResult' }
         '404': { $ref: '#/components/responses/NotFound' }
         '409': { $ref: '#/components/responses/Conflict' }
+        '501': { $ref: '#/components/responses/NotImplemented' }
         default: { $ref: '#/components/responses/Error' }
   /api/attempts/{attemptId}/abandon:
     post:
@@ -921,12 +925,31 @@ paths:
         - { $ref: '#/components/parameters/AttemptId' }
       responses:
         '200':
-          description: Сохранённый итог и сравнение по каждому вопросу, только для собственной COMPLETED-попытки; Cache-Control no-store
+          description: Итоговые показатели и результаты по темам
           content:
             application/json:
               schema: { $ref: '#/components/schemas/AttemptResult' }
         '404': { $ref: '#/components/responses/NotFound' }
         '409': { $ref: '#/components/responses/Conflict' }
+        '501': { $ref: '#/components/responses/NotImplemented' }
+        default: { $ref: '#/components/responses/Error' }
+  /api/attempts/{attemptId}/review:
+    get:
+      tags: [Attempts]
+      operationId: reviewAttempt
+      summary: Разобрать ответы и ошибки после завершения
+      parameters:
+        - { $ref: '#/components/parameters/AttemptId' }
+        - { name: incorrectOnly, in: query, schema: { type: boolean, default: true } }
+      responses:
+        '200':
+          description: Ответ пользователя, правильные варианты и объяснение; только для COMPLETED
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ReviewListResponse' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '501': { $ref: '#/components/responses/NotImplemented' }
         default: { $ref: '#/components/responses/Error' }
   /api/attempts/{attemptId}/questions/{questionId}/hint:
     post:
@@ -1488,8 +1511,6 @@ components:
         totalElements: { type: integer, format: int64, minimum: 0 }
     SaveAnswerRequest:
       type: object
-      additionalProperties: false
-      x-class-extra-annotation: '@tools.jackson.databind.annotation.JsonDeserialize(using = tech.genna.TY3.service.attempt.SaveAnswerDeserializer.class)'
       required: [selectedOptionIds]
       properties:
         selectedOptionIds: { type: array, maxItems: 4, uniqueItems: true, items: { type: string, format: uuid } }
@@ -1501,44 +1522,43 @@ components:
         questionId: { type: string, format: uuid }
         selectedOptionIds: { type: array, uniqueItems: true, items: { type: string, format: uuid } }
         savedAt: { type: string, format: date-time }
-    AttemptCompletion:
-      type: object
-      required: [attemptId, quiz, totalQuestions, correctCount, incorrectCount, skippedCount, scorePercent, durationSeconds, completedAt, score]
-      properties:
-        attemptId: { type: string, format: uuid }
-        quiz: { $ref: '#/components/schemas/QuizSummary' }
-        totalQuestions: { type: integer, minimum: 1 }
-        score: { type: integer, minimum: 0, description: Число баллов; равно correctCount }
-        correctCount: { type: integer, minimum: 0 }
-        incorrectCount: { type: integer, minimum: 0, description: 'Без пропущенных; correctCount + incorrectCount + skippedCount = totalQuestions' }
-        skippedCount: { type: integer, minimum: 0 }
-        scorePercent: { type: number, format: double, minimum: 0, maximum: 100, description: '100 * correctCount / totalQuestions; округление до двух знаков' }
-        durationSeconds: { type: integer, format: int64, minimum: 0, description: 'От startedAt до completedAt по часам сервера' }
-        completedAt: { type: string, format: date-time }
     AttemptResult:
       type: object
-      required: [attemptId, quiz, totalQuestions, correctCount, incorrectCount, skippedCount, scorePercent, durationSeconds, completedAt, score, items]
+      required: [attemptId, quiz, totalQuestions, correctCount, incorrectCount, skippedCount, scorePercent, durationSeconds, completedAt, topics]
       properties:
-        items: { type: array, minItems: 1, items: { $ref: '#/components/schemas/QuestionResult' } }
         attemptId: { type: string, format: uuid }
         quiz: { $ref: '#/components/schemas/QuizSummary' }
         totalQuestions: { type: integer, minimum: 1 }
-        score: { type: integer, minimum: 0, description: Число баллов; равно correctCount }
         correctCount: { type: integer, minimum: 0 }
-        incorrectCount: { type: integer, minimum: 0, description: 'Без пропущенных; correctCount + incorrectCount + skippedCount = totalQuestions' }
+        incorrectCount: { type: integer, minimum: 0, description: 'Включая пропущенные; correctCount + incorrectCount = totalQuestions' }
         skippedCount: { type: integer, minimum: 0 }
         scorePercent: { type: number, format: double, minimum: 0, maximum: 100, description: '100 * correctCount / totalQuestions; округление до двух знаков' }
         durationSeconds: { type: integer, format: int64, minimum: 0, description: 'От startedAt до completedAt по часам сервера' }
         completedAt: { type: string, format: date-time }
-    QuestionResult:
+        topics: { type: array, items: { $ref: '#/components/schemas/TopicResult' } }
+    TopicResult:
       type: object
-      required: [question, selectedOptionIds, correctOptionIds, outcome, score]
+      required: [topicId, topicName, totalQuestions, correctCount, scorePercent]
+      properties:
+        topicId: { type: string, format: uuid }
+        topicName: { type: string }
+        totalQuestions: { type: integer, minimum: 1 }
+        correctCount: { type: integer, minimum: 0 }
+        scorePercent: { type: number, format: double, minimum: 0, maximum: 100 }
+    ReviewItem:
+      type: object
+      required: [question, selectedOptionIds, correctOptionIds, correct, explanation]
       properties:
         question: { $ref: '#/components/schemas/Question' }
-        selectedOptionIds: { type: array, uniqueItems: true, items: { type: string, format: uuid } }
-        correctOptionIds: { type: array, minItems: 1, uniqueItems: true, items: { type: string, format: uuid } }
-        outcome: { type: string, enum: [CORRECT, INCORRECT, SKIPPED] }
-        score: { type: integer, minimum: 0, maximum: 1 }
+        selectedOptionIds: { type: array, items: { type: string, format: uuid } }
+        correctOptionIds: { type: array, minItems: 1, items: { type: string, format: uuid } }
+        correct: { type: boolean }
+        explanation: { type: string, description: 'Проверенное объяснение, сохранённое при генерации; доступно без повторного вызова LLM' }
+    ReviewListResponse:
+      type: object
+      required: [items]
+      properties:
+        items: { type: array, items: { $ref: '#/components/schemas/ReviewItem' } }
     AiTextResponse:
       type: object
       required: [text]
