@@ -9,17 +9,7 @@ dependencies {
     testRuntimeOnly("org.junit.platform:junit-platform-launcher:1.13.4")
 }
 tasks.test {
-    useJUnitPlatform {
-        when {
-            project.hasProperty("generationApiLive") -> includeTags("generation-live")
-            project.hasProperty("generationApi") -> {
-                includeTags("generation-api")
-                excludeTags("generation-live")
-            }
-            project.hasProperty("quizCrud") -> includeTags("quiz-crud")
-            else -> excludeTags("quiz-crud", "generation-api")
-        }
-    }
+    useJUnitPlatform()
     outputs.upToDateWhen { false }
     testLogging { events("passed", "failed", "skipped") }
 }

@@ -31,10 +31,6 @@ public class JwtAuthFilter extends OncePerRequestFilter {
             @NonNull FilterChain filterChain
     ) throws ServletException, IOException {
 
-        if (request.getRequestURI().startsWith("/api/")) {
-            response.setHeader("Cache-Control", "no-store");
-        }
-
         final String authHeader = request.getHeader("Authorization");
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
             filterChain.doFilter(request, response);
@@ -52,19 +48,14 @@ public class JwtAuthFilter extends OncePerRequestFilter {
         }
 
         if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-            try {
-                UserDetails userDetails = userDetailsService.loadUserByUsername(username);
-                if (jwtService.isTokenValid(jwt, userDetails)) {
+            UserDetails userDetails = userDetailsService.loadUserByUsername(username);
+
+            if (jwtService.isTokenValid(jwt, userDetails)) {
                 UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
                         userDetails, null, userDetails.getAuthorities()
                 );
                 authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
                 SecurityContextHolder.getContext().setAuthentication(authToken);
-                }
-            } catch (org.springframework.security.core.userdetails.UsernameNotFoundException
-                     | io.jsonwebtoken.JwtException | IllegalArgumentException ignored) {
-                // Deleted users and rejected credentials remain unauthenticated; never log the JWT.
-                SecurityContextHolder.clearContext();
             }
         }
 
