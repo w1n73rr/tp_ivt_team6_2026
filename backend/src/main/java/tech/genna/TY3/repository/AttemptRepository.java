@@ -3,6 +3,7 @@ package tech.genna.TY3.repository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
+import tech.genna.TY3.api.model.AttemptCompletion;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
 import java.time.OffsetDateTime;
@@ -32,5 +33,14 @@ public class AttemptRepository {
     }
     public void answers(UUID id, UUID owner, JsonNode answers) {
         jdbc.update("UPDATE attempts SET answers_json=? WHERE id=? AND user_id=?", answers.toString(), id, owner);
+    }
+    public AttemptCompletion completion(UUID id, UUID owner) {
+        return jdbc.queryForObject("SELECT result_json FROM attempts WHERE id=? AND user_id=?",
+                (rs,n) -> json.readValue(rs.getString(1),AttemptCompletion.class),id,owner);
+    }
+    public void complete(UUID id, UUID owner, AttemptCompletion result) {
+        int changed=jdbc.update("UPDATE attempts SET result_json=?, completed_at=?, status='COMPLETED' WHERE id=? AND user_id=? AND status='IN_PROGRESS'",
+                json.writeValueAsString(result),result.getCompletedAt(),id,owner);
+        if(changed!=1) throw new org.springframework.dao.ConcurrencyFailureException("ATTEMPT_CLOSED");
     }
 }
