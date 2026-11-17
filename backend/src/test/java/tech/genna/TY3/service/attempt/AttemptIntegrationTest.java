@@ -39,8 +39,8 @@ class AttemptIntegrationTest extends BaseTest {
     @AfterEach void cleanup() {
         if(owner!=null) {
             jdbc.update("DELETE FROM attempts WHERE user_id IN (?,?)",owner,other);
-            jdbc.update("DELETE FROM quizzes WHERE user_id=?",owner);
-            jdbc.update("DELETE FROM generation_jobs WHERE user_id=?",owner);
+            jdbc.update("DELETE FROM quizzes WHERE user_id IN (?,?)",owner,other);
+            jdbc.update("DELETE FROM generation_jobs WHERE user_id IN (?,?)",owner,other);
             jdbc.update("DELETE FROM users WHERE id IN (?,?)",owner,other);
         }
     }
@@ -88,9 +88,9 @@ class AttemptIntegrationTest extends BaseTest {
     @Test void startIsIdempotentAndSnapshotsSurviveQuizDeletion() throws Exception {
         UUID key=UUID.randomUUID();String path="/api/quizzes/"+quiz+"/attempts";
         String first=call(token,"POST",path,null,201,key).body();
-        assertEquals(first,call(token,"POST",path,null,201,key).body());
+        assertEquals(first,call(token,"POST",path,null,200,key).body());
         UUID id=UUID.fromString(json.readTree(first).path("attempt").path("id").asText());
-        assertNotEquals(id,start());
+        assertEquals(id,UUID.fromString(json.readTree(call(token,"POST",path,null,200).body()).path("attempt").path("id").asText()));
         jdbc.update("DELETE FROM quizzes WHERE id=?",quiz);
         call(token,"GET","/api/attempts/"+id,null,200);
         call(otherToken,"GET","/api/attempts/"+id,null,404);

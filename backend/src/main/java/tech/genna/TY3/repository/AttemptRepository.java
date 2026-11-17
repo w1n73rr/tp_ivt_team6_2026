@@ -24,8 +24,21 @@ public class AttemptRepository {
                         rs.getObject("started_at", OffsetDateTime.class)), id, owner).stream().findFirst();
     }
     public Optional<UUID> replay(UUID owner, String key) {
-        return jdbc.query("SELECT id FROM attempts WHERE user_id=? AND idempotency_key=?",
+        return jdbc.query("""
+                SELECT a.id FROM attempt_start_requests r
+                JOIN attempts a ON a.id=r.attempt_id AND a.user_id=r.user_id
+                WHERE r.user_id=? AND r.idempotency_key=?
+                """,
                 (rs,n) -> rs.getObject(1, UUID.class), owner, key).stream().findFirst();
+    }
+    public Optional<Attempt> active(UUID quizId, UUID owner) {
+        return jdbc.query("SELECT id FROM attempts WHERE quiz_id=? AND user_id=? AND status='IN_PROGRESS' FOR UPDATE",
+                (rs,n) -> rs.getObject(1, UUID.class),quizId,owner).stream().findFirst()
+                .flatMap(id -> find(id,owner,false));
+    }
+    public void bindStartKey(UUID owner, String key, UUID attemptId) {
+        jdbc.update("INSERT INTO attempt_start_requests(user_id,idempotency_key,attempt_id) VALUES (?,?,?)",
+                owner,key,attemptId);
     }
     public void create(Attempt a, String key) {
         jdbc.update("INSERT INTO attempts(id,user_id,quiz_id,idempotency_key,quiz_json,questions_json,started_at) VALUES (?,?,?,?,?,?,?)",

@@ -15,7 +15,8 @@ public class AttemptController implements AttemptsApi {
     private final AttemptService attempts;
     private final CurrentUser user;
     public ResponseEntity<AttemptDetail> startAttempt(UUID quizId,UUID idempotencyKey) {
-        return ResponseEntity.status(201).cacheControl(CacheControl.noStore()).body(attempts.start(quizId,user.get().getId(),idempotencyKey.toString()));
+        var outcome=attempts.start(quizId,user.get().getId(),idempotencyKey.toString());
+        return ResponseEntity.status(outcome.created()?201:200).cacheControl(CacheControl.noStore()).body(outcome.detail());
     }
     public ResponseEntity<AttemptDetail> getAttempt(UUID attemptId) {
         return ResponseEntity.ok().cacheControl(CacheControl.noStore()).body(attempts.get(attemptId,user.get().getId()));

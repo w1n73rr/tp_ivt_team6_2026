@@ -802,17 +802,35 @@ paths:
     post:
       tags: [Attempts]
       operationId: startAttempt
-      summary: Начать или повторить прохождение существующего теста
-      description: Каждый вызов с новым Idempotency-Key создаёт новую попытку, включая повтор теста. Список вопросов фиксируется приватным снимком. Ключ идемпотентности сохраняется на срок жизни попытки.
+      summary: Начать, продолжить или повторить прохождение своего теста
+      description: |
+        Для доступного собственного теста возвращает единственную IN_PROGRESS-попытку
+        с сохранённым выбором (200) либо создаёт новую с пустыми ответами (201).
+        Параллельные запросы с одинаковыми или разными ключами не создают дубли.
+        После завершения новый ключ создаёт отдельную попытку; старый ключ возвращает
+        связанную с ним попытку, включая завершённую. Ключи хранятся на срок жизни
+        попытки. Другой quizId с уже использованным ключом — 409 IDEMPOTENCY_KEY_REUSED.
+        Вопросы и порядок зафиксированы приватным снимком; правильные варианты,
+        признаки правильности и баллы в ответ не попадают. Cache-Control: no-store.
       parameters:
         - { $ref: '#/components/parameters/QuizId' }
-        - { $ref: '#/components/parameters/IdempotencyKey' }
+        - { $ref: '#/components/parameters/AttemptStartIdempotencyKey' }
       responses:
+        '200':
+          description: Существующая активная попытка или повтор ранее принятого запроса
+          headers:
+            Cache-Control: { schema: { type: string, enum: [no-store] } }
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/AttemptDetail' }
         '201':
           description: Попытка начата
           content:
             application/json:
               schema: { $ref: '#/components/schemas/AttemptDetail' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '409': { $ref: '#/components/responses/Conflict' }
         '404': { $ref: '#/components/responses/NotFound' }
         default: { $ref: '#/components/responses/Error' }
   /api/attempts:
@@ -1055,6 +1073,12 @@ components:
     QuestionId: { name: questionId, in: path, required: true, schema: { type: string, format: uuid } }
     Page: { name: page, in: query, schema: { type: integer, minimum: 0, default: 0 } }
     Size: { name: size, in: query, schema: { type: integer, minimum: 1, maximum: 100, default: 20 } }
+    AttemptStartIdempotencyKey:
+      name: Idempotency-Key
+      in: header
+      required: true
+      description: UUID запуска. Все ключи, вернувшие одну активную попытку, связаны с ней до её удаления. Для повторного прохождения после завершения используйте новый ключ. Другой тест с тем же ключом — 409.
+      schema: { type: string, format: uuid }
     IdempotencyKey:
       name: Idempotency-Key
       in: header
