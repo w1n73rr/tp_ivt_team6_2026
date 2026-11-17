@@ -60,6 +60,47 @@ public class AttemptService {
         }));
     }
     public AttemptDetail get(UUID id, UUID owner) { return database(() -> detail(owned(id,owner,false))); }
+    public AttemptResult result(UUID id, UUID owner) {
+        return database(() -> {
+            var a=owned(id,owner,false);
+            if(!a.status().equals("COMPLETED")) throw error(409,"RESULT_NOT_READY");
+            // Totals/time are persisted, never recalculated on read. Keys/selections are immutable after completion.
+            var saved=attempts.completion(id,owner);
+            var result=new AttemptResult().attemptId(saved.getAttemptId()).quiz(saved.getQuiz())
+                    .score(saved.getScore()).scorePercent(saved.getScorePercent()).totalQuestions(saved.getTotalQuestions())
+                    .correctCount(saved.getCorrectCount()).incorrectCount(saved.getIncorrectCount())
+                    .skippedCount(saved.getSkippedCount()).durationSeconds(saved.getDurationSeconds()).completedAt(saved.getCompletedAt());
+            var items=new ArrayList<QuestionResult>();
+            for(var q:a.questions()) {
+                var selected=new LinkedHashSet<UUID>();
+                for(var option:a.answers().path(q.path("id").asText()).path("selectedOptionIds"))
+                    selected.add(UUID.fromString(option.asText()));
+                var correct=new LinkedHashSet<UUID>();
+                for(var option:q.path("correctOptionIds")) correct.add(UUID.fromString(option.asText()));
+                var outcome=selected.isEmpty()?QuestionResult.OutcomeEnum.SKIPPED:
+                        selected.equals(correct)?QuestionResult.OutcomeEnum.CORRECT:QuestionResult.OutcomeEnum.INCORRECT;
+                items.add(new QuestionResult().question(publicQuestion(q,items.size()+1))
+                        .selectedOptionIds(selected).correctOptionIds(correct).outcome(outcome)
+                        .score(outcome==QuestionResult.OutcomeEnum.CORRECT?1:0));
+            }
+            return result.items(items);
+        });
+    }
+    public AttemptCompletion complete(UUID id, UUID owner) {
+        return database(() -> writes.execute(tx -> {
+            var a=owned(id,owner,true);
+            if(a.status().equals("COMPLETED")) return attempts.completion(id,owner);
+            if(!a.status().equals("IN_PROGRESS")) throw error(409,"ATTEMPT_CLOSED");
+            var score=AttemptScorer.score(a.questions(),a.answers());
+            var now=OffsetDateTime.now(ZoneOffset.UTC).truncatedTo(java.time.temporal.ChronoUnit.MICROS);
+            var result=new AttemptCompletion().attemptId(id).quiz(json.treeToValue(a.quiz(),QuizSummary.class))
+                    .totalQuestions(score.total()).correctCount(score.correct()).incorrectCount(score.incorrect())
+                    .skippedCount(score.skipped()).score(score.correct()).scorePercent(score.percent())
+                    .durationSeconds(Math.max(0,java.time.Duration.between(a.startedAt(),now).getSeconds())).completedAt(now);
+            attempts.complete(id,owner,result);
+            return result;
+        }));
+    }
     public SavedAnswer save(UUID id, UUID owner, UUID questionId, SaveAnswerRequest request) {
         return database(() -> writes.execute(tx -> {
             var a=owned(id,owner,true);
@@ -104,6 +145,10 @@ public class AttemptService {
         }
         var summary=new AttemptSummary(a.id(),json.treeToValue(a.quiz(),QuizSummary.class),
                 AttemptStatus.fromValue(a.status()),a.startedAt(),answered);
+        if(a.status().equals("COMPLETED")) {
+            var result=attempts.completion(a.id(),a.owner());
+            summary.completedAt(result.getCompletedAt()).scorePercent(result.getScorePercent());
+        }
         return new AttemptDetail(summary,questions,answers,first==0?questions.size():first);
     }
     static Question publicQuestion(JsonNode q,int position) {
