@@ -50,8 +50,8 @@ class AttemptStartIntegrationTest extends AttemptIntegrationTest {
         assertEquals(x.toString(),body.path("answers").get(0).path("selectedOptionIds").get(0).asText());
         var continued=call(token,"GET","/api/attempts/"+first,null,200);
         assertPublic(continued);assertEquals(body,json.readTree(continued.body()));
-        // Controlled persisted completion: scoring/completion API is outside this task and absent in this dev.
-        jdbc.update("UPDATE attempts SET status='COMPLETED' WHERE id=?",first);
+        // Use the existing production completion endpoint after recovering the missing features in dev.
+        call(token,"POST","/api/attempts/"+first+"/complete",null,200);
         UUID second=attemptId(call(token,"POST",path(),null,201));
         assertNotEquals(first,second);
         var fresh=json.readTree(call(token,"GET","/api/attempts/"+second,null,200).body());

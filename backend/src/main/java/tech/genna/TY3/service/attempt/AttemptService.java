@@ -45,18 +45,18 @@ public class AttemptService {
             if(replay.isPresent()) {
                 var a=owned(replay.get(),owner,true);
                 if(!a.quizId().equals(quizId)) throw error(409,"IDEMPOTENCY_KEY_REUSED");
-                return new StartOutcome(detail(a),false);
+                return new StartOutcome(detail(a,false),false);
             }
             var active=attempts.active(quizId,owner);
             if(active.isPresent()) {
                 attempts.bindStartKey(owner,normalizedKey,active.get().id());
-                return new StartOutcome(detail(active.get()),false);
+                return new StartOutcome(detail(active.get(),false),false);
             }
             var a=new Attempt(UUID.randomUUID(),owner,quizId,json.valueToTree(quiz.summary()),
                     quiz.result().get("questions"),json.createObjectNode(),"IN_PROGRESS",OffsetDateTime.now(ZoneOffset.UTC).truncatedTo(java.time.temporal.ChronoUnit.MICROS));
             attempts.create(a,normalizedKey);
             attempts.bindStartKey(owner,normalizedKey,a.id());
-            return new StartOutcome(detail(a),true);
+            return new StartOutcome(detail(a,false),true);
         }));
     }
     public AttemptDetail get(UUID id, UUID owner) { return database(() -> detail(owned(id,owner,false))); }
@@ -132,7 +132,8 @@ public class AttemptService {
     private Attempt owned(UUID id,UUID owner,boolean lock) {
         return attempts.find(id,owner,lock).orElseThrow(() -> error(404,"ATTEMPT_NOT_FOUND"));
     }
-    private AttemptDetail detail(Attempt a) {
+    private AttemptDetail detail(Attempt a) { return detail(a,true); }
+    private AttemptDetail detail(Attempt a,boolean includeResultSummary) {
         var questions=new ArrayList<Question>();
         var answers=new ArrayList<SavedAnswer>();
         int first=0, answered=0;
@@ -145,7 +146,7 @@ public class AttemptService {
         }
         var summary=new AttemptSummary(a.id(),json.treeToValue(a.quiz(),QuizSummary.class),
                 AttemptStatus.fromValue(a.status()),a.startedAt(),answered);
-        if(a.status().equals("COMPLETED")) {
+        if(includeResultSummary && a.status().equals("COMPLETED")) {
             var result=attempts.completion(a.id(),a.owner());
             summary.completedAt(result.getCompletedAt()).scorePercent(result.getScorePercent());
         }
