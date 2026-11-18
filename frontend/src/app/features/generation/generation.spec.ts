@@ -2,7 +2,7 @@ import { TestBed } from '@angular/core/testing';
 import { provideHttpClient } from '@angular/common/http';
 import { provideRouter, Router } from '@angular/router';
 import { RouterTestingHarness } from '@angular/router/testing';
-import { of, Subject, throwError } from 'rxjs';
+import { EMPTY, of, Subject, throwError } from 'rxjs';
 import { HttpErrorResponse } from '@angular/common/http';
 import { Generation } from './generation';
 import { GENERATION_SOURCE, GenerationOptions } from './generation-source';
@@ -20,7 +20,7 @@ describe('Generation prototype', () => {
     source = { status: vi.fn(), saved: vi.fn(), demo: true, options: vi.fn(() => of(structuredClone(options))), start: vi.fn(() => of({ state: 'DEMO_WAITING' })) };
     TestBed.configureTestingModule({ providers: [provideHttpClient(), provideRouter([
       { path: 'materials', component: Materials }, { path: 'materials/:materialId/generate', component: Generation },
-    ]), { provide: GENERATION_SOURCE, useValue: source }, { provide: AuthService, useValue: { token: 'test', username: () => 'owner' } }] });
+    ]), { provide: GENERATION_SOURCE, useValue: source }, { provide: AuthService, useValue: { token: 'test', username: () => 'owner', sessionChanges: EMPTY } }] });
     vi.spyOn(TestBed.inject(MaterialsApi), 'detail').mockImplementation(id => of({ material: { ...material, id }, tags: [] }));
     vi.spyOn(TestBed.inject(MaterialsApi), 'list').mockReturnValue(of({ items: [material] }));
   });

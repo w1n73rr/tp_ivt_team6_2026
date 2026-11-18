@@ -27,6 +27,9 @@ Backend CRUD сохранённых тестов: `GET /api/quizzes`, `GET/PATCH
 
 ## Локальный запуск
 
+Передача frontend-задач, карта кода, настройка API и ручная проверка сессии:
+[Frontend — запуск и передача работы](frontend/README.md).
+
 Нужны Docker с Linux-контейнерами и Compose >= 2.24.4. Команды выполняются из корня.
 Для новой базы скопируйте `.env.example` в `.env`, если своего `.env` ещё нет.
 Заполните `POSTGRES_PASSWORD`, `JWT_SECRET`, `S3_ACCESS_KEY`, `S3_SECRET_KEY`

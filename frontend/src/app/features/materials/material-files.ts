@@ -1,6 +1,8 @@
 import { DestroyRef, Injectable, inject } from '@angular/core';
 import { HttpResponse } from '@angular/common/http';
 import { Material } from './materials.models';
+import { AuthService } from '../../core/auth/auth.service';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
 export function fileName(response: HttpResponse<Blob>, item: Material): string {
   const disposition = response.headers.get('Content-Disposition') ?? '';
@@ -42,24 +44,33 @@ export async function previewBlob(blob: Blob, format: Material['format']): Promi
 }
 @Injectable({providedIn: 'root'})
 export class MaterialFiles {
+  private readonly auth = inject(AuthService);
   private readonly urls = new Map<string, number>();
-  constructor() { inject(DestroyRef).onDestroy(() => {
+  private readonly tabs = new Set<Window>();
+  private clear(): void {
     for (const [url, timer] of this.urls) { window.clearInterval(timer); URL.revokeObjectURL(url); }
     this.urls.clear();
-  }); }
+    for (const tab of this.tabs) tab.close();
+    this.tabs.clear();
+  }
+  constructor() {
+    inject(DestroyRef).onDestroy(() => this.clear());
+    this.auth.sessionChanges.pipe(takeUntilDestroyed()).subscribe(() => this.clear());
+  }
   reservePreview(): Window | null {
     const tab = window.open('about:blank', '_blank');
-    if (tab) { tab.opener = null; tab.document.title = 'Просмотр материала'; tab.document.body.textContent = 'Загрузка документа…'; }
+    if (tab) { this.tabs.add(tab); tab.opener = null; tab.document.title = 'Просмотр материала'; tab.document.body.textContent = 'Загрузка документа…'; }
     return tab;
   }
   async preview(response: HttpResponse<Blob>, item: Material, tab: Window): Promise<void> {
     if (!response.body) throw new Error('Empty file response');
+    const revision = this.auth.sessionRevision;
     const blob = await previewBlob(response.body, item.format);
-    if (tab.closed) return;
+    if (tab.closed || revision !== this.auth.sessionRevision) { tab.close(); return; }
     const url = URL.createObjectURL(blob);
     tab.location.replace(url);
     const timer = window.setInterval(() => {
-      if (tab.closed) { URL.revokeObjectURL(url); window.clearInterval(timer); this.urls.delete(url); }
+      if (tab.closed) { URL.revokeObjectURL(url); window.clearInterval(timer); this.urls.delete(url); this.tabs.delete(tab); }
     }, 1000);
     this.urls.set(url, timer);
   }
