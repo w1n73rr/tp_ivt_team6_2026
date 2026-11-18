@@ -45,9 +45,11 @@ docker compose ps
 перед обновлением существующей базы нужны резервная копия и проверка совместимости.
 Номера портов не являются секретами; защиту обеспечивает ограничение доступа.
 
-Для настоящей генерации дополнительно задайте `OPENROUTER_API_KEY` и точный
-`OPENROUTER_MODEL`. Ключ передаётся только backend. Без него генерация завершается
-ошибкой `NOT_CONFIGURED`; остальные функции можно проверять отдельно.
+Для настоящей генерации выберите провайдера через `ML_PROVIDER`. Для Cloud.ru
+задайте `ML_PROVIDER=cloudru`, `CLOUDRU_API_KEY` и `CLOUDRU_MODEL`; для OpenRouter —
+`ML_PROVIDER=openrouter`, `OPENROUTER_API_KEY` и `OPENROUTER_MODEL`. Значение по умолчанию — openrouter.
+Ключ передаётся только backend. [ML/LLM: назначение, схема, запуск, промпт и JSON](backend/ML.md).
+Без ключа выбранного провайдера задача завершается `NOT_CONFIGURED`.
 Никогда не помещайте реальные секреты в Git, Dockerfile, frontend или отчёты.
 `config --quiet` проверяет конфигурацию без печати значений секретов.
 
@@ -234,3 +236,7 @@ curl -fsS http://127.0.0.1/ >/dev/null
 Неполное количество вопросов считается ошибкой. На готовности «Перейти к тесту»
 пока отключена, «Все тесты» открывает реальный список. Новых переменных окружения нет.
 Подробности и границы проверки — [frontend/CRUD-INTEGRATION.md](frontend/CRUD-INTEGRATION.md).
+
+Подключение Cloud.ru Foundation Models и проверка модели описаны в [backend/CLOUDRU.md](backend/CLOUDRU.md).
+
+Контрольные материалы, результаты оценки ML и команды повторения описаны в [backend/ML-QUALITY-CONTROL.md](backend/ML-QUALITY-CONTROL.md).

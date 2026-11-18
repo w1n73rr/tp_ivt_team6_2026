@@ -1,0 +1,17 @@
+{
+  "result": "FAILED",
+  "questionCount": 10,
+  "difficulty": "MEDIUM",
+  "questionType": "SINGLE_CHOICE",
+  "jobId": "ddabaef0-c895-4186-ab7a-a220b9a96a5e",
+  "status": "FAILED",
+  "errorCode": "INVALID_MODEL_OUTPUT",
+  "durationSeconds": 33,
+  "material": "sre",
+  "mlSourceCommit": "101fef7",
+  "provider": "cloudru",
+  "model": "deepseek-ai/DeepSeek-V4-Flash",
+  "maxOutputTokens": 8000,
+  "repeat": 1,
+  "schemaErrors": null
+}
