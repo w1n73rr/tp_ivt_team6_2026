@@ -243,3 +243,8 @@ curl -fsS http://127.0.0.1/ >/dev/null
 Подключение Cloud.ru Foundation Models и проверка модели описаны в [backend/CLOUDRU.md](backend/CLOUDRU.md).
 
 Контрольные материалы, результаты оценки ML и команды повторения описаны в [backend/ML-QUALITY-CONTROL.md](backend/ML-QUALITY-CONTROL.md).
+
+Для проверки экрана №102 после запуска Docker Compose возьмите идентификатор
+попытки из ответа на запуск выше и откройте `http://localhost:3000/attempts/<attemptId>`
+в браузере под тем же аккаунтом. Повторите для тестов каждого из трёх типов.
+Проверьте выбор клавишами Tab, пробелом и стрелками для радиокнопок.
