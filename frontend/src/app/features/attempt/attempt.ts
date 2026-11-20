@@ -20,7 +20,7 @@ type AttemptDetail = {
   currentPosition: number;
 };
 type State = { kind: 'loading' | 'error' | 'unavailable' } |
-  { kind: 'ready'; title: string; question: Question; total: number; selected: string[] };
+  { kind: 'ready'; title: string; questions: Question[]; index: number; answers: Record<string, string[]> };
 
 @Component({
   selector: 'app-attempt',
@@ -31,6 +31,7 @@ type State = { kind: 'loading' | 'error' | 'unavailable' } |
 export class AttemptPage {
   readonly state = signal<State>({ kind: 'loading' });
   readonly selected = signal<string[]>([]);
+  readonly reviewing = signal(false);
   private readonly retry = new Subject<void>();
 
   constructor() {
@@ -40,6 +41,7 @@ export class AttemptPage {
     auth.sessionChanges.pipe(takeUntilDestroyed()).subscribe(() => {
       this.state.set({ kind: 'unavailable' });
       this.selected.set([]);
+      this.reviewing.set(false);
     });
     combineLatest([route.paramMap, this.retry.pipe(startWith(undefined))]).pipe(
       switchMap(([params]) => http.get<AttemptDetail>(
@@ -47,18 +49,20 @@ export class AttemptPage {
         { headers: { Authorization: 'Bearer ' + auth.token } },
       ).pipe(
         map((detail): State => {
-          const question = detail.questions.find(item => item.position === detail.currentPosition);
-          if (detail.attempt.status !== 'IN_PROGRESS' || !question?.options.length) {
+          const questions = [...detail.questions].sort((a, b) => a.position - b.position)
+            .map(({ id, position, type, text, options }) => ({
+              id, position, type, text, options: options.map(({ id, text }) => ({ id, text })),
+            }));
+          const index = questions.findIndex(question => question.position === detail.currentPosition);
+          if (detail.attempt.status !== 'IN_PROGRESS' || index < 0 || questions.some(q => !q.options.length)) {
             return { kind: 'unavailable' };
           }
-          const { id, position, type, text } = question;
-          return {
-            kind: 'ready',
-            title: detail.attempt.quiz.name,
-            total: detail.questions.length,
-            question: { id, position, type, text, options: question.options.map(({ id, text }) => ({ id, text })) },
-            selected: detail.answers.find(answer => answer.questionId === id)?.selectedOptionIds ?? [],
-          };
+          const answers = Object.fromEntries(questions.map(question => {
+            const saved = detail.answers.find(answer => answer.questionId === question.id);
+            return [question.id, question.options.filter(option => saved?.selectedOptionIds.includes(option.id))
+              .map(option => option.id)];
+          }));
+          return { kind: 'ready', title: detail.attempt.quiz.name, questions, index, answers };
         }),
         catchError((error: HttpErrorResponse) => of<State>({
           kind: [401, 403, 404, 410].includes(error.status) ? 'unavailable' : 'error',
@@ -68,13 +72,24 @@ export class AttemptPage {
       takeUntil(auth.sessionChanges),
       takeUntilDestroyed(),
     ).subscribe(state => {
-      this.selected.set(state.kind === 'ready' ? state.selected : []);
+      this.reviewing.set(false);
+      this.selected.set(state.kind === 'ready' ? state.answers[state.questions[state.index].id] : []);
       this.state.set(state);
     });
   }
 
   reload(): void {
     this.retry.next();
+  }
+
+  move(delta: number): void {
+    const state = this.state();
+    if (state.kind !== 'ready') return;
+    const index = state.index + delta;
+    if (index < 0 || index >= state.questions.length) return;
+    const answers = { ...state.answers, [state.questions[state.index].id]: this.selected() };
+    this.selected.set(answers[state.questions[index].id]);
+    this.state.set({ ...state, index, answers });
   }
 
   choose(id: string, multiple: boolean, checked: boolean): void {

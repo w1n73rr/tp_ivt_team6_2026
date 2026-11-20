@@ -5,12 +5,19 @@
     @switch (view.kind) {
       @case ('ready') {
         <h1>{{ view.title }}</h1>
-        <p>Вопрос {{ view.question.position }} из {{ view.total }}</p>
+        @let question = view.questions[view.index];
+        <p aria-live="polite">Вопрос {{ view.index + 1 }} из {{ view.questions.length }}</p>
+        <progress [value]="view.index + 1" [max]="view.questions.length" aria-label="Позиция в тесте"></progress>
+        @if (reviewing()) {
+          <h2>Последний вопрос</h2>
+          <p>Можно вернуться и проверить выбранные варианты. Отправка ответов пока недоступна.</p>
+          <button type="button" (click)="reviewing.set(false)">Вернуться к вопросу</button>
+        } @else {
         <fieldset>
-          <legend>{{ view.question.text }}</legend>
-          @let multiple = view.question.type === 'MULTIPLE_CHOICE';
+          <legend>{{ question.text }}</legend>
+          @let multiple = question.type === 'MULTIPLE_CHOICE';
           <p>{{ multiple ? 'Выберите несколько ответов' : 'Выберите один ответ' }}</p>
-          @for (option of view.question.options; track option.id) {
+          @for (option of question.options; track option.id) {
             <label>
               <input [type]="multiple ? 'checkbox' : 'radio'" name="answer"
                 [checked]="selected().includes(option.id)"
@@ -19,6 +26,15 @@
             </label>
           }
         </fieldset>
+        <div class="attempt-actions">
+          <button type="button" [disabled]="view.index === 0" (click)="move(-1)">Назад</button>
+          @if (view.index + 1 < view.questions.length) {
+            <button type="button" (click)="move(1)">Далее</button>
+          } @else {
+            <button type="button" (click)="reviewing.set(true)">Завершить тест</button>
+          }
+        </div>
+        }
       }
       @case ('loading') { <p role="status">Загружаем тест…</p> }
       @case ('unavailable') { <h1>Попытка недоступна</h1> }
