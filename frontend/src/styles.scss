@@ -48,3 +48,16 @@ html {
 }
 // Скрываем личное содержимое до завершения анимации закрытия диалога.
 .cdk-overlay-pane.session-ended-dialog { visibility: hidden; }
+
+@media (prefers-reduced-motion: no-preference) {
+  app-auth-shell,
+  app-not-found {
+    display: block;
+    animation: public-screen-enter 320ms ease-out;
+  }
+}
+
+@keyframes public-screen-enter {
+  from { opacity: .45; }
+  to { opacity: 1; }
+}

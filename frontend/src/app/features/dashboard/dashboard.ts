@@ -13,11 +13,8 @@ export class Dashboard {
   readonly sections = [
     'Мои материалы',
     'Тесты',
-    'Тренировка',
-    'Прогресс',
     'История тестов',
     'Профиль',
-    'Настройки',
   ];
   notice = '';
   explain(section: string): void {

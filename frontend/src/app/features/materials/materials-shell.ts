@@ -15,12 +15,9 @@ import { FigmaIcon } from './figma-icon';
         ><a [class.active]="active() === 'materials'" routerLink="/materials" [attr.aria-current]="active() === 'materials' ? 'page' : null"
           ><app-figma-icon name="folder" />Мои материалы</a
         ><a [class.active]="active() === 'tests'" [attr.aria-current]="active() === 'tests' ? 'page' : null" routerLink="/tests"><app-figma-icon name="tests" />Тесты</a
-        ><span><app-figma-icon name="training" />Тренировка</span
-        ><span><app-figma-icon name="progress" />Прогресс</span
         ><span><app-figma-icon name="history" />История тестов</span>
         <hr />
-        <span><app-figma-icon name="profile" />Профиль</span
-        ><span><app-figma-icon name="settings" />Настройки</span>
+        <span><app-figma-icon name="profile" />Профиль</span>
       </nav>
       <div class="account">
         <span class="avatar">{{ initial() }}</span>
