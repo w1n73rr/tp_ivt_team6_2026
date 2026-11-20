@@ -1,0 +1,127 @@
+import { provideHttpClient } from '@angular/common/http';
+import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
+import { TestBed } from '@angular/core/testing';
+import { ActivatedRoute, convertToParamMap, provideRouter, Router } from '@angular/router';
+import { BehaviorSubject } from 'rxjs';
+import { AttemptPage } from './attempt';
+
+describe('AttemptPage', () => {
+  const params = new BehaviorSubject(convertToParamMap({ attemptId: 'attempt-1' }));
+  beforeEach(() => {
+    params.next(convertToParamMap({ attemptId: 'attempt-1' }));
+    TestBed.configureTestingModule({
+    providers: [
+      provideRouter([]), provideHttpClient(), provideHttpClientTesting(),
+      { provide: ActivatedRoute, useValue: { paramMap: params } },
+    ],
+    });
+  });
+
+  it.each([
+    ['SINGLE_CHOICE', 'radio', ['b']],
+    ['TRUE_FALSE', 'radio', ['b']],
+    ['MULTIPLE_CHOICE', 'checkbox', ['a', 'b']],
+  ])('renders and handles %s', (type, control, expected) => {
+    const fixture = TestBed.createComponent(AttemptPage);
+    fixture.detectChanges();
+    const text = '<img src=x onerror=alert(1)>';
+    const http = TestBed.inject(HttpTestingController);
+    http.expectOne('/api/attempts/attempt-1').flush({
+      attempt: { status: 'IN_PROGRESS', quiz: { name: 'Тест' } },
+      questions: [{ id: 'q', type, position: 1, text, options: [{ id: 'a', text }, { id: 'b', text: 'Б' }] }],
+      answers: [],
+      currentPosition: 1,
+    });
+    fixture.detectChanges();
+    const inputs = fixture.nativeElement.querySelectorAll('input');
+    expect(inputs).toHaveLength(2);
+    expect(inputs[0].type).toBe(control);
+    inputs[0].click();
+    inputs[1].click();
+    expect(fixture.componentInstance.selected()).toEqual(expected);
+    expect(fixture.nativeElement.querySelector('img')).toBeNull();
+    expect(fixture.nativeElement.textContent).toContain(text);
+    http.verify();
+  });
+  it.each([5, 10])('navigates %i questions, retains choice and resets on route change', count => {
+    const fixture = TestBed.createComponent(AttemptPage);
+    const http = TestBed.inject(HttpTestingController);
+    const detail = {
+      attempt: { status: 'IN_PROGRESS', quiz: { name: 'Тест' } },
+      questions: Array.from({ length: count }, (_, i) => ({
+        id: 'q' + i, position: i + 1, type: 'SINGLE_CHOICE', text: 'Вопрос ' + (i + 1),
+        options: [{ id: 'a', text: 'А' }, { id: 'b', text: 'Б' }],
+      })),
+      answers: [],
+      currentPosition: 1,
+    };
+    http.expectOne('/api/attempts/attempt-1').flush(detail);
+    fixture.detectChanges();
+    const page = fixture.componentInstance;
+    const back = () => fixture.nativeElement.querySelector('.attempt-actions button:first-child') as HTMLButtonElement;
+    expect(back().disabled).toBe(true);
+    let position = 0;
+    const move = (delta: number) => {
+      page.move(delta);
+      page.move(delta);
+      const write = http.expectOne('/api/attempts/attempt-1/answers/q' + position);
+      expect(write.request.method).toBe('PUT');
+      expect(write.request.body).toEqual({ selectedOptionIds: page.selected() });
+      write.flush({});
+      position += delta;
+    };
+    page.choose('a', false, true);
+    page.move(1);
+    http.expectOne('/api/attempts/attempt-1/answers/q0')
+      .flush({}, { status: 503, statusText: 'Unavailable' });
+    expect(page.saveError()).toBe(true);
+    expect(page.selected()).toEqual(['a']);
+    move(1);
+    expect(page.selected()).toEqual([]);
+    move(1);
+    move(-1);
+    move(-1);
+    expect(page.selected()).toEqual(['a']);
+    for (let i = 1; i < count; i++) move(1);
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('progress').value).toBe(count);
+    expect(fixture.nativeElement.querySelector('.attempt-actions button:last-child').textContent).toContain('Завершить тест');
+
+    params.next(convertToParamMap({ attemptId: 'attempt-2' }));
+    expect(page.selected()).toEqual([]);
+    http.expectOne('/api/attempts/attempt-2').flush({ ...detail, currentPosition: 2,
+      answers: [{ questionId: 'q1', selectedOptionIds: ['b'] }] });
+    expect(page.selected()).toEqual(['b']);
+    http.verify();
+  });
+  it('confirms only after saving and retries completion for the same attempt', () => {
+    const fixture = TestBed.createComponent(AttemptPage);
+    const page = fixture.componentInstance;
+    const http = TestBed.inject(HttpTestingController);
+    const navigate = vi.spyOn(TestBed.inject(Router), 'navigate').mockResolvedValue(true);
+    http.expectOne('/api/attempts/attempt-1').flush({
+      attempt: { status: 'IN_PROGRESS', quiz: { name: 'Тест' } },
+      questions: [{ id: 'q', position: 1, type: 'TRUE_FALSE', text: 'Вопрос',
+        options: [{ id: 'a', text: 'Да' }] }],
+      answers: [], currentPosition: 1,
+    });
+    page.review();
+    expect(page.skipped()).toBe(1);
+    page.reviewing.set(false);
+    http.expectNone('/api/attempts/attempt-1/answers/q');
+    page.choose('a', false, true);
+    page.review();
+    expect(page.skipped()).toBe(0);
+    page.finish();
+    http.expectOne('/api/attempts/attempt-1/answers/q').flush({}, { status: 503, statusText: 'Unavailable' });
+    http.expectNone('/api/attempts/attempt-1/complete');
+    page.finish();
+    http.expectOne('/api/attempts/attempt-1/answers/q').flush({});
+    http.expectOne('/api/attempts/attempt-1/complete').flush({}, { status: 503, statusText: 'Unavailable' });
+    page.finish();
+    http.expectNone('/api/attempts/attempt-1/answers/q');
+    http.expectOne('/api/attempts/attempt-1/complete').flush({ attemptId: 'attempt-1' });
+    expect(navigate).toHaveBeenCalledWith(['/attempts', 'attempt-1', 'result']);
+    http.verify();
+  });
+});

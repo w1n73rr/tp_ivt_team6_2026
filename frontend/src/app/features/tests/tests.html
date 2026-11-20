@@ -10,6 +10,7 @@
   <p class="hint">Поиск по названию без учёта регистра. При равных значениях сохраняется исходный порядок.</p>
   @if (query() && visibleItems().length > 0) { <button type="button" (click)="query.set('')">Очистить поиск</button> }
   @if (state() === 'list' && visibleItems().length === 0) { <section class="state"><h2>По вашему запросу тесты не найдены</h2><p>Попробуйте изменить название или очистить поиск.</p><button type="button" (click)="query.set('')">Очистить поиск</button></section> }
+  @if (startingTest()) { <p role="status">Открываем попытку…</p> }
   @if (notice()) { <div class="notice" role="status">{{ notice() }} <button type="button" (click)="notice.set('')" aria-label="Закрыть сообщение">×</button></div> }
   @if (state() === 'loading') { <section class="state" role="status" aria-live="polite"><h2>Загружаем тесты…</h2></section> }
   @if (state() === 'empty') { <section class="state"><app-figma-icon name="test" /><h2>Тестов пока нет</h2><p>Создайте тест из раздела «Мои материалы».</p><a class="primary" routerLink="/materials">Мои материалы</a></section> }
@@ -18,8 +19,17 @@
   @if (state() === 'list' && visibleItems().length > 0) {
     <div class="table-scroll" tabindex="0" role="region" aria-label="Таблица тестов — прокрутка по горизонтали"><table><caption class="sr-only">Тесты</caption><thead><tr><th scope="col" [attr.aria-sort]="ariaSort('name')">Название теста</th><th scope="col" [attr.aria-sort]="ariaSort('materialName')">Учебный материал</th><th scope="col">Количество вопросов</th><th scope="col">Сложность</th><th scope="col">Тип вопросов</th><th scope="col" [attr.aria-sort]="ariaSort('createdAt')">Дата создания</th><th scope="col">Действия</th></tr></thead><tbody>
       @for (item of visibleItems(); track item.id) {
-        <tr [class.created-test]="item.id === selectedTest"><th scope="row"><div class="test-name"><span class="format" [class.docx]="item.format === 'DOCX'" [class.txt]="item.format === 'TXT'">{{ item.format }}</span><span>{{ item.name }}</span></div></th><td>{{ item.materialName }}</td><td class="center">{{ item.questionCount }}</td><td>{{ difficulties[item.difficulty] }}</td><td>{{ types[item.questionType] }}</td><td class="date">{{ item.createdAt | date:'dd.MM.yyyy':'UTC' }}</td><td><div class="row-actions"><button (click)="action('play', item)">Пройти тест</button><button [disabled]="!source.rename" title="Переименовать" (click)="action('rename', item)" [attr.aria-label]="'Переименовать тест «' + item.name + '»'"><app-figma-icon name="edit" /></button><button class="danger" [disabled]="!source.remove" title="Удалить" (click)="action('delete', item)" [attr.aria-label]="'Удалить тест «' + item.name + '»'"><app-figma-icon name="delete" /></button></div></td></tr>
+        <tr [class.created-test]="item.id === selectedTest"><th scope="row"><div class="test-name"><span class="format" [class.docx]="item.format === 'DOCX'" [class.txt]="item.format === 'TXT'">{{ item.format }}</span><span>{{ item.name }}</span></div></th><td>{{ item.materialName }}</td><td class="center">{{ item.questionCount }}</td><td>{{ difficulties[item.difficulty] }}</td><td>{{ types[item.questionType] }}</td><td class="date">{{ item.createdAt | date:'dd.MM.yyyy':'UTC' }}</td><td><div class="row-actions"><button type="button" [disabled]="source.demo || startingTest() !== null" (click)="action('play', item)">{{ startingTest() === item.id ? 'Открываем…' : 'Пройти тест' }}</button><button [disabled]="!source.rename" title="Переименовать" (click)="action('rename', item)" [attr.aria-label]="'Переименовать тест «' + item.name + '»'"><app-figma-icon name="edit" /></button><button class="danger" [disabled]="!source.remove" title="Удалить" (click)="action('delete', item)" [attr.aria-label]="'Удалить тест «' + item.name + '»'"><app-figma-icon name="delete" /></button></div></td></tr>
       }
     </tbody></table></div><p class="total">Показано: {{ visibleItems().length }} из {{ items().length }}</p>
   }
 </app-materials-shell>
+
+<ng-template #resumeDialog>
+  <h2 mat-dialog-title>Продолжить попытку?</h2>
+  <mat-dialog-content>Вы вернётесь к незавершённому тесту. Сохранённые ответы останутся в попытке.</mat-dialog-content>
+  <mat-dialog-actions align="end">
+    <button type="button" [mat-dialog-close]="false">Отмена</button>
+    <button type="button" [mat-dialog-close]="true">Продолжить</button>
+  </mat-dialog-actions>
+</ng-template>
