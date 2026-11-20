@@ -1,8 +1,8 @@
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
-import { Component, inject, signal } from '@angular/core';
+import { Component, DestroyRef, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { ActivatedRoute, RouterLink } from '@angular/router';
-import { catchError, combineLatest, map, of, startWith, Subject, switchMap, takeUntil } from 'rxjs';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { catchError, combineLatest, finalize, map, of, startWith, Subject, switchMap, takeUntil } from 'rxjs';
 import { AuthService } from '../../core/auth/auth.service';
 import { MaterialsShell } from '../materials/materials-shell';
 
@@ -40,6 +40,47 @@ export function formatDuration(seconds: number): string {
   styleUrl: './attempt-result.scss',
 })
 export class AttemptResultPage {
+  private readonly http = inject(HttpClient);
+  private readonly auth = inject(AuthService);
+  private readonly router = inject(Router);
+  private readonly destroyRef = inject(DestroyRef);
+  private readonly routeChanged = new Subject<void>();
+  readonly repeating = signal(false);
+  readonly repeatError = signal(false);
+  readonly activeAttempt = signal<string | null>(null);
+
+  repeat(quizId: string): void {
+    if (!this.auth.token || this.repeating() || this.activeAttempt()) return;
+    this.repeatError.set(false);
+    this.repeating.set(true);
+    this.http.post<{ attempt: { id: string } }>('/api/quizzes/' + encodeURIComponent(quizId) + '/attempts', null, {
+      observe: 'response', headers: { 'Idempotency-Key': crypto.randomUUID() },
+    }).pipe(
+      takeUntil(this.routeChanged),
+      takeUntil(this.auth.sessionChanges),
+      takeUntilDestroyed(this.destroyRef),
+      finalize(() => this.repeating.set(false)),
+    ).subscribe({
+      next: response => {
+        const id = response.body?.attempt?.id;
+        if (!id) this.repeatError.set(true);
+        else if (response.status === 200) this.activeAttempt.set(id);
+        else this.openAttempt(id);
+      },
+      error: () => this.repeatError.set(true),
+    });
+  }
+
+  openAttempt(id: string): void {
+    const revision = this.auth.sessionRevision;
+    this.activeAttempt.set(null);
+    void this.router.navigate(['/attempts', id]).catch(() => false).then(ok => {
+      if (!ok && revision === this.auth.sessionRevision && this.state().kind === 'ready') {
+        this.repeatError.set(true);
+      }
+    });
+  }
+
   readonly state = signal<State>({ kind: 'loading' });
   readonly retry = new Subject<void>();
   readonly formatDuration = formatDuration;
@@ -79,6 +120,11 @@ export class AttemptResultPage {
       }),
       takeUntil(auth.sessionChanges),
       takeUntilDestroyed(),
-    ).subscribe(state => this.state.set(state));
+    ).subscribe(state => {
+      this.routeChanged.next();
+      this.activeAttempt.set(null);
+      this.repeatError.set(false);
+      this.state.set(state);
+    });
   }
 }

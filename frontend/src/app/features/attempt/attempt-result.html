@@ -9,8 +9,23 @@
           <p class="subtitle">{{ view.result.quiz.name }} @if (view.result.quiz.subjectName) { · {{ view.result.quiz.subjectName }} }</p>
         }
       </div>
-      <a class="back" routerLink="/tests">К тестам</a>
+            <div class="header-actions">
+        <a class="back" routerLink="/tests">К тестам</a>
+        @if (view.kind === 'ready') {
+          <button type="button" class="back primary" [disabled]="repeating() || !!activeAttempt()" (click)="repeat(view.result.quiz.id)">
+            {{ repeating() ? 'Открываем…' : 'Пройти ещё раз' }}
+          </button>
+        }
+      </div>
     </header>
+    @if (repeatError()) { <p role="alert">Не удалось открыть попытку. Попробуйте ещё раз.</p> }
+    @if (activeAttempt(); as id) {
+      <div class="panel message">
+        <p>У вас есть незавершённая попытка. Продолжить с места остановки?</p>
+        <button type="button" class="back" (click)="activeAttempt.set(null)">Отмена</button>
+        <button type="button" class="back primary" (click)="openAttempt(id)">Продолжить</button>
+      </div>
+    }
     @switch (view.kind) {
       @case ('ready') {
         @let result = view.result;
