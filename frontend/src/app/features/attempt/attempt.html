@@ -1,0 +1,31 @@
+<app-materials-shell active="tests">
+  <section class="attempt">
+    <a routerLink="/tests">← К тестам</a>
+    @let view = state();
+    @switch (view.kind) {
+      @case ('ready') {
+        <h1>{{ view.title }}</h1>
+        <p>Вопрос {{ view.question.position }} из {{ view.total }}</p>
+        <fieldset>
+          <legend>{{ view.question.text }}</legend>
+          @let multiple = view.question.type === 'MULTIPLE_CHOICE';
+          <p>{{ multiple ? 'Выберите несколько ответов' : 'Выберите один ответ' }}</p>
+          @for (option of view.question.options; track option.id) {
+            <label>
+              <input [type]="multiple ? 'checkbox' : 'radio'" name="answer"
+                [checked]="selected().includes(option.id)"
+                (change)="choose(option.id, multiple, $any($event.target).checked)" />
+              <span>{{ option.text }}</span>
+            </label>
+          }
+        </fieldset>
+      }
+      @case ('loading') { <p role="status">Загружаем тест…</p> }
+      @case ('unavailable') { <h1>Попытка недоступна</h1> }
+      @case ('error') {
+        <h1>Не удалось загрузить тест</h1>
+        <button type="button" (click)="reload()">Повторить</button>
+      }
+    }
+  </section>
+</app-materials-shell>

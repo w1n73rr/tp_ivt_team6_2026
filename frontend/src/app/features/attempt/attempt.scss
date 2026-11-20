@@ -1,0 +1,24 @@
+.attempt { max-width: 900px; margin: 20px auto; overflow-wrap: anywhere; }
+fieldset {
+  min-inline-size: 0;
+  padding: 24px;
+  border: 1px solid #d4def0;
+  border-radius: 16px;
+  background: white;
+}
+legend { font-size: 1.25rem; font-weight: 650; }
+label {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  margin-block: 12px;
+  padding: 14px;
+  border: 1px solid #d4def0;
+  border-radius: 10px;
+  cursor: pointer;
+}
+label:has(input:checked) { background: #eef4ff; border-color: #2459ef; }
+label:focus-within { outline: 2px solid #2459ef; outline-offset: 2px; }
+@media (prefers-reduced-motion: no-preference) {
+  label { transition: background-color 160ms ease, border-color 160ms ease; }
+}
