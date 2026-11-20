@@ -244,6 +244,8 @@ curl -fsS http://127.0.0.1/ >/dev/null
 
 Контрольные материалы, результаты оценки ML и команды повторения описаны в [backend/ML-QUALITY-CONTROL.md](backend/ML-QUALITY-CONTROL.md).
 
+Проверки API результата и защиты ответов на Java описаны в [api-tests/attempt-result/README.md](api-tests/attempt-result/README.md).
+
 Для проверки экрана №102 после запуска Docker Compose возьмите идентификатор
 попытки из ответа на запуск выше и откройте `http://localhost:3000/attempts/<attemptId>`
 в браузере под тем же аккаунтом. Повторите для тестов каждого из трёх типов.
