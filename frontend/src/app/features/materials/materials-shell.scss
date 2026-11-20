@@ -147,17 +147,25 @@ nav { min-width: 0; max-width: 100%; }
 .logout:hover { background: #ffffff18; }
 .logout:focus-visible { outline: 3px solid #8bb5ff; outline-offset: 2px; }
 
+nav a:not(.active):is(:hover, :focus-visible) {
+  background-color: #ffffff1f;
+  color: white;
+}
+
 @media (prefers-reduced-motion: no-preference) {
   main {
-    animation: page-enter 180ms ease-out;
+    animation: page-enter 360ms cubic-bezier(.2, .75, .25, 1);
   }
 
   nav a, .logout {
-    transition: background-color 150ms ease-out, color 150ms ease-out;
+    transition: background-color 200ms ease-out, color 200ms ease-out, transform 200ms ease-out;
   }
+
+  nav a:is(:hover, :focus-visible) { transform: translateX(4px); }
+  nav a:active, .logout:active { transform: scale(.98); }
 }
 
 @keyframes page-enter {
-  from { opacity: 0.85; transform: translateY(4px); }
+  from { opacity: .4; transform: translateY(10px); }
   to { opacity: 1; transform: translateY(0); }
 }
