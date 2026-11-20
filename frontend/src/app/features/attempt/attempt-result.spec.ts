@@ -1,8 +1,9 @@
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
-import { ActivatedRoute, convertToParamMap, provideRouter } from '@angular/router';
+import { ActivatedRoute, convertToParamMap, provideRouter, Router } from '@angular/router';
 import { BehaviorSubject } from 'rxjs';
+import { AuthService } from '../../core/auth/auth.service';
 import { AttemptResultPage, formatDuration } from './attempt-result';
 
 it('formats elapsed time without wrapping hours', () => {
@@ -40,5 +41,30 @@ it('shows server counts, clears on route changes and distinguishes result errors
     expect(page.state()).toEqual({ kind });
     if (status !== 503) page.retry.next();
   }
+  http.verify();
+});
+
+it('blocks duplicate repeat requests and preserves the old result on error', () => {
+  TestBed.configureTestingModule({ providers: [provideRouter([]), provideHttpClient(), provideHttpClientTesting(),
+    { provide: ActivatedRoute, useValue: { paramMap: new BehaviorSubject(convertToParamMap({ attemptId: 'old' })) } }] });
+  vi.spyOn(TestBed.inject(AuthService), 'token', 'get').mockReturnValue('test-session');
+  const navigate = vi.spyOn(TestBed.inject(Router), 'navigate').mockResolvedValue(true);
+  const page = TestBed.createComponent(AttemptResultPage).componentInstance;
+  const http = TestBed.inject(HttpTestingController);
+  http.expectOne('/api/attempts/old/result').flush({ attemptId: 'old', quiz: { id: 'quiz' }, items: [] });
+  page.repeat('quiz');
+  page.repeat('quiz');
+  const url = '/api/quizzes/quiz/attempts';
+  http.expectOne(url).flush({}, { status: 503, statusText: 'Unavailable' });
+  expect(page.state().kind).toBe('ready');
+  expect(page.repeatError()).toBe(true);
+  page.repeat('quiz');
+  http.expectOne(url).flush({ attempt: { id: 'active' } });
+  expect(page.activeAttempt()).toBe('active');
+  expect(navigate).not.toHaveBeenCalled();
+  page.activeAttempt.set(null);
+  page.repeat('quiz');
+  http.expectOne(url).flush({ attempt: { id: 'new' } }, { status: 201, statusText: 'Created' });
+  expect(navigate).toHaveBeenCalledWith(['/attempts', 'new']);
   http.verify();
 });

@@ -47,3 +47,7 @@ h4 { margin: 0 0 10px; font-size: 12px; }
   .ring { width: 90px; }
 }
 @media (prefers-reduced-motion: no-preference) { .back { transition: border-color 160ms ease; } }
+
+.header-actions { display: flex; gap: 10px; flex-wrap: wrap; }
+.primary { background: #2368c9; color: white; border-color: #2368c9; }
+.primary:disabled { opacity: .6; cursor: default; }
