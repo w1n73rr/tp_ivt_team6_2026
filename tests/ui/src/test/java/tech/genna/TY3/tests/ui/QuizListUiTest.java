@@ -32,6 +32,7 @@ import static com.codeborne.selenide.Condition.*;
 import static com.codeborne.selenide.Selenide.*;
 import static com.codeborne.selenide.WebDriverRunner.getWebDriver;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
 /** Browser checks with controlled quiz HTTP responses. Registration uses the running application. */
 public class QuizListUiTest {
@@ -91,11 +92,12 @@ public class QuizListUiTest {
     @ValueSource(ints = {200, 401, 500})
     void rendersListStates(int status) {
         listResponse.set(() -> json(status, status == 200 ? Map.of("items", List.of()) : Map.of("code", "QA_FIXTURE")));
-        page.openPage();
+        if (status == 401) open("/tests");
+        else page.openPage();
         page.rows.shouldHave(size(0));
         switch (status) {
             case 200 -> heading("Тестов пока нет").shouldBe(visible);
-            case 401 -> heading("Требуется авторизация").shouldBe(visible);
+            case 401 -> assertSignedOut();
             case 500 -> {
                 heading("Не удалось загрузить тесты").shouldBe(visible);
                 heading("Тестов пока нет").shouldNot(exist);
@@ -213,6 +215,11 @@ public class QuizListUiTest {
         String input = status == 409 ? ALGEBRA : "Несохранённое название";
         $("#test-rename").setValue(input);
         dialogButton("Сохранить").click();
+        if (status == 401) {
+            assertSignedOut();
+            assertEquals(1, mutations.get());
+            return;
+        }
         $("app-test-dialog [role=alert]").shouldHave(text(message));
         $("#test-rename").shouldHave(value(input));
         dialogButton("Отмена").click();
@@ -227,10 +234,40 @@ public class QuizListUiTest {
         openList();
         action(SQL, "Удалить");
         dialogButton("Удалить").click();
+        if (status == 401) {
+            assertSignedOut();
+            assertEquals(1, mutations.get());
+            return;
+        }
         $("app-test-dialog [role=alert]").shouldHave(text(message));
         dialogButton("Отмена").click();
         row(SQL).shouldBe(visible);
         assertEquals(1, mutations.get());
+    }
+
+    @Test
+    @DisplayName("FE119: выход, возврат назад и прямые ссылки не показывают личные данные")
+    void protectsPrivateRoutesAfterLogout() {
+        openList();
+        $(".logout").click();
+        assertSignedOut();
+        back();
+        $("app-tests").shouldNot(exist);
+        for (String path : List.of("/tests", "/materials", "/materials/upload", "/dashboard",
+                "/materials/11111111-1111-1111-1111-111111111111/generate")) {
+            open(path);
+            assertSignedOut();
+            $("app-materials-shell").shouldNot(exist);
+        }
+        refresh();
+        assertSignedOut();
+    }
+
+    private void assertSignedOut() {
+        $("#username").shouldBe(visible);
+        $("app-tests").shouldNot(exist);
+        $("app-test-dialog").shouldNot(exist);
+        assertNull(executeJavaScript("return sessionStorage.getItem('exam-ai-session')"));
     }
 
     @ParameterizedTest(name = "TC-TESTS-09: переход к материалам, пустой список = {0}")

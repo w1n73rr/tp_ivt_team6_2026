@@ -17,9 +17,12 @@ describe('Dashboard', () => {
     expect(TestBed.inject(Router).url).toBe('/materials/upload');
     expect(harness.routeNativeElement?.querySelector('h1')?.textContent).toBe('Загрузка материала');
   });
-  beforeEach(() =>
-    TestBed.configureTestingModule({ providers: [provideRouter(routes), provideHttpClient(), { provide: TESTS_SOURCE, useValue: { demo: true, list: () => of({ items: [] }) } }] }),
-  );
+  beforeEach(() => {
+    sessionStorage.clear();
+    TestBed.configureTestingModule({ providers: [provideRouter(routes), provideHttpClient(), { provide: TESTS_SOURCE, useValue: { demo: true, list: () => of({ items: [] }) } }] });
+    vi.spyOn(TestBed.inject(AuthService), 'token', 'get').mockReturnValue('test-session');
+  });
+  afterEach(() => sessionStorage.clear());
   it('redirects the entry route to login', async () => {
     await RouterTestingHarness.create('/');
     expect(TestBed.inject(Router).url).toBe('/login');

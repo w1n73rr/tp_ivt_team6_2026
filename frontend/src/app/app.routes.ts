@@ -27,10 +27,11 @@ export const routes: Routes = [
   {
     path: 'dashboard',
     component: Dashboard,
+    canActivate: [testsAccess],
   },
-  { path: 'materials/upload', component: MaterialUpload },
-  { path: 'materials/:materialId/generate', component: Generation },
-  { path: 'materials', component: Materials },
+  { path: 'materials/upload', component: MaterialUpload, canActivate: [testsAccess] },
+  { path: 'materials/:materialId/generate', component: Generation, canActivate: [testsAccess] },
+  { path: 'materials', component: Materials, canActivate: [testsAccess] },
   { path: 'tests', component: TestsPage, canActivate: [testsAccess] },
   {
     path: '**',

@@ -15,6 +15,11 @@ import { GENERATION_SOURCE, GenerationJob, GenerationOptions, GenerationSettings
 export class GenerationDrafts {
   readonly values = new Map<string, GenerationSettings>();
   readonly names = new Map<string, string>();
+  constructor() {
+    inject(AuthService).sessionChanges.pipe(takeUntilDestroyed()).subscribe(() => {
+      this.values.clear(); this.names.clear();
+    });
+  }
 }
 @Component({
   selector: 'app-generation', imports: [MaterialsShell, RouterLink, DecimalPipe],
