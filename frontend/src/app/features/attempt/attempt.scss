@@ -22,3 +22,20 @@ label:focus-within { outline: 2px solid #2459ef; outline-offset: 2px; }
 @media (prefers-reduced-motion: no-preference) {
   label { transition: background-color 160ms ease, border-color 160ms ease; }
 }
+
+progress { width: 100%; margin-bottom: 20px; accent-color: #2459ef; }
+.attempt-actions { display: flex; justify-content: space-between; gap: 12px; margin-top: 20px; }
+.attempt button {
+  padding: 10px 18px;
+  border: 1px solid #d4def0;
+  border-radius: 8px;
+  background: white;
+  color: #17243b;
+  cursor: pointer;
+}
+.attempt-actions button:last-child { background: #2459ef; border-color: #2459ef; color: white; }
+.attempt button:disabled { opacity: .55; cursor: default; }
+@media (prefers-reduced-motion: no-preference) {
+  .attempt button { transition: opacity 160ms ease, transform 160ms ease; }
+  .attempt button:active:not(:disabled) { transform: scale(.98); }
+}
