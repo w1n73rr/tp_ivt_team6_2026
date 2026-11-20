@@ -1,0 +1,2288 @@
+{
+  "mode" : "real HTTP/SQL/S3, controlled ML for setup only",
+  "backendRevision" : "621eee1be0608d93bd7303e864e4db75e96f77fa",
+  "result" : "PASSED",
+  "cases" : [ {
+    "requests" : [ {
+      "method" : "POST",
+      "path" : "/api/auth/register",
+      "expected" : 200,
+      "actual" : 200
+    }, {
+      "method" : "POST",
+      "expected" : 201,
+      "actual" : 201,
+      "path" : "/api/materials"
+    }, {
+      "method" : "POST",
+      "path" : "/api/quizzes",
+      "expected" : 202,
+      "actual" : 202
+    }, {
+      "method" : "GET",
+      "path" : "/api/generation-jobs/8e6d46ac-e79f-4805-8322-1dc3dd65ec65",
+      "expected" : 200,
+      "actual" : 200
+    }, {
+      "method" : "GET",
+      "path" : "/api/generation-jobs/8e6d46ac-e79f-4805-8322-1dc3dd65ec65",
+      "expected" : 200,
+      "actual" : 200
+    }, {
+      "method" : "GET",
+      "path" : "/api/generation-jobs/8e6d46ac-e79f-4805-8322-1dc3dd65ec65",
+      "expected" : 200,
+      "actual" : 200
+    }, {
+      "method" : "GET",
+      "path" : "/api/generation-jobs/8e6d46ac-e79f-4805-8322-1dc3dd65ec65",
+      "expected" : 200,
+      "actual" : 200
+    }, {
+      "method" : "GET",
+      "path" : "/api/quizzes/8e6d46ac-e79f-4805-8322-1dc3dd65ec65",
+      "expected" : [ 200 ],
+      "actual" : 200
+    }, {
+      "method" : "POST",
+      "path" : "/api/quizzes/8e6d46ac-e79f-4805-8322-1dc3dd65ec65/attempts",
+      "expected" : [ 201 ],
+      "actual" : 201
+    }, {
+      "method" : "POST",
+      "path" : "/api/quizzes/8e6d46ac-e79f-4805-8322-1dc3dd65ec65/attempts",
+      "expected" : [ 200 ],
+      "actual" : 200
+    }, {
+      "method" : "PUT",
+      "path" : "/api/attempts/e5779d36-8d38-4e0a-9cfa-1cf82329a2f5/answers/80cf3ad4-6c9b-4398-aed7-4eebb9bc3891",
+      "expected" : [ 200 ],
+      "actual" : 200
+    }, {
+      "method" : "PUT",
+      "path" : "/api/attempts/e5779d36-8d38-4e0a-9cfa-1cf82329a2f5/answers/80cf3ad4-6c9b-4398-aed7-4eebb9bc3891",
+      "expected" : [ 200 ],
+      "actual" : 200
+    }, {
+      "method" : "PUT",
+      "path" : "/api/attempts/e5779d36-8d38-4e0a-9cfa-1cf82329a2f5/answers/80cf3ad4-6c9b-4398-aed7-4eebb9bc3891",
+      "expected" : [ 200 ],
+      "actual" : 200
+    }, {
+      "method" : "GET",
+      "path" : "/api/attempts/e5779d36-8d38-4e0a-9cfa-1cf82329a2f5",
+      "expected" : [ 200 ],
+      "actual" : 200
+    }, {
+      "method" : "PUT",
+      "path" : "/api/attempts/e5779d36-8d38-4e0a-9cfa-1cf82329a2f5/answers/80cf3ad4-6c9b-4398-aed7-4eebb9bc3891",
+      "expected" : [ 200 ],
+      "actual" : 200
+    }, {
+      "method" : "GET",
+      "path" : "/api/attempts/e5779d36-8d38-4e0a-9cfa-1cf82329a2f5",
+      "expected" : [ 200 ],
+      "actual" : 200
+    }, {
+      "method" : "POST",
+      "path" : "/api/quizzes/8e6d46ac-e79f-4805-8322-1dc3dd65ec65/attempts",
+      "expected" : [ 200 ],
+      "actual" : 200
+    }, {
+      "method" : "PUT",
+      "path" : "/api/attempts/e5779d36-8d38-4e0a-9cfa-1cf82329a2f5/answers/80cf3ad4-6c9b-4398-aed7-4eebb9bc3891",
+      "expected" : [ 200 ],
+      "actual" : 200
+    }, {
+      "method" : "PUT",
+      "path" : "/api/attempts/e5779d36-8d38-4e0a-9cfa-1cf82329a2f5/answers/e469b6d6-2e6d-4726-a24e-c20d6659eed2",
+      "expected" : [ 200 ],
+      "actual" : 200
+    }, {
+      "method" : "PUT",
+      "path" : "/api/attempts/e5779d36-8d38-4e0a-9cfa-1cf82329a2f5/answers/224d74de-80cf-4190-994f-d419e302d64b",
+      "expected" : [ 200 ],
+      "actual" : 200
+    }, {
+      "method" : "PUT",
+      "path" : "/api/attempts/e5779d36-8d38-4e0a-9cfa-1cf82329a2f5/answers/702d6447-14e2-4884-a4bf-5a4b86792a9a",
+      "expected" : [ 200 ],
+      "actual" : 200
+    }, {
+      "method" : "GET",
+      "path" : "/api/attempts/e5779d36-8d38-4e0a-9cfa-1cf82329a2f5",
+      "expected" : [ 200 ],
+      "actual" : 200
+    }, {
+      "method" : "POST",
+      "path" : "/api/quizzes/8e6d46ac-e79f-4805-8322-1dc3dd65ec65/attempts",
+      "expected" : [ 200 ],
+      "actual" : 200
+    }, {
+      "method" : "GET",
+      "path" : "/api/attempts/e5779d36-8d38-4e0a-9cfa-1cf82329a2f5/result",
+      "expected" : [ 409 ],
+      "actual" : 409
+    }, {
+      "method" : "POST",
+      "path" : "/api/attempts/e5779d36-8d38-4e0a-9cfa-1cf82329a2f5/complete",
+      "expected" : [ 200 ],
+      "actual" : 200
+    }, {
+      "method" : "POST",
+      "path" : "/api/attempts/e5779d36-8d38-4e0a-9cfa-1cf82329a2f5/complete",
+      "expected" : [ 200 ],
+      "actual" : 200
+    }, {
+      "method" : "GET",
+      "path" : "/api/attempts/e5779d36-8d38-4e0a-9cfa-1cf82329a2f5",
+      "expected" : [ 200 ],
+      "actual" : 200
+    }, {
+      "method" : "GET",
+      "path" : "/api/attempts/e5779d36-8d38-4e0a-9cfa-1cf82329a2f5/result",
+      "expected" : [ 200 ],
+      "actual" : 200
+    }, {
+      "method" : "PUT",
+      "path" : "/api/attempts/e5779d36-8d38-4e0a-9cfa-1cf82329a2f5/answers/80cf3ad4-6c9b-4398-aed7-4eebb9bc3891",
+      "expected" : [ 409 ],
+      "actual" : 409
+    }, {
+      "method" : "PUT",
+      "path" : "/api/attempts/e5779d36-8d38-4e0a-9cfa-1cf82329a2f5/answers/80cf3ad4-6c9b-4398-aed7-4eebb9bc3891",
+      "expected" : [ 409 ],
+      "actual" : 409
+    }, {
+      "method" : "PUT",
+      "path" : "/api/attempts/e5779d36-8d38-4e0a-9cfa-1cf82329a2f5/answers/80cf3ad4-6c9b-4398-aed7-4eebb9bc3891",
+      "expected" : [ 409 ],
+      "actual" : 409
+    }, {
+      "method" : "POST",
+      "path" : "/api/quizzes/8e6d46ac-e79f-4805-8322-1dc3dd65ec65/attempts",
+      "expected" : [ 200 ],
+      "actual" : 200
+    }, {
+      "method" : "POST",
+      "path" : "/api/quizzes/8e6d46ac-e79f-4805-8322-1dc3dd65ec65/attempts",
+      "expected" : [ 201 ],
+      "actual" : 201
+    }, {
+      "method" : "GET",
+      "path" : "/api/attempts/e5779d36-8d38-4e0a-9cfa-1cf82329a2f5/result",
+      "expected" : [ 200 ],
+      "actual" : 200
+    }, {
+      "method" : "GET",
+      "path" : "/api/quizzes/8e6d46ac-e79f-4805-8322-1dc3dd65ec65",
+      "expected" : [ 200 ],
+      "actual" : 200
+    } ],
+    "result" : "PASSED",
+    "case" : "PASS lifecycle: SINGLE_CHOICE, 5 questions"
+  }, {
+    "requests" : [ {
+      "method" : "POST",
+      "path" : "/api/auth/register",
+      "expected" : 200,
+      "actual" : 200
+    }, {
+      "method" : "POST",
+      "expected" : 201,
+      "actual" : 201,
+      "path" : "/api/materials"
+    }, {
+      "method" : "POST",
+      "path" : "/api/quizzes",
+      "expected" : 202,
+      "actual" : 202
+    }, {
+      "method" : "GET",
+      "path" : "/api/generation-jobs/b2651e00-050b-4f41-ac5a-ed32f1524cfd",
+      "expected" : 200,
+      "actual" : 200
+    }, {
+      "method" : "GET",
+      "path" : "/api/generation-jobs/b2651e00-050b-4f41-ac5a-ed32f1524cfd",
+      "expected" : 200,
+      "actual" : 200
+    }, {
+      "method" : "GET",
+      "path" : "/api/quizzes/b2651e00-050b-4f41-ac5a-ed32f1524cfd",
+      "expected" : [ 200 ],
+      "actual" : 200
+    }, {
+      "method" : "POST",
+      "path" : "/api/quizzes/b2651e00-050b-4f41-ac5a-ed32f1524cfd/attempts",
+      "expected" : [ 201 ],
+      "actual" : 201
+    }, {
+      "method" : "POST",
+      "path" : "/api/quizzes/b2651e00-050b-4f41-ac5a-ed32f1524cfd/attempts",
+      "expected" : [ 200 ],
+      "actual" : 200
+    }, {
+      "method" : "PUT",
+      "path" : "/api/attempts/9e9be4b8-bba8-45b3-92c9-75115a0e6d7d/answers/4261f956-ce0e-443a-81e6-64e5b5bafeec",
+      "expected" : [ 200 ],
+      "actual" : 200
+    }, {
+      "method" : "PUT",
+      "path" : "/api/attempts/9e9be4b8-bba8-45b3-92c9-75115a0e6d7d/answers/4261f956-ce0e-443a-81e6-64e5b5bafeec",
+      "expected" : [ 200 ],
+      "actual" : 200
+    }, {
+      "method" : "PUT",
+      "path" : "/api/attempts/9e9be4b8-bba8-45b3-92c9-75115a0e6d7d/answers/4261f956-ce0e-443a-81e6-64e5b5bafeec",
+      "expected" : [ 200 ],
+      "actual" : 200
+    }, {
+      "method" : "GET",
+      "path" : "/api/attempts/9e9be4b8-bba8-45b3-92c9-75115a0e6d7d",
+      "expected" : [ 200 ],
+      "actual" : 200
+    }, {
+      "method" : "PUT",
+      "path" : "/api/attempts/9e9be4b8-bba8-45b3-92c9-75115a0e6d7d/answers/4261f956-ce0e-443a-81e6-64e5b5bafeec",
+      "expected" : [ 200 ],
+      "actual" : 200
+    }, {
+      "method" : "GET",
+      "path" : "/api/attempts/9e9be4b8-bba8-45b3-92c9-75115a0e6d7d",
+      "expected" : [ 200 ],
+      "actual" : 200
+    }, {
+      "method" : "POST",
+      "path" : "/api/quizzes/b2651e00-050b-4f41-ac5a-ed32f1524cfd/attempts",
+      "expected" : [ 200 ],
+      "actual" : 200
+    }, {
+      "method" : "PUT",
+      "path" : "/api/attempts/9e9be4b8-bba8-45b3-92c9-75115a0e6d7d/answers/4261f956-ce0e-443a-81e6-64e5b5bafeec",
+      "expected" : [ 200 ],
+      "actual" : 200
+    }, {
+      "method" : "PUT",
+      "path" : "/api/attempts/9e9be4b8-bba8-45b3-92c9-75115a0e6d7d/answers/33456221-2776-44b5-b693-b0da24ede9bd",
+      "expected" : [ 200 ],
+      "actual" : 200
+    }, {
+      "method" : "PUT",
+      "path" : "/api/attempts/9e9be4b8-bba8-45b3-92c9-75115a0e6d7d/answers/112dbf17-6564-4307-9ed0-27e922e2ce6d",
+      "expected" : [ 200 ],
+      "actual" : 200
+    }, {
+      "method" : "PUT",
+      "path" : "/api/attempts/9e9be4b8-bba8-45b3-92c9-75115a0e6d7d/answers/5ec70e2b-f9c8-4fa3-ab7f-1afa825b59a1",
+      "expected" : [ 200 ],
+      "actual" : 200
+    }, {
+      "method" : "PUT",
+      "path" : "/api/attempts/9e9be4b8-bba8-45b3-92c9-75115a0e6d7d/answers/9c830803-e5b5-41d3-ae1f-3800099b7787",
+      "expected" : [ 200 ],
+      "actual" : 200
+    }, {
+      "method" : "PUT",
+      "path" : "/api/attempts/9e9be4b8-bba8-45b3-92c9-75115a0e6d7d/answers/8034a3b3-2493-4909-b555-6b4da167bb57",
+      "expected" : [ 200 ],
+      "actual" : 200
+    }, {
+      "method" : "PUT",
+      "path" : "/api/attempts/9e9be4b8-bba8-45b3-92c9-75115a0e6d7d/answers/8b0c5758-2a9d-4326-af38-0814b9a785f2",
+      "expected" : [ 200 ],
+      "actual" : 200
+    }, {
+      "method" : "PUT",
+      "path" : "/api/attempts/9e9be4b8-bba8-45b3-92c9-75115a0e6d7d/answers/6af4cbe6-ac9b-449e-a33b-b6229149302b",
+      "expected" : [ 200 ],
+      "actual" : 200
+    }, {
+      "method" : "PUT",
+      "path" : "/api/attempts/9e9be4b8-bba8-45b3-92c9-75115a0e6d7d/answers/d4a4f4ab-73b7-4f95-8892-3be77e8c0d91",
+      "expected" : [ 200 ],
+      "actual" : 200
+    }, {
+      "method" : "GET",
+      "path" : "/api/attempts/9e9be4b8-bba8-45b3-92c9-75115a0e6d7d",
+      "expected" : [ 200 ],
+      "actual" : 200
+    }, {
+      "method" : "POST",
+      "path" : "/api/quizzes/b2651e00-050b-4f41-ac5a-ed32f1524cfd/attempts",
+      "expected" : [ 200 ],
+      "actual" : 200
+    }, {
+      "method" : "GET",
+      "path" : "/api/attempts/9e9be4b8-bba8-45b3-92c9-75115a0e6d7d/result",
+      "expected" : [ 409 ],
+      "actual" : 409
+    }, {
+      "method" : "POST",
+      "path" : "/api/attempts/9e9be4b8-bba8-45b3-92c9-75115a0e6d7d/complete",
+      "expected" : [ 200 ],
+      "actual" : 200
+    }, {
+      "method" : "POST",
+      "path" : "/api/attempts/9e9be4b8-bba8-45b3-92c9-75115a0e6d7d/complete",
+      "expected" : [ 200 ],
+      "actual" : 200
+    }, {
+      "method" : "GET",
+      "path" : "/api/attempts/9e9be4b8-bba8-45b3-92c9-75115a0e6d7d",
+      "expected" : [ 200 ],
+      "actual" : 200
+    }, {
+      "method" : "GET",
+      "path" : "/api/attempts/9e9be4b8-bba8-45b3-92c9-75115a0e6d7d/result",
+      "expected" : [ 200 ],
+      "actual" : 200
+    }, {
+      "method" : "PUT",
+      "path" : "/api/attempts/9e9be4b8-bba8-45b3-92c9-75115a0e6d7d/answers/4261f956-ce0e-443a-81e6-64e5b5bafeec",
+      "expected" : [ 409 ],
+      "actual" : 409
+    }, {
+      "method" : "PUT",
+      "path" : "/api/attempts/9e9be4b8-bba8-45b3-92c9-75115a0e6d7d/answers/4261f956-ce0e-443a-81e6-64e5b5bafeec",
+      "expected" : [ 409 ],
+      "actual" : 409
+    }, {
+      "method" : "PUT",
+      "path" : "/api/attempts/9e9be4b8-bba8-45b3-92c9-75115a0e6d7d/answers/4261f956-ce0e-443a-81e6-64e5b5bafeec",
+      "expected" : [ 409 ],
+      "actual" : 409
+    }, {
+      "method" : "POST",
+      "path" : "/api/quizzes/b2651e00-050b-4f41-ac5a-ed32f1524cfd/attempts",
+      "expected" : [ 200 ],
+      "actual" : 200
+    }, {
+      "method" : "POST",
+      "path" : "/api/quizzes/b2651e00-050b-4f41-ac5a-ed32f1524cfd/attempts",
+      "expected" : [ 201 ],
+      "actual" : 201
+    }, {
+      "method" : "GET",
+      "path" : "/api/attempts/9e9be4b8-bba8-45b3-92c9-75115a0e6d7d/result",
+      "expected" : [ 200 ],
+      "actual" : 200
+    }, {
+      "method" : "GET",
+      "path" : "/api/quizzes/b2651e00-050b-4f41-ac5a-ed32f1524cfd",
+      "expected" : [ 200 ],
+      "actual" : 200
+    } ],
+    "result" : "PASSED",
+    "case" : "PASS lifecycle: SINGLE_CHOICE, 10 questions"
+  }, {
+    "requests" : [ {
+      "method" : "POST",
+      "path" : "/api/auth/register",
+      "expected" : 200,
+      "actual" : 200
+    }, {
+      "method" : "POST",
+      "expected" : 201,
+      "actual" : 201,
+      "path" : "/api/materials"
+    }, {
+      "method" : "POST",
+      "path" : "/api/quizzes",
+      "expected" : 202,
+      "actual" : 202
+    }, {
+      "method" : "GET",
+      "path" : "/api/generation-jobs/84b471ba-78de-476f-b0a6-97276fb0a84d",
+      "expected" : 200,
+      "actual" : 200
+    }, {
+      "method" : "GET",
+      "path" : "/api/generation-jobs/84b471ba-78de-476f-b0a6-97276fb0a84d",
+      "expected" : 200,
+      "actual" : 200
+    }, {
+      "method" : "GET",
+      "path" : "/api/generation-jobs/84b471ba-78de-476f-b0a6-97276fb0a84d",
+      "expected" : 200,
+      "actual" : 200
+    }, {
+      "method" : "GET",
+      "path" : "/api/quizzes/84b471ba-78de-476f-b0a6-97276fb0a84d",
+      "expected" : [ 200 ],
+      "actual" : 200
+    }, {
+      "method" : "POST",
+      "path" : "/api/quizzes/84b471ba-78de-476f-b0a6-97276fb0a84d/attempts",
+      "expected" : [ 201 ],
+      "actual" : 201
+    }, {
+      "method" : "POST",
+      "path" : "/api/quizzes/84b471ba-78de-476f-b0a6-97276fb0a84d/attempts",
+      "expected" : [ 200 ],
+      "actual" : 200
+    }, {
+      "method" : "PUT",
+      "path" : "/api/attempts/832ac99c-5365-43ea-bbad-5e0ceb2c5865/answers/c675f8e6-a28b-4752-91f4-b18d4675d8d5",
+      "expected" : [ 200 ],
+      "actual" : 200
+    }, {
+      "method" : "PUT",
+      "path" : "/api/attempts/832ac99c-5365-43ea-bbad-5e0ceb2c5865/answers/c675f8e6-a28b-4752-91f4-b18d4675d8d5",
+      "expected" : [ 200 ],
+      "actual" : 200
+    }, {
+      "method" : "PUT",
+      "path" : "/api/attempts/832ac99c-5365-43ea-bbad-5e0ceb2c5865/answers/c675f8e6-a28b-4752-91f4-b18d4675d8d5",
+      "expected" : [ 200 ],
+      "actual" : 200
+    }, {
+      "method" : "GET",
+      "path" : "/api/attempts/832ac99c-5365-43ea-bbad-5e0ceb2c5865",
+      "expected" : [ 200 ],
+      "actual" : 200
+    }, {
+      "method" : "PUT",
+      "path" : "/api/attempts/832ac99c-5365-43ea-bbad-5e0ceb2c5865/answers/c675f8e6-a28b-4752-91f4-b18d4675d8d5",
+      "expected" : [ 200 ],
+      "actual" : 200
+    }, {
+      "method" : "GET",
+      "path" : "/api/attempts/832ac99c-5365-43ea-bbad-5e0ceb2c5865",
+      "expected" : [ 200 ],
+      "actual" : 200
+    }, {
+      "method" : "POST",
+      "path" : "/api/quizzes/84b471ba-78de-476f-b0a6-97276fb0a84d/attempts",
+      "expected" : [ 200 ],
+      "actual" : 200
+    }, {
+      "method" : "PUT",
+      "path" : "/api/attempts/832ac99c-5365-43ea-bbad-5e0ceb2c5865/answers/c675f8e6-a28b-4752-91f4-b18d4675d8d5",
+      "expected" : [ 200 ],
+      "actual" : 200
+    }, {
+      "method" : "PUT",
+      "path" : "/api/attempts/832ac99c-5365-43ea-bbad-5e0ceb2c5865/answers/354f43bd-dc51-47b0-acc1-e00bdcf0b1ae",
+      "expected" : [ 200 ],
+      "actual" : 200
+    }, {
+      "method" : "PUT",
+      "path" : "/api/attempts/832ac99c-5365-43ea-bbad-5e0ceb2c5865/answers/3db83b0d-ec7d-4599-961a-b8b58b1f728a",
+      "expected" : [ 200 ],
+      "actual" : 200
+    }, {
+      "method" : "PUT",
+      "path" : "/api/attempts/832ac99c-5365-43ea-bbad-5e0ceb2c5865/answers/3d81ad39-b180-4b4e-9a13-2642b9dcec9e",
+      "expected" : [ 200 ],
+      "actual" : 200
+    }, {
+      "method" : "GET",
+      "path" : "/api/attempts/832ac99c-5365-43ea-bbad-5e0ceb2c5865",
+      "expected" : [ 200 ],
+      "actual" : 200
+    }, {
+      "method" : "POST",
+      "path" : "/api/quizzes/84b471ba-78de-476f-b0a6-97276fb0a84d/attempts",
+      "expected" : [ 200 ],
+      "actual" : 200
+    }, {
+      "method" : "GET",
+      "path" : "/api/attempts/832ac99c-5365-43ea-bbad-5e0ceb2c5865/result",
+      "expected" : [ 409 ],
+      "actual" : 409
+    }, {
+      "method" : "POST",
+      "path" : "/api/attempts/832ac99c-5365-43ea-bbad-5e0ceb2c5865/complete",
+      "expected" : [ 200 ],
+      "actual" : 200
+    }, {
+      "method" : "POST",
+      "path" : "/api/attempts/832ac99c-5365-43ea-bbad-5e0ceb2c5865/complete",
+      "expected" : [ 200 ],
+      "actual" : 200
+    }, {
+      "method" : "GET",
+      "path" : "/api/attempts/832ac99c-5365-43ea-bbad-5e0ceb2c5865",
+      "expected" : [ 200 ],
+      "actual" : 200
+    }, {
+      "method" : "GET",
+      "path" : "/api/attempts/832ac99c-5365-43ea-bbad-5e0ceb2c5865/result",
+      "expected" : [ 200 ],
+      "actual" : 200
+    }, {
+      "method" : "PUT",
+      "path" : "/api/attempts/832ac99c-5365-43ea-bbad-5e0ceb2c5865/answers/c675f8e6-a28b-4752-91f4-b18d4675d8d5",
+      "expected" : [ 409 ],
+      "actual" : 409
+    }, {
+      "method" : "PUT",
+      "path" : "/api/attempts/832ac99c-5365-43ea-bbad-5e0ceb2c5865/answers/c675f8e6-a28b-4752-91f4-b18d4675d8d5",
+      "expected" : [ 409 ],
+      "actual" : 409
+    }, {
+      "method" : "PUT",
+      "path" : "/api/attempts/832ac99c-5365-43ea-bbad-5e0ceb2c5865/answers/c675f8e6-a28b-4752-91f4-b18d4675d8d5",
+      "expected" : [ 409 ],
+      "actual" : 409
+    }, {
+      "method" : "POST",
+      "path" : "/api/quizzes/84b471ba-78de-476f-b0a6-97276fb0a84d/attempts",
+      "expected" : [ 200 ],
+      "actual" : 200
+    }, {
+      "method" : "POST",
+      "path" : "/api/quizzes/84b471ba-78de-476f-b0a6-97276fb0a84d/attempts",
+      "expected" : [ 201 ],
+      "actual" : 201
+    }, {
+      "method" : "GET",
+      "path" : "/api/attempts/832ac99c-5365-43ea-bbad-5e0ceb2c5865/result",
+      "expected" : [ 200 ],
+      "actual" : 200
+    }, {
+      "method" : "GET",
+      "path" : "/api/quizzes/84b471ba-78de-476f-b0a6-97276fb0a84d",
+      "expected" : [ 200 ],
+      "actual" : 200
+    } ],
+    "result" : "PASSED",
+    "case" : "PASS lifecycle: MULTIPLE_CHOICE, 5 questions"
+  }, {
+    "requests" : [ {
+      "method" : "POST",
+      "path" : "/api/auth/register",
+      "expected" : 200,
+      "actual" : 200
+    }, {
+      "method" : "POST",
+      "expected" : 201,
+      "actual" : 201,
+      "path" : "/api/materials"
+    }, {
+      "method" : "POST",
+      "path" : "/api/quizzes",
+      "expected" : 202,
+      "actual" : 202
+    }, {
+      "method" : "GET",
+      "path" : "/api/generation-jobs/cac58ca5-e6da-46ac-b499-7114c8a47c11",
+      "expected" : 200,
+      "actual" : 200
+    }, {
+      "method" : "GET",
+      "path" : "/api/generation-jobs/cac58ca5-e6da-46ac-b499-7114c8a47c11",
+      "expected" : 200,
+      "actual" : 200
+    }, {
+      "method" : "GET",
+      "path" : "/api/generation-jobs/cac58ca5-e6da-46ac-b499-7114c8a47c11",
+      "expected" : 200,
+      "actual" : 200
+    }, {
+      "method" : "GET",
+      "path" : "/api/quizzes/cac58ca5-e6da-46ac-b499-7114c8a47c11",
+      "expected" : [ 200 ],
+      "actual" : 200
+    }, {
+      "method" : "POST",
+      "path" : "/api/quizzes/cac58ca5-e6da-46ac-b499-7114c8a47c11/attempts",
+      "expected" : [ 201 ],
+      "actual" : 201
+    }, {
+      "method" : "POST",
+      "path" : "/api/quizzes/cac58ca5-e6da-46ac-b499-7114c8a47c11/attempts",
+      "expected" : [ 200 ],
+      "actual" : 200
+    }, {
+      "method" : "PUT",
+      "path" : "/api/attempts/e0aea136-e36d-40b5-87b2-40018d9163d6/answers/d5e4fe6d-5dec-467a-9fd8-00cc4bad698d",
+      "expected" : [ 200 ],
+      "actual" : 200
+    }, {
+      "method" : "PUT",
+      "path" : "/api/attempts/e0aea136-e36d-40b5-87b2-40018d9163d6/answers/d5e4fe6d-5dec-467a-9fd8-00cc4bad698d",
+      "expected" : [ 200 ],
+      "actual" : 200
+    }, {
+      "method" : "PUT",
+      "path" : "/api/attempts/e0aea136-e36d-40b5-87b2-40018d9163d6/answers/d5e4fe6d-5dec-467a-9fd8-00cc4bad698d",
+      "expected" : [ 200 ],
+      "actual" : 200
+    }, {
+      "method" : "GET",
+      "path" : "/api/attempts/e0aea136-e36d-40b5-87b2-40018d9163d6",
+      "expected" : [ 200 ],
+      "actual" : 200
+    }, {
+      "method" : "PUT",
+      "path" : "/api/attempts/e0aea136-e36d-40b5-87b2-40018d9163d6/answers/d5e4fe6d-5dec-467a-9fd8-00cc4bad698d",
+      "expected" : [ 200 ],
+      "actual" : 200
+    }, {
+      "method" : "GET",
+      "path" : "/api/attempts/e0aea136-e36d-40b5-87b2-40018d9163d6",
+      "expected" : [ 200 ],
+      "actual" : 200
+    }, {
+      "method" : "POST",
+      "path" : "/api/quizzes/cac58ca5-e6da-46ac-b499-7114c8a47c11/attempts",
+      "expected" : [ 200 ],
+      "actual" : 200
+    }, {
+      "method" : "PUT",
+      "path" : "/api/attempts/e0aea136-e36d-40b5-87b2-40018d9163d6/answers/d5e4fe6d-5dec-467a-9fd8-00cc4bad698d",
+      "expected" : [ 200 ],
+      "actual" : 200
+    }, {
+      "method" : "PUT",
+      "path" : "/api/attempts/e0aea136-e36d-40b5-87b2-40018d9163d6/answers/111c35f7-0ca9-43f1-b6db-e6efee42a6d2",
+      "expected" : [ 200 ],
+      "actual" : 200
+    }, {
+      "method" : "PUT",
+      "path" : "/api/attempts/e0aea136-e36d-40b5-87b2-40018d9163d6/answers/0049c1a7-a6d0-4b0c-8ff3-d17682c3f7ab",
+      "expected" : [ 200 ],
+      "actual" : 200
+    }, {
+      "method" : "PUT",
+      "path" : "/api/attempts/e0aea136-e36d-40b5-87b2-40018d9163d6/answers/36972246-0c26-43dc-b41d-d4a664659add",
+      "expected" : [ 200 ],
+      "actual" : 200
+    }, {
+      "method" : "PUT",
+      "path" : "/api/attempts/e0aea136-e36d-40b5-87b2-40018d9163d6/answers/1ecd2a89-1f8f-4bcd-8835-8e811ae7cc01",
+      "expected" : [ 200 ],
+      "actual" : 200
+    }, {
+      "method" : "PUT",
+      "path" : "/api/attempts/e0aea136-e36d-40b5-87b2-40018d9163d6/answers/813c9ca8-f292-4937-a2c8-753fcfc5b1ef",
+      "expected" : [ 200 ],
+      "actual" : 200
+    }, {
+      "method" : "PUT",
+      "path" : "/api/attempts/e0aea136-e36d-40b5-87b2-40018d9163d6/answers/bb9a2217-f721-4f39-8880-716e8fc343ce",
+      "expected" : [ 200 ],
+      "actual" : 200
+    }, {
+      "method" : "PUT",
+      "path" : "/api/attempts/e0aea136-e36d-40b5-87b2-40018d9163d6/answers/14750c7e-919c-4315-a4b6-cd447ace6a41",
+      "expected" : [ 200 ],
+      "actual" : 200
+    }, {
+      "method" : "PUT",
+      "path" : "/api/attempts/e0aea136-e36d-40b5-87b2-40018d9163d6/answers/4fcecf8c-660e-4412-8acb-8b02f2cbbc72",
+      "expected" : [ 200 ],
+      "actual" : 200
+    }, {
+      "method" : "GET",
+      "path" : "/api/attempts/e0aea136-e36d-40b5-87b2-40018d9163d6",
+      "expected" : [ 200 ],
+      "actual" : 200
+    }, {
+      "method" : "POST",
+      "path" : "/api/quizzes/cac58ca5-e6da-46ac-b499-7114c8a47c11/attempts",
+      "expected" : [ 200 ],
+      "actual" : 200
+    }, {
+      "method" : "GET",
+      "path" : "/api/attempts/e0aea136-e36d-40b5-87b2-40018d9163d6/result",
+      "expected" : [ 409 ],
+      "actual" : 409
+    }, {
+      "method" : "POST",
+      "path" : "/api/attempts/e0aea136-e36d-40b5-87b2-40018d9163d6/complete",
+      "expected" : [ 200 ],
+      "actual" : 200
+    }, {
+      "method" : "POST",
+      "path" : "/api/attempts/e0aea136-e36d-40b5-87b2-40018d9163d6/complete",
+      "expected" : [ 200 ],
+      "actual" : 200
+    }, {
+      "method" : "GET",
+      "path" : "/api/attempts/e0aea136-e36d-40b5-87b2-40018d9163d6",
+      "expected" : [ 200 ],
+      "actual" : 200
+    }, {
+      "method" : "GET",
+      "path" : "/api/attempts/e0aea136-e36d-40b5-87b2-40018d9163d6/result",
+      "expected" : [ 200 ],
+      "actual" : 200
+    }, {
+      "method" : "PUT",
+      "path" : "/api/attempts/e0aea136-e36d-40b5-87b2-40018d9163d6/answers/d5e4fe6d-5dec-467a-9fd8-00cc4bad698d",
+      "expected" : [ 409 ],
+      "actual" : 409
+    }, {
+      "method" : "PUT",
+      "path" : "/api/attempts/e0aea136-e36d-40b5-87b2-40018d9163d6/answers/d5e4fe6d-5dec-467a-9fd8-00cc4bad698d",
+      "expected" : [ 409 ],
+      "actual" : 409
+    }, {
+      "method" : "PUT",
+      "path" : "/api/attempts/e0aea136-e36d-40b5-87b2-40018d9163d6/answers/d5e4fe6d-5dec-467a-9fd8-00cc4bad698d",
+      "expected" : [ 409 ],
+      "actual" : 409
+    }, {
+      "method" : "POST",
+      "path" : "/api/quizzes/cac58ca5-e6da-46ac-b499-7114c8a47c11/attempts",
+      "expected" : [ 200 ],
+      "actual" : 200
+    }, {
+      "method" : "POST",
+      "path" : "/api/quizzes/cac58ca5-e6da-46ac-b499-7114c8a47c11/attempts",
+      "expected" : [ 201 ],
+      "actual" : 201
+    }, {
+      "method" : "GET",
+      "path" : "/api/attempts/e0aea136-e36d-40b5-87b2-40018d9163d6/result",
+      "expected" : [ 200 ],
+      "actual" : 200
+    }, {
+      "method" : "GET",
+      "path" : "/api/quizzes/cac58ca5-e6da-46ac-b499-7114c8a47c11",
+      "expected" : [ 200 ],
+      "actual" : 200
+    } ],
+    "result" : "PASSED",
+    "case" : "PASS lifecycle: MULTIPLE_CHOICE, 10 questions"
+  }, {
+    "requests" : [ {
+      "method" : "POST",
+      "path" : "/api/auth/register",
+      "expected" : 200,
+      "actual" : 200
+    }, {
+      "method" : "POST",
+      "expected" : 201,
+      "actual" : 201,
+      "path" : "/api/materials"
+    }, {
+      "method" : "POST",
+      "path" : "/api/quizzes",
+      "expected" : 202,
+      "actual" : 202
+    }, {
+      "method" : "GET",
+      "path" : "/api/generation-jobs/94080044-e325-446a-b3a3-83d2931d5eca",
+      "expected" : 200,
+      "actual" : 200
+    }, {
+      "method" : "GET",
+      "path" : "/api/generation-jobs/94080044-e325-446a-b3a3-83d2931d5eca",
+      "expected" : 200,
+      "actual" : 200
+    }, {
+      "method" : "GET",
+      "path" : "/api/generation-jobs/94080044-e325-446a-b3a3-83d2931d5eca",
+      "expected" : 200,
+      "actual" : 200
+    }, {
+      "method" : "GET",
+      "path" : "/api/quizzes/94080044-e325-446a-b3a3-83d2931d5eca",
+      "expected" : [ 200 ],
+      "actual" : 200
+    }, {
+      "method" : "POST",
+      "path" : "/api/quizzes/94080044-e325-446a-b3a3-83d2931d5eca/attempts",
+      "expected" : [ 201 ],
+      "actual" : 201
+    }, {
+      "method" : "POST",
+      "path" : "/api/quizzes/94080044-e325-446a-b3a3-83d2931d5eca/attempts",
+      "expected" : [ 200 ],
+      "actual" : 200
+    }, {
+      "method" : "PUT",
+      "path" : "/api/attempts/014b9aba-02f8-4986-8efa-611df2c60901/answers/6a0a01cc-33a2-409d-8ea0-d1001f21bec0",
+      "expected" : [ 200 ],
+      "actual" : 200
+    }, {
+      "method" : "PUT",
+      "path" : "/api/attempts/014b9aba-02f8-4986-8efa-611df2c60901/answers/6a0a01cc-33a2-409d-8ea0-d1001f21bec0",
+      "expected" : [ 200 ],
+      "actual" : 200
+    }, {
+      "method" : "PUT",
+      "path" : "/api/attempts/014b9aba-02f8-4986-8efa-611df2c60901/answers/6a0a01cc-33a2-409d-8ea0-d1001f21bec0",
+      "expected" : [ 200 ],
+      "actual" : 200
+    }, {
+      "method" : "GET",
+      "path" : "/api/attempts/014b9aba-02f8-4986-8efa-611df2c60901",
+      "expected" : [ 200 ],
+      "actual" : 200
+    }, {
+      "method" : "PUT",
+      "path" : "/api/attempts/014b9aba-02f8-4986-8efa-611df2c60901/answers/6a0a01cc-33a2-409d-8ea0-d1001f21bec0",
+      "expected" : [ 200 ],
+      "actual" : 200
+    }, {
+      "method" : "GET",
+      "path" : "/api/attempts/014b9aba-02f8-4986-8efa-611df2c60901",
+      "expected" : [ 200 ],
+      "actual" : 200
+    }, {
+      "method" : "POST",
+      "path" : "/api/quizzes/94080044-e325-446a-b3a3-83d2931d5eca/attempts",
+      "expected" : [ 200 ],
+      "actual" : 200
+    }, {
+      "method" : "PUT",
+      "path" : "/api/attempts/014b9aba-02f8-4986-8efa-611df2c60901/answers/6a0a01cc-33a2-409d-8ea0-d1001f21bec0",
+      "expected" : [ 200 ],
+      "actual" : 200
+    }, {
+      "method" : "PUT",
+      "path" : "/api/attempts/014b9aba-02f8-4986-8efa-611df2c60901/answers/f6b270d8-d50a-443d-a602-53834bd1b8e5",
+      "expected" : [ 200 ],
+      "actual" : 200
+    }, {
+      "method" : "PUT",
+      "path" : "/api/attempts/014b9aba-02f8-4986-8efa-611df2c60901/answers/8fa350f8-d396-4a87-9606-0e6b4c16ecdd",
+      "expected" : [ 200 ],
+      "actual" : 200
+    }, {
+      "method" : "PUT",
+      "path" : "/api/attempts/014b9aba-02f8-4986-8efa-611df2c60901/answers/a69ab16d-48d9-46af-9e6d-e69287198d43",
+      "expected" : [ 200 ],
+      "actual" : 200
+    }, {
+      "method" : "GET",
+      "path" : "/api/attempts/014b9aba-02f8-4986-8efa-611df2c60901",
+      "expected" : [ 200 ],
+      "actual" : 200
+    }, {
+      "method" : "POST",
+      "path" : "/api/quizzes/94080044-e325-446a-b3a3-83d2931d5eca/attempts",
+      "expected" : [ 200 ],
+      "actual" : 200
+    }, {
+      "method" : "GET",
+      "path" : "/api/attempts/014b9aba-02f8-4986-8efa-611df2c60901/result",
+      "expected" : [ 409 ],
+      "actual" : 409
+    }, {
+      "method" : "POST",
+      "path" : "/api/attempts/014b9aba-02f8-4986-8efa-611df2c60901/complete",
+      "expected" : [ 200 ],
+      "actual" : 200
+    }, {
+      "method" : "POST",
+      "path" : "/api/attempts/014b9aba-02f8-4986-8efa-611df2c60901/complete",
+      "expected" : [ 200 ],
+      "actual" : 200
+    }, {
+      "method" : "GET",
+      "path" : "/api/attempts/014b9aba-02f8-4986-8efa-611df2c60901",
+      "expected" : [ 200 ],
+      "actual" : 200
+    }, {
+      "method" : "GET",
+      "path" : "/api/attempts/014b9aba-02f8-4986-8efa-611df2c60901/result",
+      "expected" : [ 200 ],
+      "actual" : 200
+    }, {
+      "method" : "PUT",
+      "path" : "/api/attempts/014b9aba-02f8-4986-8efa-611df2c60901/answers/6a0a01cc-33a2-409d-8ea0-d1001f21bec0",
+      "expected" : [ 409 ],
+      "actual" : 409
+    }, {
+      "method" : "PUT",
+      "path" : "/api/attempts/014b9aba-02f8-4986-8efa-611df2c60901/answers/6a0a01cc-33a2-409d-8ea0-d1001f21bec0",
+      "expected" : [ 409 ],
+      "actual" : 409
+    }, {
+      "method" : "PUT",
+      "path" : "/api/attempts/014b9aba-02f8-4986-8efa-611df2c60901/answers/6a0a01cc-33a2-409d-8ea0-d1001f21bec0",
+      "expected" : [ 409 ],
+      "actual" : 409
+    }, {
+      "method" : "POST",
+      "path" : "/api/quizzes/94080044-e325-446a-b3a3-83d2931d5eca/attempts",
+      "expected" : [ 200 ],
+      "actual" : 200
+    }, {
+      "method" : "POST",
+      "path" : "/api/quizzes/94080044-e325-446a-b3a3-83d2931d5eca/attempts",
+      "expected" : [ 201 ],
+      "actual" : 201
+    }, {
+      "method" : "GET",
+      "path" : "/api/attempts/014b9aba-02f8-4986-8efa-611df2c60901/result",
+      "expected" : [ 200 ],
+      "actual" : 200
+    }, {
+      "method" : "GET",
+      "path" : "/api/quizzes/94080044-e325-446a-b3a3-83d2931d5eca",
+      "expected" : [ 200 ],
+      "actual" : 200
+    } ],
+    "result" : "PASSED",
+    "case" : "PASS lifecycle: TRUE_FALSE, 5 questions"
+  }, {
+    "requests" : [ {
+      "method" : "POST",
+      "path" : "/api/auth/register",
+      "expected" : 200,
+      "actual" : 200
+    }, {
+      "method" : "POST",
+      "expected" : 201,
+      "actual" : 201,
+      "path" : "/api/materials"
+    }, {
+      "method" : "POST",
+      "path" : "/api/quizzes",
+      "expected" : 202,
+      "actual" : 202
+    }, {
+      "method" : "GET",
+      "path" : "/api/generation-jobs/576af880-56bd-469e-b6e3-41b12358ccfe",
+      "expected" : 200,
+      "actual" : 200
+    }, {
+      "method" : "GET",
+      "path" : "/api/generation-jobs/576af880-56bd-469e-b6e3-41b12358ccfe",
+      "expected" : 200,
+      "actual" : 200
+    }, {
+      "method" : "GET",
+      "path" : "/api/generation-jobs/576af880-56bd-469e-b6e3-41b12358ccfe",
+      "expected" : 200,
+      "actual" : 200
+    }, {
+      "method" : "GET",
+      "path" : "/api/quizzes/576af880-56bd-469e-b6e3-41b12358ccfe",
+      "expected" : [ 200 ],
+      "actual" : 200
+    }, {
+      "method" : "POST",
+      "path" : "/api/quizzes/576af880-56bd-469e-b6e3-41b12358ccfe/attempts",
+      "expected" : [ 201 ],
+      "actual" : 201
+    }, {
+      "method" : "POST",
+      "path" : "/api/quizzes/576af880-56bd-469e-b6e3-41b12358ccfe/attempts",
+      "expected" : [ 200 ],
+      "actual" : 200
+    }, {
+      "method" : "PUT",
+      "path" : "/api/attempts/b6e3b635-c75b-49d0-8863-4dee2de49507/answers/14dd2456-4468-416b-a5ea-29d539c4e787",
+      "expected" : [ 200 ],
+      "actual" : 200
+    }, {
+      "method" : "PUT",
+      "path" : "/api/attempts/b6e3b635-c75b-49d0-8863-4dee2de49507/answers/14dd2456-4468-416b-a5ea-29d539c4e787",
+      "expected" : [ 200 ],
+      "actual" : 200
+    }, {
+      "method" : "PUT",
+      "path" : "/api/attempts/b6e3b635-c75b-49d0-8863-4dee2de49507/answers/14dd2456-4468-416b-a5ea-29d539c4e787",
+      "expected" : [ 200 ],
+      "actual" : 200
+    }, {
+      "method" : "GET",
+      "path" : "/api/attempts/b6e3b635-c75b-49d0-8863-4dee2de49507",
+      "expected" : [ 200 ],
+      "actual" : 200
+    }, {
+      "method" : "PUT",
+      "path" : "/api/attempts/b6e3b635-c75b-49d0-8863-4dee2de49507/answers/14dd2456-4468-416b-a5ea-29d539c4e787",
+      "expected" : [ 200 ],
+      "actual" : 200
+    }, {
+      "method" : "GET",
+      "path" : "/api/attempts/b6e3b635-c75b-49d0-8863-4dee2de49507",
+      "expected" : [ 200 ],
+      "actual" : 200
+    }, {
+      "method" : "POST",
+      "path" : "/api/quizzes/576af880-56bd-469e-b6e3-41b12358ccfe/attempts",
+      "expected" : [ 200 ],
+      "actual" : 200
+    }, {
+      "method" : "PUT",
+      "path" : "/api/attempts/b6e3b635-c75b-49d0-8863-4dee2de49507/answers/14dd2456-4468-416b-a5ea-29d539c4e787",
+      "expected" : [ 200 ],
+      "actual" : 200
+    }, {
+      "method" : "PUT",
+      "path" : "/api/attempts/b6e3b635-c75b-49d0-8863-4dee2de49507/answers/d1250a32-7894-488a-979d-45efa173093a",
+      "expected" : [ 200 ],
+      "actual" : 200
+    }, {
+      "method" : "PUT",
+      "path" : "/api/attempts/b6e3b635-c75b-49d0-8863-4dee2de49507/answers/2eddf917-6c2c-46de-90ed-8b2b8a94aec0",
+      "expected" : [ 200 ],
+      "actual" : 200
+    }, {
+      "method" : "PUT",
+      "path" : "/api/attempts/b6e3b635-c75b-49d0-8863-4dee2de49507/answers/2aec61ad-14ee-4824-97ee-a615b28704e9",
+      "expected" : [ 200 ],
+      "actual" : 200
+    }, {
+      "method" : "PUT",
+      "path" : "/api/attempts/b6e3b635-c75b-49d0-8863-4dee2de49507/answers/0eed27a4-c61c-4f4d-86f4-d75074598579",
+      "expected" : [ 200 ],
+      "actual" : 200
+    }, {
+      "method" : "PUT",
+      "path" : "/api/attempts/b6e3b635-c75b-49d0-8863-4dee2de49507/answers/e3fb26c6-1de0-4e7e-a728-a0b6b4b95c8a",
+      "expected" : [ 200 ],
+      "actual" : 200
+    }, {
+      "method" : "PUT",
+      "path" : "/api/attempts/b6e3b635-c75b-49d0-8863-4dee2de49507/answers/bc89ba20-4518-4d47-85de-14521e2c541e",
+      "expected" : [ 200 ],
+      "actual" : 200
+    }, {
+      "method" : "PUT",
+      "path" : "/api/attempts/b6e3b635-c75b-49d0-8863-4dee2de49507/answers/3fb6b0b2-25f8-44c5-bcc1-1d60cd44d688",
+      "expected" : [ 200 ],
+      "actual" : 200
+    }, {
+      "method" : "PUT",
+      "path" : "/api/attempts/b6e3b635-c75b-49d0-8863-4dee2de49507/answers/3800b84a-4c36-4fce-8f62-0e67ea5af737",
+      "expected" : [ 200 ],
+      "actual" : 200
+    }, {
+      "method" : "GET",
+      "path" : "/api/attempts/b6e3b635-c75b-49d0-8863-4dee2de49507",
+      "expected" : [ 200 ],
+      "actual" : 200
+    }, {
+      "method" : "POST",
+      "path" : "/api/quizzes/576af880-56bd-469e-b6e3-41b12358ccfe/attempts",
+      "expected" : [ 200 ],
+      "actual" : 200
+    }, {
+      "method" : "GET",
+      "path" : "/api/attempts/b6e3b635-c75b-49d0-8863-4dee2de49507/result",
+      "expected" : [ 409 ],
+      "actual" : 409
+    }, {
+      "method" : "POST",
+      "path" : "/api/attempts/b6e3b635-c75b-49d0-8863-4dee2de49507/complete",
+      "expected" : [ 200 ],
+      "actual" : 200
+    }, {
+      "method" : "POST",
+      "path" : "/api/attempts/b6e3b635-c75b-49d0-8863-4dee2de49507/complete",
+      "expected" : [ 200 ],
+      "actual" : 200
+    }, {
+      "method" : "GET",
+      "path" : "/api/attempts/b6e3b635-c75b-49d0-8863-4dee2de49507",
+      "expected" : [ 200 ],
+      "actual" : 200
+    }, {
+      "method" : "GET",
+      "path" : "/api/attempts/b6e3b635-c75b-49d0-8863-4dee2de49507/result",
+      "expected" : [ 200 ],
+      "actual" : 200
+    }, {
+      "method" : "PUT",
+      "path" : "/api/attempts/b6e3b635-c75b-49d0-8863-4dee2de49507/answers/14dd2456-4468-416b-a5ea-29d539c4e787",
+      "expected" : [ 409 ],
+      "actual" : 409
+    }, {
+      "method" : "PUT",
+      "path" : "/api/attempts/b6e3b635-c75b-49d0-8863-4dee2de49507/answers/14dd2456-4468-416b-a5ea-29d539c4e787",
+      "expected" : [ 409 ],
+      "actual" : 409
+    }, {
+      "method" : "PUT",
+      "path" : "/api/attempts/b6e3b635-c75b-49d0-8863-4dee2de49507/answers/14dd2456-4468-416b-a5ea-29d539c4e787",
+      "expected" : [ 409 ],
+      "actual" : 409
+    }, {
+      "method" : "POST",
+      "path" : "/api/quizzes/576af880-56bd-469e-b6e3-41b12358ccfe/attempts",
+      "expected" : [ 200 ],
+      "actual" : 200
+    }, {
+      "method" : "POST",
+      "path" : "/api/quizzes/576af880-56bd-469e-b6e3-41b12358ccfe/attempts",
+      "expected" : [ 201 ],
+      "actual" : 201
+    }, {
+      "method" : "GET",
+      "path" : "/api/attempts/b6e3b635-c75b-49d0-8863-4dee2de49507/result",
+      "expected" : [ 200 ],
+      "actual" : 200
+    }, {
+      "method" : "GET",
+      "path" : "/api/quizzes/576af880-56bd-469e-b6e3-41b12358ccfe",
+      "expected" : [ 200 ],
+      "actual" : 200
+    } ],
+    "result" : "PASSED",
+    "case" : "PASS lifecycle: TRUE_FALSE, 10 questions"
+  }, {
+    "requests" : [ {
+      "method" : "POST",
+      "path" : "/api/auth/register",
+      "expected" : 200,
+      "actual" : 200
+    }, {
+      "method" : "POST",
+      "expected" : 201,
+      "actual" : 201,
+      "path" : "/api/materials"
+    }, {
+      "method" : "POST",
+      "path" : "/api/quizzes",
+      "expected" : 202,
+      "actual" : 202
+    }, {
+      "method" : "GET",
+      "path" : "/api/generation-jobs/15abe51b-a782-43e0-9729-b579d252b82a",
+      "expected" : 200,
+      "actual" : 200
+    }, {
+      "method" : "GET",
+      "path" : "/api/generation-jobs/15abe51b-a782-43e0-9729-b579d252b82a",
+      "expected" : 200,
+      "actual" : 200
+    }, {
+      "method" : "GET",
+      "path" : "/api/generation-jobs/15abe51b-a782-43e0-9729-b579d252b82a",
+      "expected" : 200,
+      "actual" : 200
+    }, {
+      "method" : "POST",
+      "path" : "/api/quizzes/15abe51b-a782-43e0-9729-b579d252b82a/attempts",
+      "expected" : [ 201 ],
+      "actual" : 201
+    }, {
+      "method" : "PUT",
+      "path" : "/api/attempts/cf1c1ae1-3163-4c0a-b992-5210e6ddeab6/answers/6539cb95-ef54-4adb-b9b7-07ca630494a7",
+      "expected" : [ 200 ],
+      "actual" : 200
+    }, {
+      "method" : "POST",
+      "path" : "/api/attempts/cf1c1ae1-3163-4c0a-b992-5210e6ddeab6/complete",
+      "expected" : [ 200 ],
+      "actual" : 200
+    } ],
+    "result" : "PASSED",
+    "case" : "PASS multiple-choice scoring: 0+1"
+  }, {
+    "requests" : [ {
+      "method" : "POST",
+      "path" : "/api/auth/register",
+      "expected" : 200,
+      "actual" : 200
+    }, {
+      "method" : "POST",
+      "expected" : 201,
+      "actual" : 201,
+      "path" : "/api/materials"
+    }, {
+      "method" : "POST",
+      "path" : "/api/quizzes",
+      "expected" : 202,
+      "actual" : 202
+    }, {
+      "method" : "GET",
+      "path" : "/api/generation-jobs/97d45f31-4c12-4a97-af1f-ae36c7e700a8",
+      "expected" : 200,
+      "actual" : 200
+    }, {
+      "method" : "GET",
+      "path" : "/api/generation-jobs/97d45f31-4c12-4a97-af1f-ae36c7e700a8",
+      "expected" : 200,
+      "actual" : 200
+    }, {
+      "method" : "GET",
+      "path" : "/api/generation-jobs/97d45f31-4c12-4a97-af1f-ae36c7e700a8",
+      "expected" : 200,
+      "actual" : 200
+    }, {
+      "method" : "GET",
+      "path" : "/api/generation-jobs/97d45f31-4c12-4a97-af1f-ae36c7e700a8",
+      "expected" : 200,
+      "actual" : 200
+    }, {
+      "method" : "POST",
+      "path" : "/api/quizzes/97d45f31-4c12-4a97-af1f-ae36c7e700a8/attempts",
+      "expected" : [ 201 ],
+      "actual" : 201
+    }, {
+      "method" : "PUT",
+      "path" : "/api/attempts/c4cd787c-c05d-429d-83d8-b092d997b26e/answers/59675ab6-5e20-4b7f-a2b5-9e9d6bf5eba1",
+      "expected" : [ 200 ],
+      "actual" : 200
+    }, {
+      "method" : "POST",
+      "path" : "/api/attempts/c4cd787c-c05d-429d-83d8-b092d997b26e/complete",
+      "expected" : [ 200 ],
+      "actual" : 200
+    } ],
+    "result" : "PASSED",
+    "case" : "PASS multiple-choice scoring: 1+0"
+  }, {
+    "requests" : [ {
+      "method" : "POST",
+      "path" : "/api/auth/register",
+      "expected" : 200,
+      "actual" : 200
+    }, {
+      "method" : "POST",
+      "expected" : 201,
+      "actual" : 201,
+      "path" : "/api/materials"
+    }, {
+      "method" : "POST",
+      "path" : "/api/quizzes",
+      "expected" : 202,
+      "actual" : 202
+    }, {
+      "method" : "GET",
+      "path" : "/api/generation-jobs/5bd56a20-db93-488c-93a9-ab4cb0d0f15c",
+      "expected" : 200,
+      "actual" : 200
+    }, {
+      "method" : "GET",
+      "path" : "/api/generation-jobs/5bd56a20-db93-488c-93a9-ab4cb0d0f15c",
+      "expected" : 200,
+      "actual" : 200
+    }, {
+      "method" : "GET",
+      "path" : "/api/generation-jobs/5bd56a20-db93-488c-93a9-ab4cb0d0f15c",
+      "expected" : 200,
+      "actual" : 200
+    }, {
+      "method" : "GET",
+      "path" : "/api/generation-jobs/5bd56a20-db93-488c-93a9-ab4cb0d0f15c",
+      "expected" : 200,
+      "actual" : 200
+    }, {
+      "method" : "POST",
+      "path" : "/api/quizzes/5bd56a20-db93-488c-93a9-ab4cb0d0f15c/attempts",
+      "expected" : [ 201 ],
+      "actual" : 201
+    }, {
+      "method" : "PUT",
+      "path" : "/api/attempts/bbf0182d-6ef1-40ab-ad2f-a75b2f9b827d/answers/122a6c4c-8650-42f5-8dfa-59e9ee72245f",
+      "expected" : [ 200 ],
+      "actual" : 200
+    }, {
+      "method" : "POST",
+      "path" : "/api/attempts/bbf0182d-6ef1-40ab-ad2f-a75b2f9b827d/complete",
+      "expected" : [ 200 ],
+      "actual" : 200
+    } ],
+    "result" : "PASSED",
+    "case" : "PASS multiple-choice scoring: 0"
+  }, {
+    "requests" : [ {
+      "method" : "POST",
+      "path" : "/api/auth/register",
+      "expected" : 200,
+      "actual" : 200
+    }, {
+      "method" : "POST",
+      "expected" : 201,
+      "actual" : 201,
+      "path" : "/api/materials"
+    }, {
+      "method" : "POST",
+      "path" : "/api/quizzes",
+      "expected" : 202,
+      "actual" : 202
+    }, {
+      "method" : "GET",
+      "path" : "/api/generation-jobs/3f2322d5-7feb-47e8-b652-52ce71e700f2",
+      "expected" : 200,
+      "actual" : 200
+    }, {
+      "method" : "GET",
+      "path" : "/api/generation-jobs/3f2322d5-7feb-47e8-b652-52ce71e700f2",
+      "expected" : 200,
+      "actual" : 200
+    }, {
+      "method" : "GET",
+      "path" : "/api/generation-jobs/3f2322d5-7feb-47e8-b652-52ce71e700f2",
+      "expected" : 200,
+      "actual" : 200
+    }, {
+      "method" : "GET",
+      "path" : "/api/generation-jobs/3f2322d5-7feb-47e8-b652-52ce71e700f2",
+      "expected" : 200,
+      "actual" : 200
+    }, {
+      "method" : "POST",
+      "path" : "/api/quizzes/3f2322d5-7feb-47e8-b652-52ce71e700f2/attempts",
+      "expected" : [ 201 ],
+      "actual" : 201
+    }, {
+      "method" : "PUT",
+      "path" : "/api/attempts/0ac21f53-1709-4cc8-b463-915af1caba16/answers/584cb67a-1aab-48b9-8634-f8f8a8ec8871",
+      "expected" : [ 200 ],
+      "actual" : 200
+    }, {
+      "method" : "POST",
+      "path" : "/api/attempts/0ac21f53-1709-4cc8-b463-915af1caba16/complete",
+      "expected" : [ 200 ],
+      "actual" : 200
+    } ],
+    "result" : "PASSED",
+    "case" : "PASS multiple-choice scoring: 0+2"
+  }, {
+    "requests" : [ {
+      "method" : "POST",
+      "path" : "/api/auth/register",
+      "expected" : 200,
+      "actual" : 200
+    }, {
+      "method" : "POST",
+      "expected" : 201,
+      "actual" : 201,
+      "path" : "/api/materials"
+    }, {
+      "method" : "POST",
+      "path" : "/api/quizzes",
+      "expected" : 202,
+      "actual" : 202
+    }, {
+      "method" : "GET",
+      "path" : "/api/generation-jobs/ae24a8de-2866-4298-a790-ae9245c5fd6a",
+      "expected" : 200,
+      "actual" : 200
+    }, {
+      "method" : "GET",
+      "path" : "/api/generation-jobs/ae24a8de-2866-4298-a790-ae9245c5fd6a",
+      "expected" : 200,
+      "actual" : 200
+    }, {
+      "method" : "GET",
+      "path" : "/api/generation-jobs/ae24a8de-2866-4298-a790-ae9245c5fd6a",
+      "expected" : 200,
+      "actual" : 200
+    }, {
+      "method" : "GET",
+      "path" : "/api/generation-jobs/ae24a8de-2866-4298-a790-ae9245c5fd6a",
+      "expected" : 200,
+      "actual" : 200
+    }, {
+      "method" : "POST",
+      "path" : "/api/quizzes/ae24a8de-2866-4298-a790-ae9245c5fd6a/attempts",
+      "expected" : [ 201 ],
+      "actual" : 201
+    }, {
+      "method" : "PUT",
+      "path" : "/api/attempts/af78aa8b-ed82-4339-8d05-1eb7c1df896d/answers/4fe9cb27-d69c-45c5-9607-64c55edb0f50",
+      "expected" : [ 200 ],
+      "actual" : 200
+    }, {
+      "method" : "POST",
+      "path" : "/api/attempts/af78aa8b-ed82-4339-8d05-1eb7c1df896d/complete",
+      "expected" : [ 200 ],
+      "actual" : 200
+    } ],
+    "result" : "PASSED",
+    "case" : "PASS multiple-choice scoring: 0+1+2"
+  }, {
+    "requests" : [ {
+      "method" : "POST",
+      "path" : "/api/auth/register",
+      "expected" : 200,
+      "actual" : 200
+    }, {
+      "method" : "POST",
+      "expected" : 201,
+      "actual" : 201,
+      "path" : "/api/materials"
+    }, {
+      "method" : "POST",
+      "path" : "/api/quizzes",
+      "expected" : 202,
+      "actual" : 202
+    }, {
+      "method" : "GET",
+      "path" : "/api/generation-jobs/897d7202-92c7-46b4-8ca4-20e3d2752399",
+      "expected" : 200,
+      "actual" : 200
+    }, {
+      "method" : "GET",
+      "path" : "/api/generation-jobs/897d7202-92c7-46b4-8ca4-20e3d2752399",
+      "expected" : 200,
+      "actual" : 200
+    }, {
+      "method" : "GET",
+      "path" : "/api/generation-jobs/897d7202-92c7-46b4-8ca4-20e3d2752399",
+      "expected" : 200,
+      "actual" : 200
+    }, {
+      "method" : "GET",
+      "path" : "/api/generation-jobs/897d7202-92c7-46b4-8ca4-20e3d2752399",
+      "expected" : 200,
+      "actual" : 200
+    }, {
+      "method" : "POST",
+      "path" : "/api/quizzes/897d7202-92c7-46b4-8ca4-20e3d2752399/attempts",
+      "expected" : [ 201 ],
+      "actual" : 201
+    }, {
+      "method" : "PUT",
+      "path" : "/api/attempts/3a0b60ec-9806-4206-a451-d4dfcdeda899/answers/1ad6768d-c9f1-4350-9198-652023c02f05",
+      "expected" : [ 200 ],
+      "actual" : 200
+    }, {
+      "method" : "POST",
+      "path" : "/api/attempts/3a0b60ec-9806-4206-a451-d4dfcdeda899/complete",
+      "expected" : [ 200 ],
+      "actual" : 200
+    } ],
+    "result" : "PASSED",
+    "case" : "PASS multiple-choice scoring: 3"
+  }, {
+    "requests" : [ {
+      "method" : "POST",
+      "path" : "/api/auth/register",
+      "expected" : 200,
+      "actual" : 200
+    }, {
+      "method" : "POST",
+      "expected" : 201,
+      "actual" : 201,
+      "path" : "/api/materials"
+    }, {
+      "method" : "POST",
+      "path" : "/api/quizzes",
+      "expected" : 202,
+      "actual" : 202
+    }, {
+      "method" : "GET",
+      "path" : "/api/generation-jobs/401c2a9a-7c2b-4b51-9671-725d81740938",
+      "expected" : 200,
+      "actual" : 200
+    }, {
+      "method" : "GET",
+      "path" : "/api/generation-jobs/401c2a9a-7c2b-4b51-9671-725d81740938",
+      "expected" : 200,
+      "actual" : 200
+    }, {
+      "method" : "GET",
+      "path" : "/api/generation-jobs/401c2a9a-7c2b-4b51-9671-725d81740938",
+      "expected" : 200,
+      "actual" : 200
+    }, {
+      "method" : "GET",
+      "path" : "/api/generation-jobs/401c2a9a-7c2b-4b51-9671-725d81740938",
+      "expected" : 200,
+      "actual" : 200
+    }, {
+      "method" : "POST",
+      "path" : "/api/quizzes/401c2a9a-7c2b-4b51-9671-725d81740938/attempts",
+      "expected" : [ 201 ],
+      "actual" : 201
+    }, {
+      "method" : "PUT",
+      "path" : "/api/attempts/3e278d7c-c370-4ee5-b21b-fbc20afe0a60/answers/b4404a2b-855e-4f29-99ab-233cfd189dec",
+      "expected" : [ 200 ],
+      "actual" : 200
+    }, {
+      "method" : "POST",
+      "path" : "/api/attempts/3e278d7c-c370-4ee5-b21b-fbc20afe0a60/complete",
+      "expected" : [ 200 ],
+      "actual" : 200
+    } ],
+    "result" : "PASSED",
+    "case" : "PASS multiple-choice scoring: empty"
+  }, {
+    "requests" : [ {
+      "method" : "POST",
+      "path" : "/api/auth/register",
+      "expected" : 200,
+      "actual" : 200
+    }, {
+      "method" : "POST",
+      "path" : "/api/auth/register",
+      "expected" : 200,
+      "actual" : 200
+    }, {
+      "method" : "POST",
+      "expected" : 201,
+      "actual" : 201,
+      "path" : "/api/materials"
+    }, {
+      "method" : "POST",
+      "path" : "/api/quizzes",
+      "expected" : 202,
+      "actual" : 202
+    }, {
+      "method" : "GET",
+      "path" : "/api/generation-jobs/95e3b545-0e86-4c92-95d5-a84b10526a02",
+      "expected" : 200,
+      "actual" : 200
+    }, {
+      "method" : "GET",
+      "path" : "/api/generation-jobs/95e3b545-0e86-4c92-95d5-a84b10526a02",
+      "expected" : 200,
+      "actual" : 200
+    }, {
+      "method" : "GET",
+      "path" : "/api/generation-jobs/95e3b545-0e86-4c92-95d5-a84b10526a02",
+      "expected" : 200,
+      "actual" : 200
+    }, {
+      "method" : "GET",
+      "path" : "/api/generation-jobs/95e3b545-0e86-4c92-95d5-a84b10526a02",
+      "expected" : 200,
+      "actual" : 200
+    }, {
+      "method" : "POST",
+      "expected" : 201,
+      "actual" : 201,
+      "path" : "/api/materials"
+    }, {
+      "method" : "POST",
+      "path" : "/api/quizzes",
+      "expected" : 202,
+      "actual" : 202
+    }, {
+      "method" : "GET",
+      "path" : "/api/generation-jobs/02497bfb-a84d-4ad8-af61-18d5d0bc33d2",
+      "expected" : 200,
+      "actual" : 200
+    }, {
+      "method" : "GET",
+      "path" : "/api/generation-jobs/02497bfb-a84d-4ad8-af61-18d5d0bc33d2",
+      "expected" : 200,
+      "actual" : 200
+    }, {
+      "method" : "GET",
+      "path" : "/api/generation-jobs/02497bfb-a84d-4ad8-af61-18d5d0bc33d2",
+      "expected" : 200,
+      "actual" : 200
+    }, {
+      "method" : "GET",
+      "path" : "/api/generation-jobs/02497bfb-a84d-4ad8-af61-18d5d0bc33d2",
+      "expected" : 200,
+      "actual" : 200
+    }, {
+      "method" : "POST",
+      "path" : "/api/quizzes/95e3b545-0e86-4c92-95d5-a84b10526a02/attempts",
+      "expected" : [ 201 ],
+      "actual" : 201
+    }, {
+      "method" : "POST",
+      "path" : "/api/quizzes/02497bfb-a84d-4ad8-af61-18d5d0bc33d2/attempts",
+      "expected" : [ 201 ],
+      "actual" : 201
+    }, {
+      "method" : "POST",
+      "path" : "/api/quizzes/95e3b545-0e86-4c92-95d5-a84b10526a02/attempts",
+      "expected" : [ 401 ],
+      "actual" : 401
+    }, {
+      "method" : "GET",
+      "path" : "/api/attempts/1d798c84-2979-4cf1-8a5e-928ca4a0631e",
+      "expected" : [ 401 ],
+      "actual" : 401
+    }, {
+      "method" : "PUT",
+      "path" : "/api/attempts/1d798c84-2979-4cf1-8a5e-928ca4a0631e/answers/8ec9ad35-720e-4656-a39e-e5e6e7f7f33f",
+      "expected" : [ 401 ],
+      "actual" : 401
+    }, {
+      "method" : "POST",
+      "path" : "/api/attempts/1d798c84-2979-4cf1-8a5e-928ca4a0631e/complete",
+      "expected" : [ 401 ],
+      "actual" : 401
+    }, {
+      "method" : "POST",
+      "path" : "/api/quizzes/95e3b545-0e86-4c92-95d5-a84b10526a02/attempts",
+      "expected" : [ 401 ],
+      "actual" : 401
+    }, {
+      "method" : "GET",
+      "path" : "/api/attempts/1d798c84-2979-4cf1-8a5e-928ca4a0631e",
+      "expected" : [ 401 ],
+      "actual" : 401
+    }, {
+      "method" : "PUT",
+      "path" : "/api/attempts/1d798c84-2979-4cf1-8a5e-928ca4a0631e/answers/8ec9ad35-720e-4656-a39e-e5e6e7f7f33f",
+      "expected" : [ 401 ],
+      "actual" : 401
+    }, {
+      "method" : "POST",
+      "path" : "/api/attempts/1d798c84-2979-4cf1-8a5e-928ca4a0631e/complete",
+      "expected" : [ 401 ],
+      "actual" : 401
+    }, {
+      "method" : "POST",
+      "path" : "/api/quizzes/02497bfb-a84d-4ad8-af61-18d5d0bc33d2/attempts",
+      "expected" : [ 404 ],
+      "actual" : 404
+    }, {
+      "method" : "POST",
+      "path" : "/api/quizzes/0d593570-dc41-428e-a4a6-47eca672faf2/attempts",
+      "expected" : [ 404 ],
+      "actual" : 404
+    }, {
+      "method" : "GET",
+      "path" : "/api/attempts/1d798c84-2979-4cf1-8a5e-928ca4a0631e",
+      "expected" : [ 404 ],
+      "actual" : 404
+    }, {
+      "method" : "GET",
+      "path" : "/api/attempts/d384fe18-a1df-4675-b17c-bf3ec6f2adcb",
+      "expected" : [ 404 ],
+      "actual" : 404
+    }, {
+      "method" : "GET",
+      "path" : "/api/attempts/928a4e59-17b4-4ee0-a2a0-939bebf323fa",
+      "expected" : [ 404 ],
+      "actual" : 404
+    }, {
+      "method" : "PUT",
+      "path" : "/api/attempts/1d798c84-2979-4cf1-8a5e-928ca4a0631e/answers/8ec9ad35-720e-4656-a39e-e5e6e7f7f33f",
+      "expected" : [ 404 ],
+      "actual" : 404
+    }, {
+      "method" : "PUT",
+      "path" : "/api/attempts/df576004-6c47-4315-8ab7-cf9f331a571a/answers/8ec9ad35-720e-4656-a39e-e5e6e7f7f33f",
+      "expected" : [ 404 ],
+      "actual" : 404
+    }, {
+      "method" : "PUT",
+      "path" : "/api/attempts/928a4e59-17b4-4ee0-a2a0-939bebf323fa/answers/8ec9ad35-720e-4656-a39e-e5e6e7f7f33f",
+      "expected" : [ 404 ],
+      "actual" : 404
+    }, {
+      "method" : "POST",
+      "path" : "/api/attempts/1d798c84-2979-4cf1-8a5e-928ca4a0631e/complete",
+      "expected" : [ 404 ],
+      "actual" : 404
+    }, {
+      "method" : "POST",
+      "path" : "/api/attempts/86e336e0-e3fa-446f-934c-446eb3fa09ec/complete",
+      "expected" : [ 404 ],
+      "actual" : 404
+    }, {
+      "method" : "POST",
+      "path" : "/api/attempts/928a4e59-17b4-4ee0-a2a0-939bebf323fa/complete",
+      "expected" : [ 404 ],
+      "actual" : 404
+    }, {
+      "method" : "PUT",
+      "path" : "/api/attempts/1d798c84-2979-4cf1-8a5e-928ca4a0631e/answers/0d5ce351-4220-403a-b307-d92e6837c541",
+      "expected" : [ 404 ],
+      "actual" : 404
+    }, {
+      "method" : "PUT",
+      "path" : "/api/attempts/1d798c84-2979-4cf1-8a5e-928ca4a0631e/answers/dfbb31a0-b763-48ae-b458-27037b601802",
+      "expected" : [ 404 ],
+      "actual" : 404
+    }, {
+      "method" : "PUT",
+      "path" : "/api/attempts/1d798c84-2979-4cf1-8a5e-928ca4a0631e/answers/8ec9ad35-720e-4656-a39e-e5e6e7f7f33f",
+      "expected" : [ 400 ],
+      "actual" : 400
+    }, {
+      "method" : "PUT",
+      "path" : "/api/attempts/1d798c84-2979-4cf1-8a5e-928ca4a0631e/answers/8ec9ad35-720e-4656-a39e-e5e6e7f7f33f",
+      "expected" : [ 400 ],
+      "actual" : 400
+    }, {
+      "method" : "PUT",
+      "path" : "/api/attempts/1d798c84-2979-4cf1-8a5e-928ca4a0631e/answers/8ec9ad35-720e-4656-a39e-e5e6e7f7f33f",
+      "expected" : [ 400 ],
+      "actual" : 400
+    }, {
+      "method" : "PUT",
+      "path" : "/api/attempts/1d798c84-2979-4cf1-8a5e-928ca4a0631e/answers/8ec9ad35-720e-4656-a39e-e5e6e7f7f33f",
+      "expected" : [ 400 ],
+      "actual" : 400
+    }, {
+      "method" : "PUT",
+      "path" : "/api/attempts/1d798c84-2979-4cf1-8a5e-928ca4a0631e/answers/8ec9ad35-720e-4656-a39e-e5e6e7f7f33f",
+      "expected" : [ 400 ],
+      "actual" : 400
+    }, {
+      "method" : "PUT",
+      "path" : "/api/attempts/1d798c84-2979-4cf1-8a5e-928ca4a0631e/answers/8ec9ad35-720e-4656-a39e-e5e6e7f7f33f",
+      "expected" : [ 400 ],
+      "actual" : 400
+    }, {
+      "method" : "PUT",
+      "path" : "/api/attempts/1d798c84-2979-4cf1-8a5e-928ca4a0631e/answers/8ec9ad35-720e-4656-a39e-e5e6e7f7f33f",
+      "expected" : [ 400 ],
+      "actual" : 400
+    }, {
+      "method" : "PUT",
+      "path" : "/api/attempts/1d798c84-2979-4cf1-8a5e-928ca4a0631e/answers/8ec9ad35-720e-4656-a39e-e5e6e7f7f33f",
+      "expected" : [ 400 ],
+      "actual" : 400
+    }, {
+      "method" : "PUT",
+      "path" : "/api/attempts/1d798c84-2979-4cf1-8a5e-928ca4a0631e/answers/8ec9ad35-720e-4656-a39e-e5e6e7f7f33f",
+      "expected" : [ 400 ],
+      "actual" : 400
+    }, {
+      "method" : "GET",
+      "path" : "/api/attempts/1d798c84-2979-4cf1-8a5e-928ca4a0631e",
+      "expected" : [ 200 ],
+      "actual" : 200
+    }, {
+      "method" : "GET",
+      "path" : "/api/attempts/928a4e59-17b4-4ee0-a2a0-939bebf323fa",
+      "expected" : [ 200 ],
+      "actual" : 200
+    }, {
+      "method" : "GET",
+      "path" : "/api/quizzes/95e3b545-0e86-4c92-95d5-a84b10526a02",
+      "expected" : [ 200 ],
+      "actual" : 200
+    } ],
+    "result" : "PASSED",
+    "case" : "rejectsAnonymousForeignMissingAndUnrelatedIds()"
+  }, {
+    "requests" : [ {
+      "method" : "POST",
+      "path" : "/api/auth/register",
+      "expected" : 200,
+      "actual" : 200
+    }, {
+      "method" : "POST",
+      "expected" : 201,
+      "actual" : 201,
+      "path" : "/api/materials"
+    }, {
+      "method" : "POST",
+      "path" : "/api/quizzes",
+      "expected" : 202,
+      "actual" : 202
+    }, {
+      "method" : "GET",
+      "path" : "/api/generation-jobs/cb60b44b-2d4a-49bd-982e-2f93acfd2650",
+      "expected" : 200,
+      "actual" : 200
+    }, {
+      "method" : "GET",
+      "path" : "/api/generation-jobs/cb60b44b-2d4a-49bd-982e-2f93acfd2650",
+      "expected" : 200,
+      "actual" : 200
+    }, {
+      "method" : "GET",
+      "path" : "/api/generation-jobs/cb60b44b-2d4a-49bd-982e-2f93acfd2650",
+      "expected" : 200,
+      "actual" : 200
+    }, {
+      "method" : "POST",
+      "path" : "/api/quizzes/cb60b44b-2d4a-49bd-982e-2f93acfd2650/attempts",
+      "expected" : [ 201 ],
+      "actual" : 201
+    }, {
+      "method" : "POST",
+      "path" : "/api/attempts/8154c0b7-d125-40ea-bb17-7bc4aec1fe73/complete",
+      "expected" : [ 200 ],
+      "actual" : 200
+    }, {
+      "method" : "PUT",
+      "path" : "/api/attempts/8154c0b7-d125-40ea-bb17-7bc4aec1fe73/answers/041efeaa-3376-45be-a5e3-42da3733226a",
+      "expected" : [ 200, 409 ],
+      "actual" : 409
+    }, {
+      "method" : "GET",
+      "path" : "/api/attempts/8154c0b7-d125-40ea-bb17-7bc4aec1fe73/result",
+      "expected" : [ 200 ],
+      "actual" : 200
+    }, {
+      "method" : "POST",
+      "path" : "/api/attempts/8154c0b7-d125-40ea-bb17-7bc4aec1fe73/complete",
+      "expected" : [ 200 ],
+      "actual" : 200
+    }, {
+      "method" : "PUT",
+      "path" : "/api/attempts/8154c0b7-d125-40ea-bb17-7bc4aec1fe73/answers/041efeaa-3376-45be-a5e3-42da3733226a",
+      "expected" : [ 409 ],
+      "actual" : 409
+    }, {
+      "method" : "GET",
+      "path" : "/api/attempts/8154c0b7-d125-40ea-bb17-7bc4aec1fe73/result",
+      "expected" : [ 200 ],
+      "actual" : 200
+    } ],
+    "result" : "PASSED",
+    "case" : "repetition 1 of 3"
+  }, {
+    "requests" : [ {
+      "method" : "POST",
+      "path" : "/api/auth/register",
+      "expected" : 200,
+      "actual" : 200
+    }, {
+      "method" : "POST",
+      "expected" : 201,
+      "actual" : 201,
+      "path" : "/api/materials"
+    }, {
+      "method" : "POST",
+      "path" : "/api/quizzes",
+      "expected" : 202,
+      "actual" : 202
+    }, {
+      "method" : "GET",
+      "path" : "/api/generation-jobs/8f51b4aa-107d-43ba-858a-5f7480da842d",
+      "expected" : 200,
+      "actual" : 200
+    }, {
+      "method" : "GET",
+      "path" : "/api/generation-jobs/8f51b4aa-107d-43ba-858a-5f7480da842d",
+      "expected" : 200,
+      "actual" : 200
+    }, {
+      "method" : "GET",
+      "path" : "/api/generation-jobs/8f51b4aa-107d-43ba-858a-5f7480da842d",
+      "expected" : 200,
+      "actual" : 200
+    }, {
+      "method" : "GET",
+      "path" : "/api/generation-jobs/8f51b4aa-107d-43ba-858a-5f7480da842d",
+      "expected" : 200,
+      "actual" : 200
+    }, {
+      "method" : "POST",
+      "path" : "/api/quizzes/8f51b4aa-107d-43ba-858a-5f7480da842d/attempts",
+      "expected" : [ 201 ],
+      "actual" : 201
+    }, {
+      "method" : "PUT",
+      "path" : "/api/attempts/6407bac7-8250-4de7-a34e-f0d3523bf9c1/answers/300e0621-7798-4f4d-b213-e8c63bf13bc7",
+      "expected" : [ 200, 409 ],
+      "actual" : 409
+    }, {
+      "method" : "POST",
+      "path" : "/api/attempts/6407bac7-8250-4de7-a34e-f0d3523bf9c1/complete",
+      "expected" : [ 200 ],
+      "actual" : 200
+    }, {
+      "method" : "GET",
+      "path" : "/api/attempts/6407bac7-8250-4de7-a34e-f0d3523bf9c1/result",
+      "expected" : [ 200 ],
+      "actual" : 200
+    }, {
+      "method" : "POST",
+      "path" : "/api/attempts/6407bac7-8250-4de7-a34e-f0d3523bf9c1/complete",
+      "expected" : [ 200 ],
+      "actual" : 200
+    }, {
+      "method" : "PUT",
+      "path" : "/api/attempts/6407bac7-8250-4de7-a34e-f0d3523bf9c1/answers/300e0621-7798-4f4d-b213-e8c63bf13bc7",
+      "expected" : [ 409 ],
+      "actual" : 409
+    }, {
+      "method" : "GET",
+      "path" : "/api/attempts/6407bac7-8250-4de7-a34e-f0d3523bf9c1/result",
+      "expected" : [ 200 ],
+      "actual" : 200
+    } ],
+    "result" : "PASSED",
+    "case" : "repetition 2 of 3"
+  }, {
+    "requests" : [ {
+      "method" : "POST",
+      "path" : "/api/auth/register",
+      "expected" : 200,
+      "actual" : 200
+    }, {
+      "method" : "POST",
+      "expected" : 201,
+      "actual" : 201,
+      "path" : "/api/materials"
+    }, {
+      "method" : "POST",
+      "path" : "/api/quizzes",
+      "expected" : 202,
+      "actual" : 202
+    }, {
+      "method" : "GET",
+      "path" : "/api/generation-jobs/61fc1387-5c75-468e-a1dc-cdd295d5926f",
+      "expected" : 200,
+      "actual" : 200
+    }, {
+      "method" : "GET",
+      "path" : "/api/generation-jobs/61fc1387-5c75-468e-a1dc-cdd295d5926f",
+      "expected" : 200,
+      "actual" : 200
+    }, {
+      "method" : "GET",
+      "path" : "/api/generation-jobs/61fc1387-5c75-468e-a1dc-cdd295d5926f",
+      "expected" : 200,
+      "actual" : 200
+    }, {
+      "method" : "GET",
+      "path" : "/api/generation-jobs/61fc1387-5c75-468e-a1dc-cdd295d5926f",
+      "expected" : 200,
+      "actual" : 200
+    }, {
+      "method" : "POST",
+      "path" : "/api/quizzes/61fc1387-5c75-468e-a1dc-cdd295d5926f/attempts",
+      "expected" : [ 201 ],
+      "actual" : 201
+    }, {
+      "method" : "POST",
+      "path" : "/api/attempts/649f88ca-3ea2-46ae-9133-2500c8e40e01/complete",
+      "expected" : [ 200 ],
+      "actual" : 200
+    }, {
+      "method" : "PUT",
+      "path" : "/api/attempts/649f88ca-3ea2-46ae-9133-2500c8e40e01/answers/7636cf81-68ab-45db-8035-81fa3372ccab",
+      "expected" : [ 200, 409 ],
+      "actual" : 409
+    }, {
+      "method" : "GET",
+      "path" : "/api/attempts/649f88ca-3ea2-46ae-9133-2500c8e40e01/result",
+      "expected" : [ 200 ],
+      "actual" : 200
+    }, {
+      "method" : "POST",
+      "path" : "/api/attempts/649f88ca-3ea2-46ae-9133-2500c8e40e01/complete",
+      "expected" : [ 200 ],
+      "actual" : 200
+    }, {
+      "method" : "PUT",
+      "path" : "/api/attempts/649f88ca-3ea2-46ae-9133-2500c8e40e01/answers/7636cf81-68ab-45db-8035-81fa3372ccab",
+      "expected" : [ 409 ],
+      "actual" : 409
+    }, {
+      "method" : "GET",
+      "path" : "/api/attempts/649f88ca-3ea2-46ae-9133-2500c8e40e01/result",
+      "expected" : [ 200 ],
+      "actual" : 200
+    } ],
+    "result" : "PASSED",
+    "case" : "repetition 3 of 3"
+  }, {
+    "requests" : [ {
+      "method" : "POST",
+      "path" : "/api/auth/register",
+      "expected" : 200,
+      "actual" : 200
+    }, {
+      "method" : "POST",
+      "expected" : 201,
+      "actual" : 201,
+      "path" : "/api/materials"
+    }, {
+      "method" : "POST",
+      "path" : "/api/quizzes",
+      "expected" : 202,
+      "actual" : 202
+    }, {
+      "method" : "GET",
+      "path" : "/api/generation-jobs/d23a2db8-6a70-4057-ae7d-c02291ff326a",
+      "expected" : 200,
+      "actual" : 200
+    }, {
+      "method" : "GET",
+      "path" : "/api/generation-jobs/d23a2db8-6a70-4057-ae7d-c02291ff326a",
+      "expected" : 200,
+      "actual" : 200
+    }, {
+      "method" : "GET",
+      "path" : "/api/generation-jobs/d23a2db8-6a70-4057-ae7d-c02291ff326a",
+      "expected" : 200,
+      "actual" : 200
+    }, {
+      "method" : "GET",
+      "path" : "/api/generation-jobs/d23a2db8-6a70-4057-ae7d-c02291ff326a",
+      "expected" : 200,
+      "actual" : 200
+    }, {
+      "method" : "POST",
+      "path" : "/api/quizzes/d23a2db8-6a70-4057-ae7d-c02291ff326a/attempts",
+      "expected" : [ 201 ],
+      "actual" : 201
+    }, {
+      "method" : "PUT",
+      "path" : "/api/attempts/47d505bd-cc06-42d3-863b-364f5f5348df/answers/ee10c7e0-ec7b-41e8-8c41-3e82318bb4dd",
+      "expected" : [ 200 ],
+      "actual" : 200
+    }, {
+      "method" : "PUT",
+      "path" : "/api/attempts/47d505bd-cc06-42d3-863b-364f5f5348df/answers/7a71fc92-242a-451c-8664-66118575ebd1",
+      "expected" : [ 200 ],
+      "actual" : 200
+    }, {
+      "method" : "PUT",
+      "path" : "/api/attempts/47d505bd-cc06-42d3-863b-364f5f5348df/answers/46adf03b-a83d-473d-81d6-f531024a05a1",
+      "expected" : [ 200 ],
+      "actual" : 200
+    }, {
+      "method" : "PUT",
+      "path" : "/api/attempts/47d505bd-cc06-42d3-863b-364f5f5348df/answers/9d762a62-6bac-4efa-bf48-83c5d8967390",
+      "expected" : [ 200 ],
+      "actual" : 200
+    }, {
+      "method" : "PUT",
+      "path" : "/api/attempts/47d505bd-cc06-42d3-863b-364f5f5348df/answers/3da36fc9-c903-4ffe-9cb1-f8a5e7307e08",
+      "expected" : [ 200 ],
+      "actual" : 200
+    }, {
+      "method" : "POST",
+      "path" : "/api/attempts/47d505bd-cc06-42d3-863b-364f5f5348df/complete",
+      "expected" : [ 200 ],
+      "actual" : 200
+    }, {
+      "method" : "POST",
+      "path" : "/api/attempts/47d505bd-cc06-42d3-863b-364f5f5348df/complete",
+      "expected" : [ 200 ],
+      "actual" : 200
+    }, {
+      "method" : "POST",
+      "path" : "/api/attempts/47d505bd-cc06-42d3-863b-364f5f5348df/complete",
+      "expected" : [ 200 ],
+      "actual" : 200
+    } ],
+    "result" : "PASSED",
+    "case" : "PASS parallel completion: 5 questions"
+  }, {
+    "requests" : [ {
+      "method" : "POST",
+      "path" : "/api/auth/register",
+      "expected" : 200,
+      "actual" : 200
+    }, {
+      "method" : "POST",
+      "expected" : 201,
+      "actual" : 201,
+      "path" : "/api/materials"
+    }, {
+      "method" : "POST",
+      "path" : "/api/quizzes",
+      "expected" : 202,
+      "actual" : 202
+    }, {
+      "method" : "GET",
+      "path" : "/api/generation-jobs/e9c92136-fd2d-4285-9457-322777807d9e",
+      "expected" : 200,
+      "actual" : 200
+    }, {
+      "method" : "GET",
+      "path" : "/api/generation-jobs/e9c92136-fd2d-4285-9457-322777807d9e",
+      "expected" : 200,
+      "actual" : 200
+    }, {
+      "method" : "GET",
+      "path" : "/api/generation-jobs/e9c92136-fd2d-4285-9457-322777807d9e",
+      "expected" : 200,
+      "actual" : 200
+    }, {
+      "method" : "GET",
+      "path" : "/api/generation-jobs/e9c92136-fd2d-4285-9457-322777807d9e",
+      "expected" : 200,
+      "actual" : 200
+    }, {
+      "method" : "POST",
+      "path" : "/api/quizzes/e9c92136-fd2d-4285-9457-322777807d9e/attempts",
+      "expected" : [ 201 ],
+      "actual" : 201
+    }, {
+      "method" : "PUT",
+      "path" : "/api/attempts/bdce6870-d078-4351-a75e-26fc174761a5/answers/de2ee362-03af-4966-893c-1f28c70a43b7",
+      "expected" : [ 200 ],
+      "actual" : 200
+    }, {
+      "method" : "PUT",
+      "path" : "/api/attempts/bdce6870-d078-4351-a75e-26fc174761a5/answers/3b0678aa-a27f-4a21-9aad-cea5756c3d33",
+      "expected" : [ 200 ],
+      "actual" : 200
+    }, {
+      "method" : "PUT",
+      "path" : "/api/attempts/bdce6870-d078-4351-a75e-26fc174761a5/answers/f18eca1b-1d4c-4838-bdd1-42cd4d38f6ea",
+      "expected" : [ 200 ],
+      "actual" : 200
+    }, {
+      "method" : "PUT",
+      "path" : "/api/attempts/bdce6870-d078-4351-a75e-26fc174761a5/answers/10175ebf-3b56-4404-93bc-d98a55fad281",
+      "expected" : [ 200 ],
+      "actual" : 200
+    }, {
+      "method" : "PUT",
+      "path" : "/api/attempts/bdce6870-d078-4351-a75e-26fc174761a5/answers/d93f0b1b-3245-4674-b4aa-f840b8b1e2e2",
+      "expected" : [ 200 ],
+      "actual" : 200
+    }, {
+      "method" : "PUT",
+      "path" : "/api/attempts/bdce6870-d078-4351-a75e-26fc174761a5/answers/5e4f545f-94a9-48fe-ad6f-d6598a38489f",
+      "expected" : [ 200 ],
+      "actual" : 200
+    }, {
+      "method" : "PUT",
+      "path" : "/api/attempts/bdce6870-d078-4351-a75e-26fc174761a5/answers/02a6cde7-2dad-4236-8f79-e9111f9ddc33",
+      "expected" : [ 200 ],
+      "actual" : 200
+    }, {
+      "method" : "PUT",
+      "path" : "/api/attempts/bdce6870-d078-4351-a75e-26fc174761a5/answers/2c1347a6-be46-40f0-b49f-a0facbf895c7",
+      "expected" : [ 200 ],
+      "actual" : 200
+    }, {
+      "method" : "PUT",
+      "path" : "/api/attempts/bdce6870-d078-4351-a75e-26fc174761a5/answers/ed023368-11c5-40da-8605-723091a97676",
+      "expected" : [ 200 ],
+      "actual" : 200
+    }, {
+      "method" : "PUT",
+      "path" : "/api/attempts/bdce6870-d078-4351-a75e-26fc174761a5/answers/82098b61-25fb-430b-a016-aa8cbe211766",
+      "expected" : [ 200 ],
+      "actual" : 200
+    }, {
+      "method" : "POST",
+      "path" : "/api/attempts/bdce6870-d078-4351-a75e-26fc174761a5/complete",
+      "expected" : [ 200 ],
+      "actual" : 200
+    }, {
+      "method" : "POST",
+      "path" : "/api/attempts/bdce6870-d078-4351-a75e-26fc174761a5/complete",
+      "expected" : [ 200 ],
+      "actual" : 200
+    }, {
+      "method" : "POST",
+      "path" : "/api/attempts/bdce6870-d078-4351-a75e-26fc174761a5/complete",
+      "expected" : [ 200 ],
+      "actual" : 200
+    } ],
+    "result" : "PASSED",
+    "case" : "PASS parallel completion: 10 questions"
+  }, {
+    "requests" : [ {
+      "method" : "POST",
+      "path" : "/api/auth/register",
+      "expected" : 200,
+      "actual" : 200
+    }, {
+      "method" : "POST",
+      "expected" : 201,
+      "actual" : 201,
+      "path" : "/api/materials"
+    }, {
+      "method" : "POST",
+      "path" : "/api/quizzes",
+      "expected" : 202,
+      "actual" : 202
+    }, {
+      "method" : "GET",
+      "path" : "/api/generation-jobs/8d80cb13-5387-42cd-9e2f-d83955113dcc",
+      "expected" : 200,
+      "actual" : 200
+    }, {
+      "method" : "GET",
+      "path" : "/api/generation-jobs/8d80cb13-5387-42cd-9e2f-d83955113dcc",
+      "expected" : 200,
+      "actual" : 200
+    }, {
+      "method" : "GET",
+      "path" : "/api/generation-jobs/8d80cb13-5387-42cd-9e2f-d83955113dcc",
+      "expected" : 200,
+      "actual" : 200
+    }, {
+      "method" : "GET",
+      "path" : "/api/generation-jobs/8d80cb13-5387-42cd-9e2f-d83955113dcc",
+      "expected" : 200,
+      "actual" : 200
+    }, {
+      "method" : "POST",
+      "path" : "/api/quizzes",
+      "expected" : 202,
+      "actual" : 202
+    }, {
+      "method" : "GET",
+      "path" : "/api/generation-jobs/cd19379a-e9a3-4d27-b590-1a17032b2b33",
+      "expected" : 200,
+      "actual" : 200
+    }, {
+      "method" : "GET",
+      "path" : "/api/generation-jobs/cd19379a-e9a3-4d27-b590-1a17032b2b33",
+      "expected" : 200,
+      "actual" : 200
+    }, {
+      "method" : "GET",
+      "path" : "/api/generation-jobs/cd19379a-e9a3-4d27-b590-1a17032b2b33",
+      "expected" : 200,
+      "actual" : 200
+    }, {
+      "method" : "GET",
+      "path" : "/api/generation-jobs/cd19379a-e9a3-4d27-b590-1a17032b2b33",
+      "expected" : 200,
+      "actual" : 200
+    }, {
+      "method" : "PATCH",
+      "path" : "/api/quizzes/8d80cb13-5387-42cd-9e2f-d83955113dcc",
+      "expected" : [ 200 ],
+      "actual" : 200
+    }, {
+      "method" : "POST",
+      "path" : "/api/quizzes/8d80cb13-5387-42cd-9e2f-d83955113dcc/attempts",
+      "expected" : [ 400 ],
+      "actual" : 400
+    }, {
+      "method" : "POST",
+      "path" : "/api/quizzes/8d80cb13-5387-42cd-9e2f-d83955113dcc/attempts",
+      "expected" : [ 400 ],
+      "actual" : 400
+    }, {
+      "method" : "POST",
+      "path" : "/api/quizzes/8d80cb13-5387-42cd-9e2f-d83955113dcc/attempts",
+      "expected" : [ 200, 201 ],
+      "actual" : 200
+    }, {
+      "method" : "POST",
+      "path" : "/api/quizzes/8d80cb13-5387-42cd-9e2f-d83955113dcc/attempts",
+      "expected" : [ 200, 201 ],
+      "actual" : 201
+    }, {
+      "method" : "POST",
+      "path" : "/api/quizzes/8d80cb13-5387-42cd-9e2f-d83955113dcc/attempts",
+      "expected" : [ 200, 201 ],
+      "actual" : 200
+    }, {
+      "method" : "POST",
+      "path" : "/api/quizzes/8d80cb13-5387-42cd-9e2f-d83955113dcc/attempts",
+      "expected" : [ 200, 201 ],
+      "actual" : 200
+    }, {
+      "method" : "POST",
+      "path" : "/api/quizzes/8d80cb13-5387-42cd-9e2f-d83955113dcc/attempts",
+      "expected" : [ 200, 201 ],
+      "actual" : 200
+    }, {
+      "method" : "POST",
+      "path" : "/api/quizzes/8d80cb13-5387-42cd-9e2f-d83955113dcc/attempts",
+      "expected" : [ 200, 201 ],
+      "actual" : 200
+    }, {
+      "method" : "POST",
+      "path" : "/api/quizzes/cd19379a-e9a3-4d27-b590-1a17032b2b33/attempts",
+      "expected" : [ 409 ],
+      "actual" : 409
+    }, {
+      "method" : "POST",
+      "path" : "/api/attempts/eb2126fb-9ca2-408d-b71f-ddf799bbcbaf/complete",
+      "expected" : [ 200 ],
+      "actual" : 200
+    }, {
+      "method" : "POST",
+      "path" : "/api/quizzes/8d80cb13-5387-42cd-9e2f-d83955113dcc/attempts",
+      "expected" : [ 200 ],
+      "actual" : 200
+    }, {
+      "method" : "POST",
+      "path" : "/api/quizzes/8d80cb13-5387-42cd-9e2f-d83955113dcc/attempts",
+      "expected" : [ 201 ],
+      "actual" : 201
+    } ],
+    "result" : "PASSED",
+    "case" : "parallelStartsAndRequestKeyReplayDoNotDuplicateAttempts()"
+  } ],
+  "baseUrl" : "http://localhost:18085",
+  "finishedAt" : "2026-11-20T16:07:57.057299300Z"
+}

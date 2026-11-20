@@ -19,7 +19,7 @@ import static org.junit.jupiter.api.Assertions.*;
 class AttemptResultApiTest {
     private static final ObjectMapper JSON = new ObjectMapper();
     private static final List<Map<String, Object>> CASES = new ArrayList<>();
-    private final List<Map<String, Object>> exchanges = new ArrayList<>();
+    final List<Map<String, Object>> exchanges = new ArrayList<>();
     private String base;
     private String caseName;
     private boolean passed;
@@ -147,7 +147,7 @@ class AttemptResultApiTest {
         passed = true;
     }
 
-    private static void noKeys(JsonNode node) {
+    static void noKeys(JsonNode node) {
         if (node.isObject()) node.properties().forEach(entry -> {
             assertFalse(Set.of("correctOptionIds", "correctAnswer", "isCorrect", "score", "scorePercent", "outcome",
                     "explanation", "sourceId", "isSkipped", "correctCount", "incorrectCount", "skippedCount").contains(entry.getKey()),
@@ -174,13 +174,13 @@ class AttemptResultApiTest {
         return call("POST", "/api/quizzes/" + quiz + "/attempts", token, null, 201);
     }
 
-    private String register() throws Exception {
+    String register() throws Exception {
         String name = "result_" + UUID.randomUUID().toString().replace("-", "");
         return call("POST", "/api/auth/register", null, Map.of("username", name,
                 "email", name + "@example.org", "password", UUID.randomUUID() + "Qa1!"), 200).path("token").asText();
     }
 
-    private String upload(String token) throws Exception {
+    String upload(String token) throws Exception {
         var req = RestAssured.given().baseUri(base).header("Authorization", "Bearer " + token)
                 .multiPart("metadata", "metadata.json", JSON.writeValueAsBytes(Map.of("name", "Result QA lecture", "subjectName", "QA")), "application/json")
                 .multiPart("file", "lecture.txt", Files.readAllBytes(Path.of("src/test/resources/quiz-crud/lecture.txt")), "text/plain");
@@ -190,7 +190,7 @@ class AttemptResultApiTest {
         return JSON.readTree(response.asByteArray()).path("material").path("id").asText();
     }
 
-    private String generate(String token, String material, String type, int count) throws Exception {
+    String generate(String token, String material, String type, int count) throws Exception {
         String job = call("POST", "/api/quizzes", token, Map.of("materialId", material, "name", "Result QA",
                 "questionCount", count, "difficulty", "MEDIUM", "questionType", type), 202).path("id").asText();
         Instant deadline = Instant.now().plusSeconds(90);
