@@ -9,7 +9,10 @@ dependencies {
     testRuntimeOnly("org.junit.platform:junit-platform-launcher:1.13.4")
 }
 tasks.test {
-    useJUnitPlatform { includeTags("attempt-result") }
+    useJUnitPlatform {
+        if (project.hasProperty("attemptPassing")) includeTags("attempt-passing")
+        else includeTags("attempt-result")
+    }
     outputs.upToDateWhen { false }
     testLogging { events("passed", "failed", "skipped") }
 }
