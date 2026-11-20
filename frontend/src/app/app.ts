@@ -23,6 +23,7 @@ export class App {
   readonly isAuthPage = computed(
     () =>
       ['/login', '/register', '/dashboard', '/tests'].includes(this.url().split(/[?#]/)[0]) ||
-      this.url().startsWith('/materials'),
+      this.url().startsWith('/materials') ||
+      this.url().startsWith('/attempts/'),
   );
 }
