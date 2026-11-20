@@ -60,22 +60,38 @@ describe('AttemptPage', () => {
     const page = fixture.componentInstance;
     const back = () => fixture.nativeElement.querySelector('.attempt-actions button:first-child') as HTMLButtonElement;
     expect(back().disabled).toBe(true);
+    let position = 0;
+    const move = (delta: number) => {
+      page.move(delta);
+      page.move(delta);
+      const write = http.expectOne('/api/attempts/attempt-1/answers/q' + position);
+      expect(write.request.method).toBe('PUT');
+      expect(write.request.body).toEqual({ selectedOptionIds: page.selected() });
+      write.flush({});
+      position += delta;
+    };
     page.choose('a', false, true);
     page.move(1);
-    expect(page.selected()).toEqual([]);
-    page.move(1);
-    page.move(-1);
-    page.move(-1);
+    http.expectOne('/api/attempts/attempt-1/answers/q0')
+      .flush({}, { status: 503, statusText: 'Unavailable' });
+    expect(page.saveError()).toBe(true);
     expect(page.selected()).toEqual(['a']);
-    for (let i = 1; i <= count; i++) page.move(1);
+    move(1);
+    expect(page.selected()).toEqual([]);
+    move(1);
+    move(-1);
+    move(-1);
+    expect(page.selected()).toEqual(['a']);
+    for (let i = 1; i < count; i++) move(1);
     fixture.detectChanges();
     expect(fixture.nativeElement.querySelector('progress').value).toBe(count);
     expect(fixture.nativeElement.querySelector('.attempt-actions button:last-child').textContent).toContain('Завершить тест');
 
     params.next(convertToParamMap({ attemptId: 'attempt-2' }));
     expect(page.selected()).toEqual([]);
-    http.expectOne('/api/attempts/attempt-2').flush(detail);
-    expect(page.selected()).toEqual([]);
+    http.expectOne('/api/attempts/attempt-2').flush({ ...detail, currentPosition: 2,
+      answers: [{ questionId: 'q1', selectedOptionIds: ['b'] }] });
+    expect(page.selected()).toEqual(['b']);
     http.verify();
   });
 });

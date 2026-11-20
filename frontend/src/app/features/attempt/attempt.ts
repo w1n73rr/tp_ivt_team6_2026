@@ -1,8 +1,8 @@
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
-import { Component, inject, signal } from '@angular/core';
+import { Component, DestroyRef, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, RouterLink } from '@angular/router';
-import { catchError, combineLatest, map, of, startWith, Subject, switchMap, takeUntil } from 'rxjs';
+import { catchError, combineLatest, finalize, map, of, startWith, Subject, switchMap, takeUntil } from 'rxjs';
 import { AuthService } from '../../core/auth/auth.service';
 import { MaterialsShell } from '../materials/materials-shell';
 
@@ -20,7 +20,7 @@ type AttemptDetail = {
   currentPosition: number;
 };
 type State = { kind: 'loading' | 'error' | 'unavailable' } |
-  { kind: 'ready'; title: string; questions: Question[]; index: number; answers: Record<string, string[]> };
+  { kind: 'ready'; attemptId: string; title: string; questions: Question[]; index: number; answers: Record<string, string[]> };
 
 @Component({
   selector: 'app-attempt',
@@ -32,12 +32,19 @@ export class AttemptPage {
   readonly state = signal<State>({ kind: 'loading' });
   readonly selected = signal<string[]>([]);
   readonly reviewing = signal(false);
+  readonly saving = signal(false);
+  readonly saveError = signal(false);
+  private readonly http = inject(HttpClient);
+  private readonly route = inject(ActivatedRoute);
+  private readonly auth = inject(AuthService);
+  private readonly writeCancelled = new Subject<void>();
+  private readonly destroyRef = inject(DestroyRef);
   private readonly retry = new Subject<void>();
 
   constructor() {
-    const route = inject(ActivatedRoute);
-    const http = inject(HttpClient);
-    const auth = inject(AuthService);
+    const route = this.route;
+    const http = this.http;
+    const auth = this.auth;
     auth.sessionChanges.pipe(takeUntilDestroyed()).subscribe(() => {
       this.state.set({ kind: 'unavailable' });
       this.selected.set([]);
@@ -62,7 +69,7 @@ export class AttemptPage {
             return [question.id, question.options.filter(option => saved?.selectedOptionIds.includes(option.id))
               .map(option => option.id)];
           }));
-          return { kind: 'ready', title: detail.attempt.quiz.name, questions, index, answers };
+          return { kind: 'ready', attemptId: params.get('attemptId')!, title: detail.attempt.quiz.name, questions, index, answers };
         }),
         catchError((error: HttpErrorResponse) => of<State>({
           kind: [401, 403, 404, 410].includes(error.status) ? 'unavailable' : 'error',
@@ -72,6 +79,8 @@ export class AttemptPage {
       takeUntil(auth.sessionChanges),
       takeUntilDestroyed(),
     ).subscribe(state => {
+      this.writeCancelled.next();
+      this.saveError.set(false);
       this.reviewing.set(false);
       this.selected.set(state.kind === 'ready' ? state.answers[state.questions[state.index].id] : []);
       this.state.set(state);
@@ -87,9 +96,35 @@ export class AttemptPage {
     if (state.kind !== 'ready') return;
     const index = state.index + delta;
     if (index < 0 || index >= state.questions.length) return;
-    const answers = { ...state.answers, [state.questions[state.index].id]: this.selected() };
-    this.selected.set(answers[state.questions[index].id]);
-    this.state.set({ ...state, index, answers });
+    this.save(state, answers => {
+      this.selected.set(answers[state.questions[index].id]);
+      this.state.set({ ...state, index, answers });
+    });
+  }
+
+  review(): void {
+    const state = this.state();
+    if (state.kind === 'ready') this.save(state, () => this.reviewing.set(true));
+  }
+
+  private save(state: Extract<State, { kind: 'ready' }>, onSaved: (answers: Record<string, string[]>) => void): void {
+    if (this.saving()) return;
+    const questionId = state.questions[state.index].id;
+    const selectedOptionIds = this.selected();
+    this.saveError.set(false);
+    this.saving.set(true);
+    this.http.put(
+      '/api/attempts/' + encodeURIComponent(state.attemptId) + '/answers/' + encodeURIComponent(questionId),
+      { selectedOptionIds },
+    ).pipe(
+      takeUntil(this.writeCancelled),
+      takeUntil(this.auth.sessionChanges),
+      takeUntilDestroyed(this.destroyRef),
+      finalize(() => this.saving.set(false)),
+    ).subscribe({
+      next: () => onSaved({ ...state.answers, [questionId]: selectedOptionIds }),
+      error: () => this.saveError.set(true),
+    });
   }
 
   choose(id: string, multiple: boolean, checked: boolean): void {
