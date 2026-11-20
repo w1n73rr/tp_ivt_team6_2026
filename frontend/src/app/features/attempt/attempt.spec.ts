@@ -1,7 +1,7 @@
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
-import { ActivatedRoute, convertToParamMap, provideRouter } from '@angular/router';
+import { ActivatedRoute, convertToParamMap, provideRouter, Router } from '@angular/router';
 import { BehaviorSubject } from 'rxjs';
 import { AttemptPage } from './attempt';
 
@@ -92,6 +92,36 @@ describe('AttemptPage', () => {
     http.expectOne('/api/attempts/attempt-2').flush({ ...detail, currentPosition: 2,
       answers: [{ questionId: 'q1', selectedOptionIds: ['b'] }] });
     expect(page.selected()).toEqual(['b']);
+    http.verify();
+  });
+  it('confirms only after saving and retries completion for the same attempt', () => {
+    const fixture = TestBed.createComponent(AttemptPage);
+    const page = fixture.componentInstance;
+    const http = TestBed.inject(HttpTestingController);
+    const navigate = vi.spyOn(TestBed.inject(Router), 'navigate').mockResolvedValue(true);
+    http.expectOne('/api/attempts/attempt-1').flush({
+      attempt: { status: 'IN_PROGRESS', quiz: { name: 'Тест' } },
+      questions: [{ id: 'q', position: 1, type: 'TRUE_FALSE', text: 'Вопрос',
+        options: [{ id: 'a', text: 'Да' }] }],
+      answers: [], currentPosition: 1,
+    });
+    page.review();
+    expect(page.skipped()).toBe(1);
+    page.reviewing.set(false);
+    http.expectNone('/api/attempts/attempt-1/answers/q');
+    page.choose('a', false, true);
+    page.review();
+    expect(page.skipped()).toBe(0);
+    page.finish();
+    http.expectOne('/api/attempts/attempt-1/answers/q').flush({}, { status: 503, statusText: 'Unavailable' });
+    http.expectNone('/api/attempts/attempt-1/complete');
+    page.finish();
+    http.expectOne('/api/attempts/attempt-1/answers/q').flush({});
+    http.expectOne('/api/attempts/attempt-1/complete').flush({}, { status: 503, statusText: 'Unavailable' });
+    page.finish();
+    http.expectNone('/api/attempts/attempt-1/answers/q');
+    http.expectOne('/api/attempts/attempt-1/complete').flush({ attemptId: 'attempt-1' });
+    expect(navigate).toHaveBeenCalledWith(['/attempts', 'attempt-1', 'result']);
     http.verify();
   });
 });

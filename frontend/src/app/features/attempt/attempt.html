@@ -9,9 +9,13 @@
         <p aria-live="polite">Вопрос {{ view.index + 1 }} из {{ view.questions.length }}</p>
         <progress [value]="view.index + 1" [max]="view.questions.length" aria-label="Позиция в тесте"></progress>
         @if (reviewing()) {
-          <h2>Последний вопрос</h2>
-          <p>Можно вернуться и проверить выбранные варианты. Завершение попытки пока недоступно.</p>
-          <button type="button" (click)="reviewing.set(false)">Вернуться к вопросу</button>
+          <h2>Завершить тест?</h2>
+          <p>Пропущено вопросов: {{ skipped() }}</p>
+          @if (saving() || finishing()) { <p role="status">Завершаем попытку…</p> }
+          @if (saveError()) { <p role="alert">Ответ не сохранён. Повторите подтверждение.</p> }
+          @if (finishError()) { <p role="alert">Не удалось подтвердить завершение. Повторите запрос.</p> }
+          <button type="button" [disabled]="saving() || finishing() || finishError()" (click)="reviewing.set(false)">Отмена</button>
+          <button type="button" [disabled]="saving() || finishing()" (click)="finish()">Подтвердить</button>
         } @else {
         <fieldset [disabled]="saving()">
           <legend>{{ question.text }}</legend>

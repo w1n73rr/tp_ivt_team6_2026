@@ -1,7 +1,7 @@
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Component, DestroyRef, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { ActivatedRoute, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { catchError, combineLatest, finalize, map, of, startWith, Subject, switchMap, takeUntil } from 'rxjs';
 import { AuthService } from '../../core/auth/auth.service';
 import { MaterialsShell } from '../materials/materials-shell';
@@ -32,6 +32,9 @@ export class AttemptPage {
   readonly state = signal<State>({ kind: 'loading' });
   readonly selected = signal<string[]>([]);
   readonly reviewing = signal(false);
+  readonly finishError = signal(false);
+  readonly finishing = signal(false);
+  private readonly router = inject(Router);
   readonly saving = signal(false);
   readonly saveError = signal(false);
   private readonly http = inject(HttpClient);
@@ -80,6 +83,8 @@ export class AttemptPage {
       takeUntilDestroyed(),
     ).subscribe(state => {
       this.writeCancelled.next();
+      this.completionAttempted = undefined;
+      this.finishError.set(false);
       this.saveError.set(false);
       this.reviewing.set(false);
       this.selected.set(state.kind === 'ready' ? state.answers[state.questions[state.index].id] : []);
@@ -104,7 +109,52 @@ export class AttemptPage {
 
   review(): void {
     const state = this.state();
-    if (state.kind === 'ready') this.save(state, () => this.reviewing.set(true));
+    if (state.kind === 'ready') this.reviewing.set(true);
+  }
+
+  skipped(): number {
+    const state = this.state();
+    if (state.kind !== 'ready') return 0;
+    return state.questions.filter((question, index) =>
+      !(index === state.index ? this.selected() : state.answers[question.id]).length).length;
+  }
+
+  finish(): void {
+    const state = this.state();
+    if (state.kind !== 'ready' || this.finishing() || this.saving()) return;
+    this.finishError.set(false);
+    if (this.completionAttempted === state.attemptId) {
+      this.complete(state.attemptId);
+      return;
+    }
+    this.save(state, () => this.complete(state.attemptId));
+  }
+
+  private completionAttempted?: string;
+
+  private complete(attemptId: string): void {
+    this.completionAttempted = attemptId;
+    this.finishing.set(true);
+    this.http.post<{ attemptId: string }>('/api/attempts/' + encodeURIComponent(attemptId) + '/complete', null).pipe(
+      takeUntil(this.writeCancelled),
+      takeUntil(this.auth.sessionChanges),
+      takeUntilDestroyed(this.destroyRef),
+      finalize(() => this.finishing.set(false)),
+    ).subscribe({
+      next: response => {
+        if (response?.attemptId !== attemptId) {
+          this.finishError.set(true);
+          return;
+        }
+        const revision = this.auth.sessionRevision;
+        void this.router.navigate(['/attempts', attemptId, 'result']).catch(() => false).then(ok => {
+          if (!ok && revision === this.auth.sessionRevision && this.state().kind === 'ready') {
+            this.finishError.set(true);
+          }
+        });
+      },
+      error: () => this.finishError.set(true),
+    });
   }
 
   private save(state: Extract<State, { kind: 'ready' }>, onSaved: (answers: Record<string, string[]>) => void): void {
