@@ -8,7 +8,9 @@ import { MaterialsShell } from '../materials/materials-shell';
 
 interface Result {
   attemptId: string;
-  quiz: { name: string };
+  quiz: { id: string; name: string; subjectName: string; difficulty: string; questionType: string };
+  completedAt: string;
+  items: QuestionResult[];
   score: number;
   scorePercent: number;
   totalQuestions: number;
@@ -16,6 +18,13 @@ interface Result {
   incorrectCount: number;
   skippedCount: number;
   durationSeconds: number;
+}
+interface QuestionResult {
+  question: { id: string; position: number; text: string; options: { id: string; text: string }[] };
+  selectedOptionIds: string[];
+  correctOptionIds: string[];
+  outcome: 'CORRECT' | 'INCORRECT' | 'SKIPPED';
+  score: number;
 }
 type State = { kind: 'loading' | 'error' | 'unavailable' | 'unfinished' } |
   { kind: 'ready'; result: Result };
@@ -27,47 +36,25 @@ export function formatDuration(seconds: number): string {
 
 @Component({
   imports: [MaterialsShell, RouterLink],
-  template: `
-    <app-materials-shell active="tests">
-      <section class="result">
-        <a routerLink="/tests">← К тестам</a>
-        <h1>Результат теста</h1>
-        @let view = state();
-        @switch (view.kind) {
-          @case ('ready') {
-            <h2>{{ view.result.quiz.name }}</h2>
-            <dl>
-              <div><dt>Балл</dt><dd>{{ view.result.score }}</dd></div>
-              <div><dt>Результат</dt><dd>{{ view.result.scorePercent }}%</dd></div>
-              <div><dt>Правильные</dt><dd>{{ view.result.correctCount }}</dd></div>
-              <div><dt>Неправильные</dt><dd>{{ view.result.incorrectCount }}</dd></div>
-              <div><dt>Пропущенные</dt><dd>{{ view.result.skippedCount }}</dd></div>
-              <div><dt>Всего вопросов</dt><dd>{{ view.result.totalQuestions }}</dd></div>
-              <div><dt>Длительность</dt><dd>{{ formatDuration(view.result.durationSeconds) }}</dd></div>
-            </dl>
-          }
-          @case ('loading') { <p role="status">Загружаем результат…</p> }
-          @case ('unfinished') { <p>Попытка ещё не завершена.</p><a routerLink="..">К попытке</a> }
-          @case ('unavailable') { <p>Результат не найден или недоступен.</p> }
-          @case ('error') {
-            <p role="alert">Не удалось загрузить результат.</p>
-            <button type="button" (click)="retry.next()">Повторить</button>
-          }
-        }
-      </section>
-    </app-materials-shell>
-  `,
-  styles: `
-    .result { max-width: 900px; margin: 20px auto; overflow-wrap: anywhere; }
-    dl { display: grid; grid-template-columns: repeat(auto-fit, minmax(155px, 1fr)); gap: 12px; }
-    dl div { background: white; padding: 16px; border: 1px solid #d4def0; border-radius: 10px; }
-    dd { margin: 8px 0 0; font-size: 1.4rem; font-weight: 650; }
-  `,
+  templateUrl: './attempt-result.html',
+  styleUrl: './attempt-result.scss',
 })
 export class AttemptResultPage {
   readonly state = signal<State>({ kind: 'loading' });
   readonly retry = new Subject<void>();
   readonly formatDuration = formatDuration;
+  readonly difficulties: Record<string, string> = { EASY: 'Лёгкая', MEDIUM: 'Средняя', HARD: 'Сложная' };
+  readonly types: Record<string, string> = {
+    SINGLE_CHOICE: 'Один правильный ответ', MULTIPLE_CHOICE: 'Несколько правильных ответов', TRUE_FALSE: 'Верно / неверно',
+  };
+
+  answers(item: QuestionResult, ids: string[]): string[] {
+    return item.question.options.filter(option => ids.includes(option.id)).map(option => option.text);
+  }
+
+  formatDate(value: string): string {
+    return value ? new Intl.DateTimeFormat('ru-RU', { dateStyle: 'short', timeStyle: 'short' }).format(new Date(value)) : '—';
+  }
 
   constructor() {
     const auth = inject(AuthService);
@@ -78,10 +65,9 @@ export class AttemptResultPage {
       switchMap(([params]) => {
         const id = params.get('attemptId');
         return http.get<Result>('/api/attempts/' + encodeURIComponent(id ?? '') + '/result').pipe(
-          map(({ attemptId, quiz: { name }, score, scorePercent, totalQuestions, correctCount,
-            incorrectCount, skippedCount, durationSeconds }): State => attemptId === id
-            ? { kind: 'ready', result: { attemptId, quiz: { name }, score, scorePercent, totalQuestions,
-              correctCount, incorrectCount, skippedCount, durationSeconds } }
+          map((result): State => result.attemptId === id
+            ? { kind: 'ready', result: { ...result, items: [...(result.items ?? [])]
+              .sort((a, b) => a.question.position - b.question.position) } }
             : { kind: 'unavailable' }),
           catchError((error: HttpErrorResponse) => of<State>({
             kind: error.status === 409 ? 'unfinished' :

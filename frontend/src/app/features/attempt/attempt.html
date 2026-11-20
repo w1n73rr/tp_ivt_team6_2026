@@ -1,24 +1,28 @@
 <app-materials-shell active="tests">
   <section class="attempt">
-    <a routerLink="/tests">← К тестам</a>
+    <a class="breadcrumb" routerLink="/tests">Тесты</a><span class="breadcrumb"> / Прохождение</span>
+    <h1>Прохождение теста</h1>
     @let view = state();
     @switch (view.kind) {
       @case ('ready') {
-        <h1>{{ view.title }}</h1>
+                <section class="attempt-card">
+        <header class="attempt-progress">
+          <h2>{{ view.title }}</h2>
         @let question = view.questions[view.index];
         <p aria-live="polite">Вопрос {{ view.index + 1 }} из {{ view.questions.length }}</p>
         <progress [value]="view.index + 1" [max]="view.questions.length" aria-label="Позиция в тесте"></progress>
+        </header>
         @if (reviewing()) {
-          <h2>Завершить тест?</h2>
-          <p>Пропущено вопросов: {{ skipped() }}</p>
+          <section class="finish-confirmation" aria-labelledby="finish-title"><h2 id="finish-title">Завершить тест?</h2>
+          <p>Вы ответили на {{ view.questions.length - skipped() }} из {{ view.questions.length }} вопросов.</p><p>После завершения ответы изменить нельзя.</p>
           @if (saving() || finishing()) { <p role="status">Завершаем попытку…</p> }
           @if (saveError()) { <p role="alert">Ответ не сохранён. Повторите подтверждение.</p> }
           @if (finishError()) { <p role="alert">Не удалось подтвердить завершение. Повторите запрос.</p> }
           <button type="button" [disabled]="saving() || finishing() || finishError()" (click)="reviewing.set(false)">Отмена</button>
-          <button type="button" [disabled]="saving() || finishing()" (click)="finish()">Подтвердить</button>
+          <button type="button" [disabled]="saving() || finishing()" (click)="finish()">Завершить</button></section>
         } @else {
         <fieldset [disabled]="saving()">
-          <legend>{{ question.text }}</legend>
+          <legend><small>ВОПРОС {{ view.index + 1 }}</small>{{ question.text }}</legend>
           @let multiple = question.type === 'MULTIPLE_CHOICE';
           <p>{{ multiple ? 'Выберите несколько ответов' : 'Выберите один ответ' }}</p>
           @for (option of question.options; track option.id) {
@@ -41,6 +45,7 @@
           }
         </div>
         }
+        </section>
       }
       @case ('loading') { <p role="status">Загружаем тест…</p> }
       @case ('unavailable') { <h1>Попытка недоступна</h1> }

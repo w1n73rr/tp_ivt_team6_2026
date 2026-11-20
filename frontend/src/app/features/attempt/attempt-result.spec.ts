@@ -21,10 +21,17 @@ it('shows server counts, clears on route changes and distinguishes result errors
   request('a').flush({
     attemptId: 'a', quiz: { name: 'Личный тест' }, score: 2, scorePercent: 40, totalQuestions: 5,
     correctCount: 2, incorrectCount: 1, skippedCount: 2, durationSeconds: 765,
+    items: [{
+      question: { id: 'q1', position: 1, text: 'Вопрос', options: [{ id: 'right', text: 'Верный вариант' }] },
+      selectedOptionIds: [], correctOptionIds: ['right'], outcome: 'SKIPPED', score: 0,
+    }],
   });
   fixture.detectChanges();
   expect([...fixture.nativeElement.querySelectorAll('dd')].map((node: Element) => node.textContent))
-    .toEqual(['2', '40%', '2', '1', '2', '5', '00:12:45']);
+    .toEqual(['2', '1', '2', '5', '00:12:45', '—', '—', '—']);
+  expect(fixture.nativeElement.querySelector('.question.skipped .selected')).toBeNull();
+  expect(fixture.nativeElement.querySelector('.question.skipped .empty').textContent).toContain('Не отвечено');
+  expect(fixture.nativeElement.querySelector('.question .expected').textContent).toContain('Верный вариант');
   params.next(convertToParamMap({ attemptId: 'b' }));
   expect(page.state()).toEqual({ kind: 'loading' });
   for (const [status, kind] of [[409, 'unfinished'], [404, 'unavailable'], [503, 'error']] as const) {
