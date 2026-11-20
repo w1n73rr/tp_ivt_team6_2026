@@ -1,4 +1,4 @@
-import { Component, DestroyRef, computed, inject, signal } from '@angular/core';
+import { Component, DestroyRef, computed, inject, signal, TemplateRef, viewChild } from '@angular/core';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { TestDialog, TestDialogResult } from './test-dialog';
 import { TEST_SORTS, TestSort, sortTests } from './tests-sort';
@@ -6,7 +6,7 @@ import { DatePipe } from '@angular/common';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { finalize, Subscription, takeUntil } from 'rxjs';
+import { finalize, firstValueFrom, Subscription, takeUntil } from 'rxjs';
 import { MaterialsShell } from '../materials/materials-shell';
 import { FigmaIcon } from '../materials/figma-icon';
 import { DemoScenario, TESTS_SOURCE, TestSummary } from './tests-source';
@@ -25,6 +25,7 @@ export class TestsPage {
   readonly startingTest = signal<string | null>(null);
   private readonly dialogs = inject(MatDialog);
   private dialogOpen = false;
+  private readonly resumeDialog = viewChild.required<TemplateRef<unknown>>('resumeDialog');
   readonly state = signal<'loading' | 'list' | 'empty' | 'error' | 'auth'>('loading');
   readonly items = signal<TestSummary[]>([]);
   readonly sort = signal<TestSort>('name:asc');
@@ -70,7 +71,7 @@ export class TestsPage {
   }
 
   private start(quizId: string): void {
-    if (this.startingTest() || this.state() !== 'list' || this.source.demo) return;
+    if (this.dialogOpen || this.startingTest() || this.state() !== 'list' || this.source.demo) return;
     if (!this.auth.token) {
       this.state.set('auth');
       return;
@@ -81,7 +82,7 @@ export class TestsPage {
     this.http.post<{ attempt: { id: string } }>(
       '/api/quizzes/' + encodeURIComponent(quizId) + '/attempts',
       null,
-      { headers: { 'Idempotency-Key': crypto.randomUUID() } },
+      { observe: 'response', headers: { 'Idempotency-Key': crypto.randomUUID() } },
     ).pipe(
       takeUntil(this.auth.sessionChanges),
       takeUntilDestroyed(this.destroyRef),
@@ -89,7 +90,14 @@ export class TestsPage {
     ).subscribe({
       next: async response => {
         if (revision !== this.auth.sessionRevision) return;
-        const id = response?.attempt?.id;
+        const id = response.body?.attempt?.id;
+        if (id && response.status === 200) {
+          this.dialogOpen = true;
+          const dialog = this.dialogs.open(this.resumeDialog(), { width: '440px', autoFocus: 'first-tabbable' });
+          const confirmed = await firstValueFrom(dialog.afterClosed(), { defaultValue: false });
+          this.dialogOpen = false;
+          if (!confirmed || revision !== this.auth.sessionRevision) return;
+        }
         if (id && await this.router.navigate(['/attempts', id]).catch(() => false)) return;
         if (revision === this.auth.sessionRevision) this.notice.set('Не удалось открыть попытку. Попробуйте ещё раз.');
       },

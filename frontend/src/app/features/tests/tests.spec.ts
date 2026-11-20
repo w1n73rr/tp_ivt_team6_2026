@@ -62,10 +62,31 @@ describe('Tests table prototype', () => {
     const request = http.expectOne('/api/quizzes/' + item.id + '/attempts');
     expect(request.request.method).toBe('POST');
     expect(request.request.headers.get('Idempotency-Key')).toMatch(/^[a-f0-9-]{36}$/);
-    request.flush({ attempt: { id: 'attempt-1' } });
+    request.flush({ attempt: { id: 'attempt-1' } }, { status: 201, statusText: 'Created' });
     expect(router).toHaveBeenCalledWith(['/attempts', 'attempt-1']);
     http.verify();
   });
+  it.each([true, false])('asks before resuming an active attempt (confirm: %s)', async confirmed => {
+    source.demo = false;
+
+    const router = vi.spyOn(TestBed.inject(Router), 'navigate').mockResolvedValue(true);
+    const fixture = TestBed.createComponent(TestsPage);
+    const http = TestBed.inject(HttpTestingController);
+    const confirm = vi.spyOn(fixture.debugElement.injector.get(MatDialog), 'open').mockReturnValue({ afterClosed: () => of(confirmed) } as never);
+    try {
+      fixture.detectChanges();
+      fixture.componentInstance.action('play', item);
+      http.expectOne('/api/quizzes/' + item.id + '/attempts').flush({ attempt: { id: 'active' } });
+      await Promise.resolve();
+      expect(confirm).toHaveBeenCalledOnce();
+      if (confirmed) expect(router).toHaveBeenCalledWith(['/attempts', 'active']);
+      else expect(router).not.toHaveBeenCalled();
+      http.verify();
+    } finally {
+      confirm.mockRestore();
+    }
+  });
+
   it('keeps the list and allows retry after an unavailable test response', () => {
     source.demo = false;
     const f = TestBed.createComponent(TestsPage);
