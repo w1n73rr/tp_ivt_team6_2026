@@ -29,6 +29,7 @@ it('shows server counts, clears on route changes and distinguishes result errors
   fixture.detectChanges();
   expect([...fixture.nativeElement.querySelectorAll('dd')].map((node: Element) => node.textContent))
     .toEqual(['2', '1', '2', '5', '00:12:45', '—', '—', '—']);
+  expect(fixture.nativeElement.querySelector('.badge').textContent).toContain('Пропущено · 0 / 1');
   expect(fixture.nativeElement.querySelector('.question.skipped .selected')).toBeNull();
   expect(fixture.nativeElement.querySelector('.question.skipped .empty').textContent).toContain('Не отвечено');
   expect(fixture.nativeElement.querySelector('.question .expected').textContent).toContain('Верный вариант');

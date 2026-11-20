@@ -1,4 +1,4 @@
-<app-materials-shell active="tests" [resultLayout]="true">
+<app-materials-shell active="tests">
   <section class="result">
     @let view = state();
     <p class="breadcrumb"><a routerLink="/tests">Тесты</a> / @if (view.kind === 'ready') { {{ view.result.quiz.name }} / } Результат</p>
@@ -36,7 +36,7 @@
           <h2>Ответы по вопросам</h2>
           @for (item of result.items; track item.question.id) {
             <article class="panel question" [class.correct]="item.outcome === 'CORRECT'" [class.incorrect]="item.outcome === 'INCORRECT'" [class.skipped]="item.outcome === 'SKIPPED'">
-              <div class="question-header"><strong>Вопрос {{ item.question.position }}</strong><span class="badge">{{ item.score }} / 1</span></div>
+              <div class="question-header"><strong>Вопрос {{ item.question.position }}</strong><span class="badge">{{ outcomes[item.outcome] }} · {{ item.score }} / 1</span></div>
               <h3>{{ item.question.text }}</h3>
               <div class="answer-columns">
                 <div><h4>Ваш ответ</h4>

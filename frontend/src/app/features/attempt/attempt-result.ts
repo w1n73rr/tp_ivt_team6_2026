@@ -44,6 +44,7 @@ export class AttemptResultPage {
   readonly retry = new Subject<void>();
   readonly formatDuration = formatDuration;
   readonly difficulties: Record<string, string> = { EASY: 'Лёгкая', MEDIUM: 'Средняя', HARD: 'Сложная' };
+  readonly outcomes = { CORRECT: 'Верно', INCORRECT: 'Неверно', SKIPPED: 'Пропущено' };
   readonly types: Record<string, string> = {
     SINGLE_CHOICE: 'Один правильный ответ', MULTIPLE_CHOICE: 'Несколько правильных ответов', TRUE_FALSE: 'Верно / неверно',
   };

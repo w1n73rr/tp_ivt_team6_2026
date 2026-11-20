@@ -1,9 +1,9 @@
-.result { margin: 0 0 36px; color: #17294c; overflow-wrap: anywhere; }
+.result { max-width: 1010px; margin: 12px auto 32px; color: #17294c; overflow-wrap: anywhere; }
 .breadcrumb, .breadcrumb a, .subtitle, dt, h4, .score p { color: #627696; }
-.breadcrumb { margin: 0 0 32px; font-size: 14px; }
+.breadcrumb { margin: 0 0 20px; font-size: 14px; }
 .breadcrumb a { text-decoration: none; }
 header, .question-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
-h1 { margin: 0; font-size: clamp(27px, 3vw, 36px); line-height: 1.1; }
+h1 { margin: 0; font-size: clamp(24px, 2.5vw, 32px); line-height: 1.1; }
 .subtitle { margin: 8px 0 0; }
 .back { flex: none; padding: 11px 24px; background: white; color: #17294c; border: 1px solid #dbe5f1; border-radius: 9px; text-decoration: none; font: inherit; font-weight: 650; cursor: pointer; }
 .back:hover { border-color: #2368c9; }
