@@ -3,10 +3,10 @@ import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { TestDialog, TestDialogResult } from './test-dialog';
 import { TEST_SORTS, TestSort, sortTests } from './tests-sort';
 import { DatePipe } from '@angular/common';
-import { HttpErrorResponse } from '@angular/common/http';
-import { ActivatedRoute, RouterLink } from '@angular/router';
+import { HttpClient, HttpErrorResponse } from '@angular/common/http';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { Subscription } from 'rxjs';
+import { finalize, Subscription, takeUntil } from 'rxjs';
 import { MaterialsShell } from '../materials/materials-shell';
 import { FigmaIcon } from '../materials/figma-icon';
 import { DemoScenario, TESTS_SOURCE, TestSummary } from './tests-source';
@@ -20,6 +20,9 @@ export class TestsPage {
   private readonly auth = inject(AuthService);
   private readonly destroyRef = inject(DestroyRef);
   private request?: Subscription;
+  private readonly http = inject(HttpClient);
+  private readonly router = inject(Router);
+  readonly startingTest = signal<string | null>(null);
   private readonly dialogs = inject(MatDialog);
   private dialogOpen = false;
   readonly state = signal<'loading' | 'list' | 'empty' | 'error' | 'auth'>('loading');
@@ -54,7 +57,7 @@ export class TestsPage {
     this.scenario.set(scenario); this.source.setScenario(scenario); this.load();
   }
   action(action: 'rename' | 'delete' | 'play', item: TestSummary): void {
-    if (action === 'play') { this.notice.set('Прохождение тестов будет доступно в следующих спринтах.'); return; }
+    if (action === 'play') { this.start(item.id); return; }
     if (this.dialogOpen || this.state() !== 'list') return;
     this.dialogOpen = true;
     this.dialogs.open<TestDialog, { action: 'rename' | 'delete'; item: TestSummary }, TestDialogResult>(TestDialog, { data: { action, item }, width: '640px', maxWidth: 'calc(100vw - 32px)', autoFocus: action === 'rename' ? '#test-rename' : 'first-tabbable' }).afterClosed().pipe(takeUntilDestroyed(this.destroyRef)).subscribe(result => {
@@ -63,6 +66,42 @@ export class TestsPage {
       this.items.update(rows => result.action === 'rename' ? rows.map(row => row.id === result.item.id ? result.item : row) : rows.filter(row => row.id !== result.id));
       this.state.set(this.items().length ? 'list' : 'empty');
       this.notice.set(result.action === 'rename' ? 'Название теста изменено.' : 'Тест удалён.');
+    });
+  }
+
+  private start(quizId: string): void {
+    if (this.startingTest() || this.state() !== 'list' || this.source.demo) return;
+    if (!this.auth.token) {
+      this.state.set('auth');
+      return;
+    }
+    const revision = this.auth.sessionRevision;
+    this.notice.set('');
+    this.startingTest.set(quizId);
+    this.http.post<{ attempt: { id: string } }>(
+      '/api/quizzes/' + encodeURIComponent(quizId) + '/attempts',
+      null,
+      { headers: { 'Idempotency-Key': crypto.randomUUID() } },
+    ).pipe(
+      takeUntil(this.auth.sessionChanges),
+      takeUntilDestroyed(this.destroyRef),
+      finalize(() => this.startingTest.set(null)),
+    ).subscribe({
+      next: async response => {
+        if (revision !== this.auth.sessionRevision) return;
+        const id = response?.attempt?.id;
+        if (id && await this.router.navigate(['/attempts', id]).catch(() => false)) return;
+        if (revision === this.auth.sessionRevision) this.notice.set('Не удалось открыть попытку. Попробуйте ещё раз.');
+      },
+      error: (error: HttpErrorResponse) => {
+        if (error.status === 401) {
+          this.state.set('auth');
+          return;
+        }
+        this.notice.set(error.status === 403 || error.status === 404
+          ? 'Тест недоступен.'
+          : 'Не удалось запустить тест. Попробуйте ещё раз.');
+      },
     });
   }
 }
