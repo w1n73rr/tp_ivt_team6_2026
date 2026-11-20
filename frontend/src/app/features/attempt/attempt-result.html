@@ -1,4 +1,4 @@
-<app-materials-shell active="tests" [resultLayout]="true">
+<app-materials-shell active="tests">
   <section class="result">
     @let view = state();
     <p class="breadcrumb"><a routerLink="/tests">Тесты</a> / @if (view.kind === 'ready') { {{ view.result.quiz.name }} / } Результат</p>

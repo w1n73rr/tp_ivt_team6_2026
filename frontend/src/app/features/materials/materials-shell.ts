@@ -28,10 +28,8 @@ import { FigmaIcon } from './figma-icon';
     <main><ng-content /></main>
   </div> }`,
   styleUrl: './materials-shell.scss',
-  host: { '[class.result-layout]': 'resultLayout()' },
 })
 export class MaterialsShell {
-  readonly resultLayout = input(false);
   readonly active = input<'materials' | 'dashboard' | 'tests'>('materials');
   private readonly auth = inject(AuthService);
   private readonly router = inject(Router);
