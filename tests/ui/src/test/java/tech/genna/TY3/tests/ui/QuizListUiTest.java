@@ -30,6 +30,7 @@ import tech.genna.TY3.tests.ui.support.BrowserSettings;
 import static com.codeborne.selenide.CollectionCondition.*;
 import static com.codeborne.selenide.Condition.*;
 import static com.codeborne.selenide.Selenide.*;
+import static com.codeborne.selenide.WebDriverConditions.url;
 import static com.codeborne.selenide.WebDriverRunner.getWebDriver;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
@@ -42,6 +43,7 @@ public class QuizListUiTest {
     private final TestsPage page = new TestsPage();
     private final AtomicReference<Supplier<HttpResponse>> listResponse = new AtomicReference<>();
     private final AtomicInteger mutations = new AtomicInteger();
+    private final AtomicInteger attemptStarts = new AtomicInteger();
     private NetworkInterceptor interceptor;
     private volatile int mutationStatus = 500;
 
@@ -58,6 +60,10 @@ public class QuizListUiTest {
             String path = URI.create(request.getUri()).getPath();
             if (path.equals("/api/quizzes") && request.getMethod() == HttpMethod.GET) {
                 return listResponse.get().get();
+            }
+            if (path.equals("/api/quizzes/a/attempts") && request.getMethod() == HttpMethod.POST) {
+                attemptStarts.incrementAndGet();
+                return json(201, Map.of("attempt", Map.of("id", "77dede69-206c-4215-9383-0327222b4827")));
             }
             if (path.startsWith("/api/quizzes/") &&
                     (request.getMethod() == HttpMethod.PATCH || request.getMethod() == HttpMethod.DELETE)) {
@@ -281,12 +287,12 @@ public class QuizListUiTest {
     }
 
     @Test
-    @DisplayName("TC-TESTS-10: заглушка прохождения")
-    void playShowsNotice() {
+    @DisplayName("TC-TESTS-10: открытие созданной попытки")
+    void opensCreatedAttempt() {
         openList();
         row(ALGEBRA).$x(".//button[normalize-space()='Пройти тест']").click();
-        $("[role=status].notice").shouldHave(text("Прохождение тестов будет доступно в следующих спринтах"));
-        page.rows.shouldHave(size(3));
+        webdriver().shouldHave(url(Configuration.baseUrl + "/attempts/77dede69-206c-4215-9383-0327222b4827"));
+        assertEquals(1, attemptStarts.get());
         assertEquals(0, mutations.get());
     }
 
