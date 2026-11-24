@@ -1,3 +1,4 @@
+import { createRequestKey } from '../../core/request-key';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Component, DestroyRef, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
@@ -54,7 +55,7 @@ export class AttemptResultPage {
     this.repeatError.set(false);
     this.repeating.set(true);
     this.http.post<{ attempt: { id: string } }>('/api/quizzes/' + encodeURIComponent(quizId) + '/attempts', null, {
-      observe: 'response', headers: { 'Idempotency-Key': crypto.randomUUID() },
+      observe: 'response', headers: { 'Idempotency-Key': createRequestKey() },
     }).pipe(
       takeUntil(this.routeChanged),
       takeUntil(this.auth.sessionChanges),

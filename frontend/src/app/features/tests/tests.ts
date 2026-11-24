@@ -1,3 +1,4 @@
+import { createRequestKey } from '../../core/request-key';
 import { Component, DestroyRef, computed, inject, signal, TemplateRef, viewChild } from '@angular/core';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { TestDialog, TestDialogResult } from './test-dialog';
@@ -82,7 +83,7 @@ export class TestsPage {
     this.http.post<{ attempt: { id: string } }>(
       '/api/quizzes/' + encodeURIComponent(quizId) + '/attempts',
       null,
-      { observe: 'response', headers: { 'Idempotency-Key': crypto.randomUUID() } },
+      { observe: 'response', headers: { 'Idempotency-Key': createRequestKey() } },
     ).pipe(
       takeUntil(this.auth.sessionChanges),
       takeUntilDestroyed(this.destroyRef),

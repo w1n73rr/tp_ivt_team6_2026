@@ -54,6 +54,19 @@ describe('Generation prototype', () => {
     expect(harness.routeNativeElement!.textContent).not.toContain('%');
     expect(harness.routeNativeElement!.textContent).not.toContain('К настройкам');
   });
+  it('starts a real request on HTTP when randomUUID is unavailable', async () => {
+    source.demo = false;
+    source.start.mockReturnValue(new Subject());
+    const { page } = await open();
+    vi.stubGlobal('crypto', { getRandomValues: crypto.getRandomValues.bind(crypto) });
+    try {
+      page.start();
+      expect(source.start).toHaveBeenCalledWith('one', options.defaults, expect.any(String),
+        expect.stringMatching(/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/));
+    } finally {
+      vi.unstubAllGlobals();
+    }
+  });
   it('blocks double submission and restores editable settings on failure', async () => {
     const sending = new Subject(); source.start.mockReturnValue(sending);
     const { page, harness } = await open(); page.start(); page.start(); harness.detectChanges();
