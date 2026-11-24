@@ -1,0 +1,81 @@
+<app-materials-shell active="tests">
+  <section class="result">
+    @let view = state();
+    <p class="breadcrumb"><a routerLink="/tests">Тесты</a> / @if (view.kind === 'ready') { {{ view.result.quiz.name }} / } Результат</p>
+    <header>
+      <div>
+        <h1>Результат теста</h1>
+        @if (view.kind === 'ready') {
+          <p class="subtitle">{{ view.result.quiz.name }} @if (view.result.quiz.subjectName) { · {{ view.result.quiz.subjectName }} }</p>
+        }
+      </div>
+            <div class="header-actions">
+        <a class="back" routerLink="/tests">К тестам</a>
+        @if (view.kind === 'ready') {
+          <button type="button" class="back primary" [disabled]="repeating() || !!activeAttempt()" (click)="repeat(view.result.quiz.id)">
+            {{ repeating() ? 'Открываем…' : 'Пройти ещё раз' }}
+          </button>
+        }
+      </div>
+    </header>
+    @if (repeatError()) { <p role="alert">Не удалось открыть попытку. Попробуйте ещё раз.</p> }
+    @if (activeAttempt(); as id) {
+      <div class="panel message">
+        <p>У вас есть незавершённая попытка. Продолжить с места остановки?</p>
+        <button type="button" class="back" (click)="activeAttempt.set(null)">Отмена</button>
+        <button type="button" class="back primary" (click)="openAttempt(id)">Продолжить</button>
+      </div>
+    }
+    @switch (view.kind) {
+      @case ('ready') {
+        @let result = view.result;
+        <section class="panel score">
+          <div class="ring" [style.--score]="result.scorePercent + '%'">
+            <strong>{{ result.scorePercent.toLocaleString('ru-RU', { minimumFractionDigits: 1, maximumFractionDigits: 2 }) }}%</strong>
+          </div>
+          <p>Вы набрали {{ result.score.toLocaleString('ru-RU', { minimumFractionDigits: 1 }) }} из {{ result.totalQuestions }} баллов.</p>
+        </section>
+        <dl class="stats">
+          <div class="panel correct"><span aria-hidden="true">✓</span><dt>Правильных</dt><dd>{{ result.correctCount }}</dd></div>
+          <div class="panel incorrect"><span aria-hidden="true">×</span><dt>Неправильных</dt><dd>{{ result.incorrectCount }}</dd></div>
+          <div class="panel skipped"><span aria-hidden="true">−</span><dt>Пропущено</dt><dd>{{ result.skippedCount }}</dd></div>
+          <div class="panel"><span aria-hidden="true">#</span><dt>Всего вопросов</dt><dd>{{ result.totalQuestions }}</dd></div>
+        </dl>
+        <dl class="panel metadata">
+          <div><dt>Время прохождения</dt><dd>{{ formatDuration(result.durationSeconds) }}</dd></div>
+          <div><dt>Дата завершения</dt><dd>{{ formatDate(result.completedAt) }}</dd></div>
+          <div><dt>Сложность</dt><dd>{{ difficulties[result.quiz.difficulty] ?? '—' }}</dd></div>
+          <div><dt>Тип вопросов</dt><dd>{{ types[result.quiz.questionType] ?? '—' }}</dd></div>
+        </dl>
+        @if (result.items.length) {
+          <h2>Ответы по вопросам</h2>
+          @for (item of result.items; track item.question.id) {
+            <article class="panel question" [class.correct]="item.outcome === 'CORRECT'" [class.incorrect]="item.outcome === 'INCORRECT'" [class.skipped]="item.outcome === 'SKIPPED'">
+              <div class="question-header"><strong>Вопрос {{ item.question.position }}</strong><span class="badge">{{ outcomes[item.outcome] }} · {{ item.score }} / 1</span></div>
+              <h3>{{ item.question.text }}</h3>
+              <div class="answer-columns">
+                <div><h4>Ваш ответ</h4>
+                  @for (answer of answers(item, item.selectedOptionIds); track $index) {
+                    <p class="answer selected">{{ answer }}</p>
+                  } @empty { <p class="answer empty">Не отвечено</p> }
+                </div>
+                <div><h4>Правильный ответ</h4>
+                  @for (answer of answers(item, item.correctOptionIds); track $index) {
+                    <p class="answer expected">{{ answer }}</p>
+                  }
+                </div>
+              </div>
+            </article>
+          }
+        }
+      }
+      @case ('loading') { <p class="panel message" role="status">Загружаем результат…</p> }
+      @case ('unfinished') { <div class="panel message"><p>Попытка ещё не завершена.</p><a routerLink="..">К попытке</a></div> }
+      @case ('unavailable') { <p class="panel message">Результат не найден или недоступен.</p> }
+      @case ('error') {
+        <div class="panel message"><p role="alert">Не удалось загрузить результат.</p>
+        <button type="button" class="back" (click)="retry.next()">Повторить</button></div>
+      }
+    }
+  </section>
+</app-materials-shell>

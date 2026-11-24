@@ -7,7 +7,7 @@ import { pathToFileURL } from 'node:url';
 function require(condition, message) { if (!condition) throw new Error(message); }
 const safeCode = code => typeof code === 'string' && /^[A-Z_]{1,64}$/.test(code) ? code : 'UNKNOWN';
 
-export function verifyResult(status, quizzes, expectUnconfigured = false) {
+export function verifyResult(status, quizzes, expectUnconfigured = false, expected = { questionCount: 5, questionType: 'SINGLE_CHOICE' }) {
   require(Array.isArray(quizzes?.items), 'API не вернул список тестов');
   if (expectUnconfigured) {
     require(status.status === 'FAILED' && status.error?.code === 'NOT_CONFIGURED', 'Ожидался FAILED/NOT_CONFIGURED');
@@ -16,15 +16,15 @@ export function verifyResult(status, quizzes, expectUnconfigured = false) {
   }
   require(status.status === 'COMPLETED', `Генерация не завершилась успешно: ${safeCode(status.error?.code)}`);
   require(quizzes.items.length === 1 && quizzes.items[0].id === status.quizId, 'Ожидался ровно один сохранённый тест этой задачи');
-  require(quizzes.items[0].questionCount === 5, 'В сохранённом тесте должно быть ровно 5 вопросов');
-  require(quizzes.items[0].questionType === 'SINGLE_CHOICE', 'Неверный тип сохранённых вопросов');
+  require(quizzes.items[0].questionCount === expected.questionCount, 'Неверное число сохранённых вопросов');
+  require(quizzes.items[0].questionType === expected.questionType, 'Неверный тип сохранённых вопросов');
 }
 
 // Создаёт учётные записи и данные. Использовать только одноразовый стенд.
-export async function checkGeneration({ baseUrl, file, timeout = 450, expectUnconfigured = false, report = 'tests/checks/test-results/generation.json' }) {
+export async function checkGeneration({ baseUrl, file, timeout = 450, expectUnconfigured = false, report = 'tests/checks/test-results/generation.json', questionCount = 5, difficulty = 'MEDIUM', questionType = 'SINGLE_CHOICE' }) {
   const base = baseUrl.replace(/\/$/, '');
   const started = Date.now();
-  const evidence = { result: 'FAILED', questionCount: 5, difficulty: 'MEDIUM', questionType: 'SINGLE_CHOICE' };
+  const evidence = { result: 'FAILED', questionCount, difficulty, questionType };
   async function request(method, path, expected, payload, token, extra = {}) {
     const headers = { ...extra };
     if (token) headers.Authorization = `Bearer ${token}`;
@@ -47,6 +47,8 @@ export async function checkGeneration({ baseUrl, file, timeout = 450, expectUnco
     return value.token;
   }
   try {
+    require([5, 10].includes(questionCount) && ['EASY', 'MEDIUM', 'HARD'].includes(difficulty)
+      && ['SINGLE_CHOICE', 'MULTIPLE_CHOICE', 'TRUE_FALSE'].includes(questionType), 'Недопустимые настройки проверки');
     require(Number.isFinite(timeout) && timeout > 0, 'Тайм-аут должен быть положительным числом');
     const token = await register();
     const filename = file ? basename(file) : 'lesson.txt';
@@ -58,7 +60,7 @@ export async function checkGeneration({ baseUrl, file, timeout = 450, expectUnco
     form.append('metadata', new Blob([JSON.stringify({ name: `TY5 ${randomUUID()}`, subjectName: 'TY5 check' })], { type: 'application/json' }));
     form.append('file', new Blob([content], { type: 'application/octet-stream' }), filename);
     const upload = (await request('POST', '/api/materials', 201, form, token)).value;
-    const parameters = { materialId: upload.material.id, name: 'TY5 check', questionCount: 5, difficulty: 'MEDIUM', questionType: 'SINGLE_CHOICE' };
+    const parameters = { materialId: upload.material.id, name: 'TY5 check', questionCount, difficulty, questionType };
     const key = { 'Idempotency-Key': randomUUID() };
     await request('POST', '/api/quizzes', 400, { ...parameters, questionCount: 20 }, token, key);
     const accepted = await request('POST', '/api/quizzes', 202, parameters, token, key);
@@ -68,7 +70,7 @@ export async function checkGeneration({ baseUrl, file, timeout = 450, expectUnco
     const path = `/api/generation-jobs/${id}`;
     require(accepted.headers.get('location') === path, 'Неверный Location для проверки статуса');
     require((await request('POST', '/api/quizzes', 202, parameters, token, key)).value.id === id, 'Повтор создал дубликат задачи');
-    await request('POST', '/api/quizzes', 409, { ...parameters, questionCount: 10 }, token, key);
+    await request('POST', '/api/quizzes', 409, { ...parameters, questionCount: questionCount === 5 ? 10 : 5 }, token, key);
     await request('GET', path, 401);
     await request('GET', path, 404, undefined, await register());
     const deadline = Date.now() + timeout * 1000;
@@ -84,8 +86,8 @@ export async function checkGeneration({ baseUrl, file, timeout = 450, expectUnco
     }
     if (status.status === 'FAILED') evidence.errorCode = safeCode(status.error?.code);
     const quizzes = (await request('GET', '/api/quizzes', 200, undefined, token)).value;
-    verifyResult(status, quizzes, expectUnconfigured);
-    verifyResult(status, (await request('GET', '/api/quizzes', 200, undefined, token)).value, expectUnconfigured);
+    verifyResult(status, quizzes, expectUnconfigured, parameters);
+    verifyResult(status, (await request('GET', '/api/quizzes', 200, undefined, token)).value, expectUnconfigured, parameters);
     evidence.result = 'PASSED';
     console.log(expectUnconfigured ? 'Успех: проверен NOT_CONFIGURED без сохранения; реальная модель не проверена' : 'Успех: реальная генерация, идемпотентность, доступ и повторное чтение сохранённого теста');
   } finally {

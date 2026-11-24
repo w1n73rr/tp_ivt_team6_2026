@@ -1,4 +1,3 @@
-import { generationRequestKey } from './generation-request-key';
 import { generationStage, generationFailure, generationStep } from './generation-status';
 import { HttpErrorResponse } from '@angular/common/http';
 import { AuthService } from '../../core/auth/auth.service';
@@ -16,6 +15,11 @@ import { GENERATION_SOURCE, GenerationJob, GenerationOptions, GenerationSettings
 export class GenerationDrafts {
   readonly values = new Map<string, GenerationSettings>();
   readonly names = new Map<string, string>();
+  constructor() {
+    inject(AuthService).sessionChanges.pipe(takeUntilDestroyed()).subscribe(() => {
+      this.values.clear(); this.names.clear();
+    });
+  }
 }
 @Component({
   selector: 'app-generation', imports: [MaterialsShell, RouterLink, DecimalPipe],
@@ -137,7 +141,7 @@ export class Generation {
     this.drafts.values.set(material.id, { ...settings });
     this.state.set('sending'); this.error.set(''); this.connectionError.set('');
     const signature = JSON.stringify({ materialId: material.id, ...settings, name: this.name() });
-    if (!this.pending || this.pending.signature !== signature) this.pending = { signature, key: generationRequestKey() };
+    if (!this.pending || this.pending.signature !== signature) this.pending = { signature, key: crypto.randomUUID() };
     this.persist();
     this.sending = (this.source.demo ? this.source.start(material.id, { ...settings }) : this.source.start(material.id, { ...settings }, this.name(), this.pending.key)).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: job => {

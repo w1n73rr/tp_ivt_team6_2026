@@ -10,6 +10,10 @@ import { Generation } from './features/generation/generation';
 import { TestsPage } from './features/tests/tests';
 import { testsAccess } from './core/auth/tests-access';
 
+import { AttemptPage } from './features/attempt/attempt';
+
+import { AttemptResultPage } from './features/attempt/attempt-result';
+
 export const routes: Routes = [
   {
     path: '',
@@ -27,10 +31,13 @@ export const routes: Routes = [
   {
     path: 'dashboard',
     component: Dashboard,
+    canActivate: [testsAccess],
   },
-  { path: 'materials/upload', component: MaterialUpload },
-  { path: 'materials/:materialId/generate', component: Generation },
-  { path: 'materials', component: Materials },
+  { path: 'materials/upload', component: MaterialUpload, canActivate: [testsAccess] },
+  { path: 'materials/:materialId/generate', component: Generation, canActivate: [testsAccess] },
+  { path: 'materials', component: Materials, canActivate: [testsAccess] },
+  { path: 'attempts/:attemptId/result', component: AttemptResultPage, canActivate: [testsAccess] },
+  { path: 'attempts/:attemptId', component: AttemptPage, canActivate: [testsAccess] },
   { path: 'tests', component: TestsPage, canActivate: [testsAccess] },
   {
     path: '**',

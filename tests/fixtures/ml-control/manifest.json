@@ -1,0 +1,45 @@
+{
+  "provider": "cloudru",
+  "model": "deepseek-ai/DeepSeek-V4-Flash",
+  "mlSourceCommit": "101fef7",
+  "baseDev": "c009a53",
+  "difficulty": "MEDIUM",
+  "questionCounts": [
+    5,
+    10
+  ],
+  "questionTypes": [
+    "SINGLE_CHOICE",
+    "MULTIPLE_CHOICE",
+    "TRUE_FALSE"
+  ],
+  "plannedRepeatsPerConfiguration": 1,
+  "plannedConfigurations": 12,
+  "materialPreparation": "Full PDF text extracted with pypdf, page markers preserved. API receives TXT. Images not included.",
+  "materials": [
+    {
+      "id": "sre",
+      "textFile": "tests/fixtures/ml-control/sre.txt",
+      "sourceFile": "ЛК2. SRE практики.pdf",
+      "sourceSha256": "a438a95ae304d5dbd81daf5648398090890500f9c910f202ed834680a622fe29",
+      "textSha256": "c7c5a0a1d19df09a65d924f6f6c54fad7b3c497512f5bb6511dcb9e4ffa83df0",
+      "characters": 10123
+    },
+    {
+      "id": "systemd",
+      "textFile": "tests/fixtures/ml-control/systemd.txt",
+      "sourceFile": "ЛК3. Boot Process & Systemd Deep Dive.pdf",
+      "sourceSha256": "6931824aba95b3e26ed1110a9c4c4dc1e0628d81ad1b13cc443712c1d126adc1",
+      "textSha256": "bcd0182a19b56daabbbf8c9f62ce96280586f36cb60f364bb94a80dbefb61af5",
+      "characters": 25247
+    }
+  ],
+  "maxOutputTokens": 8000,
+  "temperature": 0.2,
+  "reasoning": "provider_default",
+  "callTimeoutSeconds": 90,
+  "totalMlTimeoutSeconds": 240,
+  "extractionTool": "pypdf 6.21.4",
+  "sourceAuthor": "Владислав Мещеряков, VK education",
+  "recordedDate": "2026-11-17"
+}

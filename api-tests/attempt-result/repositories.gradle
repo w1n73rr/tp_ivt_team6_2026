@@ -1,0 +1,7 @@
+settingsEvaluated { settings ->
+    settings.pluginManagement.repositories {
+        clear()
+        mavenCentral()
+        gradlePluginPortal()
+    }
+}

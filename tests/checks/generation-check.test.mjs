@@ -64,3 +64,13 @@ test('API-сценарий проходит HTTP-последовательно�
     assert.ok(!text.includes('private-token'));
   } finally { await unlink(report); await rmdir(directory); }
 });
+
+
+test('Приёмка поддерживает 10 вопросов выбранного типа и ловит расхождение настроек', () => {
+  const status = { status: 'COMPLETED', quizId: 'quiz' };
+  const quiz = { id: 'quiz', questionCount: 10, questionType: 'MULTIPLE_CHOICE' };
+  const expected = { questionCount: 10, questionType: 'MULTIPLE_CHOICE' };
+  verifyResult(status, { items: [quiz] }, false, expected);
+  assert.throws(() => verifyResult(status, { items: [{ ...quiz, questionCount: 5 }] }, false, expected));
+  assert.throws(() => verifyResult(status, { items: [{ ...quiz, questionType: 'SINGLE_CHOICE' }] }, false, expected));
+});

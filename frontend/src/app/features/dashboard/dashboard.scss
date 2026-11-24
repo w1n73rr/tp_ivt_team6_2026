@@ -172,3 +172,49 @@ footer {
 }
 
 .upload-icon app-figma-icon { filter: brightness(0) saturate(100%) invert(35%) sepia(95%) saturate(2200%) hue-rotate(210deg); }
+
+.stats article,
+.details article,
+.actions button {
+  border-color: #dbe5f5;
+  box-shadow: 0 2px 4px #152c5410, 0 10px 24px #152c5410;
+}
+
+.actions button:hover,
+.actions button:focus-visible {
+  box-shadow: 0 6px 12px #152c5420, 0 14px 30px #2154a526;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .actions button,
+  .details button {
+    transition: transform 200ms ease-out, box-shadow 200ms ease-out, background-color 180ms ease-out;
+  }
+
+  .actions button:hover,
+  .actions button:focus-visible,
+  .details button:hover {
+    transform: translateY(-4px);
+  }
+
+  .actions button:active,
+  .details button:active {
+    transform: translateY(1px);
+  }
+
+  .actions,
+  .stats,
+  .details {
+    animation: dashboard-enter 420ms cubic-bezier(.2, .75, .25, 1) both;
+  }
+
+  .stats { animation-delay: 65ms; }
+  .details { animation-delay: 130ms; }
+}
+
+@keyframes dashboard-enter {
+  from { opacity: 0; transform: translateY(14px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.details { grid-template-columns: minmax(0, 1fr); }

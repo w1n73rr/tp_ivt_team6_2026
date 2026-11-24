@@ -1,0 +1,16 @@
+{
+  "result": "PASSED",
+  "questionCount": 5,
+  "difficulty": "MEDIUM",
+  "questionType": "SINGLE_CHOICE",
+  "jobId": "9b92febd-0e04-4611-bad2-ad759f918ced",
+  "status": "COMPLETED",
+  "durationSeconds": 46,
+  "material": "sre",
+  "mlSourceCommit": "101fef7",
+  "provider": "cloudru",
+  "model": "deepseek-ai/DeepSeek-V4-Flash",
+  "maxOutputTokens": 8000,
+  "repeat": 1,
+  "schemaErrors": 0
+}

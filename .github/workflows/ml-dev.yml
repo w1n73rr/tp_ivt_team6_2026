@@ -36,11 +36,22 @@ jobs:
         run: docker compose build
       - name: Запуск с ключом только в окружении backend
         env:
+          ML_PROVIDER: ${{ vars.ML_PROVIDER || 'openrouter' }}
+          CLOUDRU_API_KEY: ${{ secrets.CLOUDRU_API_KEY }}
+          CLOUDRU_MODEL: ${{ vars.CLOUDRU_MODEL || 'deepseek-ai/DeepSeek-V4-Flash' }}
           OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
           OPENROUTER_MODEL: ${{ vars.OPENROUTER_MODEL }}
         run: |
-          if [ -z "$OPENROUTER_API_KEY" ]; then echo 'Добавьте OPENROUTER_API_KEY в Environment DEV'; exit 1; fi
-          if [ -z "$OPENROUTER_MODEL" ]; then echo 'Добавьте переменную OPENROUTER_MODEL в Environment DEV'; exit 1; fi
+          case "$ML_PROVIDER" in
+            cloudru)
+              if [ -z "$CLOUDRU_API_KEY" ]; then echo 'Добавьте CLOUDRU_API_KEY в Environment DEV'; exit 1; fi
+              ;;
+            openrouter)
+              if [ -z "$OPENROUTER_API_KEY" ]; then echo 'Добавьте OPENROUTER_API_KEY в Environment DEV'; exit 1; fi
+              if [ -z "$OPENROUTER_MODEL" ]; then echo 'Добавьте OPENROUTER_MODEL в Environment DEV'; exit 1; fi
+              ;;
+            *) echo 'ML_PROVIDER должен быть cloudru или openrouter'; exit 1 ;;
+          esac
           docker compose up -d --no-build --wait --wait-timeout 300
       - name: Настоящая генерация через API и проверка сохранения
         run: node tests/checks/generation-check.mjs --base-url http://localhost:18085 --file tests/ui/src/test/resources/generation/lecture.txt

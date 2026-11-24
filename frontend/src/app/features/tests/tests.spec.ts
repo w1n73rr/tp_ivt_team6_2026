@@ -1,5 +1,6 @@
 import { TestBed } from '@angular/core/testing';
 import { provideHttpClient } from '@angular/common/http';
+import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { provideRouter, Router } from '@angular/router';
 import { RouterTestingHarness } from '@angular/router/testing';
 import { HttpErrorResponse } from '@angular/common/http';
@@ -17,7 +18,7 @@ describe('Tests table prototype', () => {
   let source: { demo: boolean; list: ReturnType<typeof vi.fn>; setScenario: ReturnType<typeof vi.fn> };
   beforeEach(() => {
     source = { demo: true, list: vi.fn(() => of({ items: [item] })), setScenario: vi.fn() };
-    TestBed.configureTestingModule({ imports: [TestsPage, MaterialsShell], providers: [provideRouter([{ path: 'tests', component: TestsPage }]), provideHttpClient(), { provide: TESTS_SOURCE, useValue: source }] });
+    TestBed.configureTestingModule({ imports: [TestsPage, MaterialsShell], providers: [provideRouter([{ path: 'tests', component: TestsPage }]), provideHttpClient(), provideHttpClientTesting(), { provide: TESTS_SOURCE, useValue: source }] });
     vi.spyOn(TestBed.inject(AuthService), 'token', 'get').mockReturnValue('test-session');
   });
   it('renders agreed fields and hides the internal id', () => {
@@ -48,12 +49,58 @@ describe('Tests table prototype', () => {
     const f = TestBed.createComponent(TestsPage); f.detectChanges();
     expect(f.nativeElement.querySelector('a[href^="/login?"]')).toBeTruthy(); expect(f.nativeElement.querySelector('table')).toBeNull();
   });
-  it('does not mutate data when the play placeholder is clicked', () => {
-    const f = TestBed.createComponent(TestsPage); f.detectChanges();
-    const buttons = [f.nativeElement.querySelector('.row-actions button')];
-    for (const button of buttons) { button.click(); f.detectChanges(); expect(f.nativeElement.querySelector('[role=status]')).toBeTruthy(); }
-    expect(f.componentInstance.items()).toEqual([item]); expect(source.list).toHaveBeenCalledTimes(1);
-    expect(f.nativeElement.textContent).toContain('Прохождение тестов будет доступно');
+  it('starts a single attempt on repeated clicks and navigates on success', () => {
+    source.demo = false;
+    const router = vi.spyOn(TestBed.inject(Router), 'navigate').mockResolvedValue(true);
+    const f = TestBed.createComponent(TestsPage);
+    f.detectChanges();
+    f.componentInstance.action('play', item);
+    f.componentInstance.action('play', item);
+    f.detectChanges();
+    expect(f.nativeElement.querySelector('.row-actions button').disabled).toBe(true);
+    const http = TestBed.inject(HttpTestingController);
+    const request = http.expectOne('/api/quizzes/' + item.id + '/attempts');
+    expect(request.request.method).toBe('POST');
+    expect(request.request.headers.get('Idempotency-Key')).toMatch(/^[a-f0-9-]{36}$/);
+    request.flush({ attempt: { id: 'attempt-1' } }, { status: 201, statusText: 'Created' });
+    expect(router).toHaveBeenCalledWith(['/attempts', 'attempt-1']);
+    http.verify();
+  });
+  it.each([true, false])('asks before resuming an active attempt (confirm: %s)', async confirmed => {
+    source.demo = false;
+
+    const router = vi.spyOn(TestBed.inject(Router), 'navigate').mockResolvedValue(true);
+    const fixture = TestBed.createComponent(TestsPage);
+    const http = TestBed.inject(HttpTestingController);
+    const confirm = vi.spyOn(fixture.debugElement.injector.get(MatDialog), 'open').mockReturnValue({ afterClosed: () => of(confirmed) } as never);
+    try {
+      fixture.detectChanges();
+      fixture.componentInstance.action('play', item);
+      http.expectOne('/api/quizzes/' + item.id + '/attempts').flush({ attempt: { id: 'active' } });
+      await Promise.resolve();
+      expect(confirm).toHaveBeenCalledOnce();
+      if (confirmed) expect(router).toHaveBeenCalledWith(['/attempts', 'active']);
+      else expect(router).not.toHaveBeenCalled();
+      http.verify();
+    } finally {
+      confirm.mockRestore();
+    }
+  });
+
+  it('keeps the list and allows retry after an unavailable test response', () => {
+    source.demo = false;
+    const f = TestBed.createComponent(TestsPage);
+    const http = TestBed.inject(HttpTestingController);
+    f.componentInstance.action('play', item);
+    http.expectOne('/api/quizzes/' + item.id + '/attempts')
+      .flush({ message: 'Private name' }, { status: 404, statusText: 'Not Found' });
+    expect(f.componentInstance.notice()).toBe('Тест недоступен.');
+    expect(f.componentInstance.items()).toEqual([item]);
+    f.componentInstance.action('play', item);
+    http.expectOne('/api/quizzes/' + item.id + '/attempts')
+      .flush({}, { status: 503, statusText: 'Unavailable' });
+    expect(f.componentInstance.startingTest()).toBeNull();
+    http.verify();
   });
   it('cancels an old request when a new load begins', () => {
     const old = new Subject<{ items: TestSummary[] }>(); source.list.mockReturnValue(old);

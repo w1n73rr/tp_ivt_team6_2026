@@ -1,0 +1,135 @@
+{
+  "plannedConfigurations": 12,
+  "executedConfigurations": 4,
+  "repeatsPerExecutedConfiguration": 1,
+  "technicalSuccesses": 3,
+  "technicalAttempts": 4,
+  "technicalSuccessRate": 0.75,
+  "tenQuestionSuccesses": 2,
+  "tenQuestionAttempts": 3,
+  "tenQuestionSuccessRate": 0.6666666666666666,
+  "schemaValidatedSavedQuizzes": 3,
+  "schemaValidatedQuestions": 25,
+  "runs": [
+    {
+      "result": "PASSED",
+      "questionCount": 5,
+      "difficulty": "MEDIUM",
+      "questionType": "SINGLE_CHOICE",
+      "jobId": "9b92febd-0e04-4611-bad2-ad759f918ced",
+      "status": "COMPLETED",
+      "durationSeconds": 46,
+      "material": "sre",
+      "mlSourceCommit": "101fef7",
+      "provider": "cloudru",
+      "model": "deepseek-ai/DeepSeek-V4-Flash",
+      "maxOutputTokens": 8000,
+      "repeat": 1,
+      "schemaErrors": 0
+    },
+    {
+      "result": "FAILED",
+      "questionCount": 10,
+      "difficulty": "MEDIUM",
+      "questionType": "SINGLE_CHOICE",
+      "jobId": "ddabaef0-c895-4186-ab7a-a220b9a96a5e",
+      "status": "FAILED",
+      "errorCode": "INVALID_MODEL_OUTPUT",
+      "durationSeconds": 33,
+      "material": "sre",
+      "mlSourceCommit": "101fef7",
+      "provider": "cloudru",
+      "model": "deepseek-ai/DeepSeek-V4-Flash",
+      "maxOutputTokens": 8000,
+      "repeat": 1,
+      "schemaErrors": null
+    },
+    {
+      "result": "PASSED",
+      "questionCount": 10,
+      "difficulty": "MEDIUM",
+      "questionType": "MULTIPLE_CHOICE",
+      "jobId": "7e93b445-49f6-4f37-845b-ee22633807c8",
+      "status": "COMPLETED",
+      "durationSeconds": 47,
+      "material": "sre",
+      "mlSourceCommit": "101fef7",
+      "provider": "cloudru",
+      "model": "deepseek-ai/DeepSeek-V4-Flash",
+      "maxOutputTokens": 8000,
+      "repeat": 1,
+      "schemaErrors": 0
+    },
+    {
+      "result": "PASSED",
+      "questionCount": 10,
+      "difficulty": "MEDIUM",
+      "questionType": "TRUE_FALSE",
+      "jobId": "4b31efb0-c3da-42da-af07-7fe57d4c927c",
+      "status": "COMPLETED",
+      "durationSeconds": 117,
+      "material": "sre",
+      "mlSourceCommit": "101fef7",
+      "provider": "cloudru",
+      "model": "deepseek-ai/DeepSeek-V4-Flash",
+      "maxOutputTokens": 8000,
+      "repeat": 1,
+      "schemaErrors": 0
+    }
+  ],
+  "manualReview": {
+    "sre-5-single": {
+      "verdict": "needs_changes",
+      "issues": [
+        {
+          "questionId": "q3",
+          "category": "AMBIGUITY",
+          "reason": "faster than 300 ms excludes exactly 300 ms, but the marked option only says slower than 300 ms"
+        },
+        {
+          "questionId": "q5",
+          "category": "DIFFICULTY",
+          "reason": "practice recognition close to easy"
+        }
+      ]
+    },
+    "sre-10-multiple": {
+      "verdict": "needs_changes",
+      "issues": [
+        {
+          "questionId": "q1,q2,q9",
+          "category": "DIFFICULTY",
+          "reason": "mostly direct source recall"
+        },
+        {
+          "questionId": "quiz",
+          "category": "ANSWER_PATTERN",
+          "reason": "all ten questions have exactly three correct options"
+        }
+      ]
+    },
+    "sre-10-true-false": {
+      "verdict": "needs_changes",
+      "issues": [
+        {
+          "questionId": "q1,q10",
+          "category": "DIFFICULTY",
+          "reason": "close to recall/recognition"
+        },
+        {
+          "questionId": "q7",
+          "category": "REVIEW_NOTE",
+          "reason": "severity classification benefits from more explicit scale and impact; no proven wrong key"
+        }
+      ]
+    }
+  },
+  "failureEvidence": [
+    {
+      "jobId": "ddabaef0-c895-4186-ab7a-a220b9a96a5e",
+      "category": "INVALID_MODEL_OUTPUT_UNCLASSIFIED",
+      "safeLog": "stage=WAITING_FOR_MODEL code=INVALID_MODEL_OUTPUT validation=The response must be one valid JSON object with the required structure and no extra fields.",
+      "rootCauseConfirmed": false
+    }
+  ]
+}

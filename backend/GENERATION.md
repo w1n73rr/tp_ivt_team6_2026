@@ -3,7 +3,7 @@
 Backend вызывает подтянутый Java-пакет `ml` через `QuizGeneratorAdapter`.
 В `QuizGenerator.generate(request, callback)` передаются jobId как requestId,
 materialId, извлечённый текст и настройки count/difficulty/type. Промпт,
-OpenRouter streaming и проверка M1 v2 находятся внутри ML-пакета.
+Выбранный провайдер (Cloud.ru/OpenRouter), streaming и проверка M1 v2 находятся внутри ML-пакета. Входная документация — [ML.md](ML.md).
 Проверки запускаются локально и в CI отдельно от реального вызова модели.
 Unit-тесты не требуют ключа OpenRouter и пользовательской базы данных.
 

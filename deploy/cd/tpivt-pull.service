@@ -1,0 +1,10 @@
+[Unit]
+Description=Deploy a published TPIVT release
+Requires=docker.service
+After=docker.service network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/bash /usr/local/sbin/tpivt-pull auto
+TimeoutStartSec=20min
