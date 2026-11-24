@@ -115,12 +115,11 @@ describe('Generation prototype', () => {
     source.options.mockReturnValue(of(options)); page.retry(); harness.detectChanges();
     expect(page.state()).toBe('settings'); expect(page.material()!.id).toBe('one');
   });
-  it('shows a disabled test action and an available list link after generation', async () => {
+  it('offers the list without a test link for demo generation', async () => {
     const { page, harness } = await open();
     page.start(); page.demoResult(true); harness.detectChanges();
     const root = harness.routeNativeElement!;
-    const button = Array.from(root.querySelectorAll('button')).find(item => item.textContent?.trim() === 'Перейти к тесту');
-    expect(button?.disabled).toBe(true);
+    expect(root.textContent).not.toContain('Перейти к тесту');
     expect(Array.from(root.querySelectorAll('a')).some(item => item.textContent?.trim() === 'Все тесты')).toBe(true);
   });
   it('handles empty settings without showing an editable form', async () => {
@@ -156,6 +155,8 @@ describe('Generation prototype', () => {
       source.saved.mockReturnValue(of({ id: 'quiz', name: 'Мой тест', questionCount: 10 }));
       await vi.advanceTimersByTimeAsync(2000);
       expect(page.state()).toBe('ready'); expect(page.quizId()).toBe('quiz'); expect(page.actualCount()).toBe(10);
+      harness.detectChanges();
+      expect(harness.routeNativeElement?.querySelector('a.primary')?.getAttribute('href')).toBe('/tests?test=quiz');
       harness.detectChanges(); expect(harness.routeNativeElement!.textContent).not.toContain('демонстрация');
       expect(source.start).toHaveBeenCalledTimes(1);
     } finally { vi.useRealTimers(); }
