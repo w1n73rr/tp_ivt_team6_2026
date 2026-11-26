@@ -11,6 +11,8 @@ public final class TestsPage extends NamedPage {
     @Name("Поиск теста") public final SelenideElement searchInput = $x("//input[@placeholder='Поиск по названию теста']");
     @Name("Демонстрационный список") public final SelenideElement demoNotice = $x("//details[@class='demo']");
     public final ElementsCollection rows = $$x("//table/tbody/tr");
+    @Name("Пройти первый тест в таблице")
+    public final SelenideElement firstStartButton = $x("//table/tbody/tr[1]//button[normalize-space()='Пройти тест']");
     public TestsPage() { nameElements(); }
     public TestsPage openPage() {
         open("/tests");
