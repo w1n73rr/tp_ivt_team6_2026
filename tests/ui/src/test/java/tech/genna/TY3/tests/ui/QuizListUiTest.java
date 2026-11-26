@@ -25,6 +25,7 @@ import org.openqa.selenium.remote.http.HttpMethod;
 import org.openqa.selenium.remote.http.HttpResponse;
 import tech.genna.TY3.tests.ui.pages.RegisterPage;
 import tech.genna.TY3.tests.ui.pages.TestsPage;
+import tech.genna.TY3.tests.ui.pages.QuizAttemptPage;
 import tech.genna.TY3.tests.ui.support.BrowserSettings;
 
 import static com.codeborne.selenide.CollectionCondition.*;
@@ -44,6 +45,10 @@ public class QuizListUiTest {
     private final AtomicInteger mutations = new AtomicInteger();
     private NetworkInterceptor interceptor;
     private volatile int mutationStatus = 500;
+    private Map<String, Object> startedAttempt;
+    private final String createdAttemptId = UUID.randomUUID().toString();
+    private final AtomicInteger attemptStarts = new AtomicInteger();
+    private final AtomicReference<String> attemptKey = new AtomicReference<>();
 
     @BeforeEach
     void registerUser() throws Exception {
@@ -56,6 +61,15 @@ public class QuizListUiTest {
         listResponse.set(QuizListUiTest::fixtureList);
         interceptor = new NetworkInterceptor(getWebDriver(), (Filter) next -> request -> {
             String path = URI.create(request.getUri()).getPath();
+            if (startedAttempt != null && path.equals("/api/quizzes/a/attempts") && request.getMethod() == HttpMethod.POST) {
+                attemptStarts.incrementAndGet();
+                attemptKey.set(request.getHeader("Idempotency-Key"));
+                return json(201, startedAttempt);
+            }
+            if (startedAttempt != null && path.equals("/api/attempts/" + createdAttemptId)
+                    && request.getMethod() == HttpMethod.GET) {
+                return json(200, startedAttempt);
+            }
             if (path.equals("/api/quizzes") && request.getMethod() == HttpMethod.GET) {
                 return listResponse.get().get();
             }
@@ -281,12 +295,26 @@ public class QuizListUiTest {
     }
 
     @Test
-    @DisplayName("TC-TESTS-10: заглушка прохождения")
-    void playShowsNotice() {
+    @DisplayName("TC-TESTS-10: запуск открывает новую попытку")
+    void opensCreatedAttempt() {
+        var questions = java.util.stream.IntStream.rangeClosed(1, 5).mapToObj(position -> Map.of(
+                "id", new UUID(0, position).toString(), "position", position,
+                "type", "SINGLE_CHOICE", "text", "Вопрос QA " + position,
+                "options", List.of(Map.of("id", new UUID(1, 1).toString(), "text", "Вариант A"),
+                        Map.of("id", new UUID(1, 2).toString(), "text", "Вариант B")))).toList();
+        startedAttempt = Map.of("attempt", Map.of("id", createdAttemptId, "status", "IN_PROGRESS",
+                        "quiz", Map.of("id", "a", "name", ALGEBRA)),
+                "questions", questions, "answers", List.of(), "currentPosition", 1);
         openList();
-        row(ALGEBRA).$x(".//button[normalize-space()='Пройти тест']").click();
-        $("[role=status].notice").shouldHave(text("Прохождение тестов будет доступно в следующих спринтах"));
-        page.rows.shouldHave(size(3));
+        page.firstStartButton.click();
+        var attempt = new QuizAttemptPage();
+        attempt.title.shouldBe(visible);
+        attempt.position.shouldHave(exactText("Вопрос 1 из 5"));
+        attempt.question.shouldHave(text("Вопрос QA 1"));
+        attempt.selectedOptions.shouldHave(size(0));
+        assertEquals("/attempts/" + createdAttemptId, URI.create(com.codeborne.selenide.WebDriverRunner.url()).getPath());
+        assertEquals(1, attemptStarts.get());
+        org.junit.jupiter.api.Assertions.assertDoesNotThrow(() -> UUID.fromString(attemptKey.get()));
         assertEquals(0, mutations.get());
     }
 
